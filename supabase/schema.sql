@@ -52,3 +52,9 @@ CREATE POLICY "Users manage own locataires" ON locataires FOR ALL USING (auth.ui
 CREATE POLICY "Users manage own paiements" ON paiements FOR ALL USING (
   EXISTS (SELECT 1 FROM locataires WHERE id = paiements.locataire_id AND user_id = auth.uid())
 );
+
+-- Index pour les performances
+CREATE INDEX IF NOT EXISTS idx_paiements_locataire ON paiements(locataire_id);
+CREATE INDEX IF NOT EXISTS idx_paiements_statut ON paiements(statut);
+CREATE INDEX IF NOT EXISTS idx_locataires_bien ON locataires(bien_id);
+CREATE INDEX IF NOT EXISTS idx_locataires_user ON locataires(user_id);
