@@ -126,3 +126,20 @@ CREATE TABLE IF NOT EXISTS parametres (
 
 ALTER TABLE parametres ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users manage own parametres" ON parametres FOR ALL USING (auth.uid() = user_id);
+
+-- Table paramètres agence
+CREATE TABLE IF NOT EXISTS parametres (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  nom_agence TEXT DEFAULT 'Mon Agence',
+  email TEXT,
+  telephone TEXT,
+  adresse TEXT,
+  ville TEXT DEFAULT 'Conakry',
+  logo_url TEXT,
+  devise TEXT DEFAULT 'GNF',
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+ALTER TABLE parametres ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own parametres" ON parametres FOR ALL USING (auth.uid() = user_id);
