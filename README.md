@@ -1,12 +1,13 @@
-# 🏠 GérerSeul Guinée
+# 🏠 CASA CHAMS
 
 Application de gestion locative immobilière pour la Guinée.
 
 ## Stack Technique
-- **Frontend** : Next.js 14 + TypeScript + Tailwind CSS
+- **Frontend** : Next.js 16 + TypeScript + Tailwind CSS
 - **Backend** : Supabase (PostgreSQL + Auth + Storage)
 - **Charts** : Recharts
 - **PDF** : jsPDF
+- **Email** : Resend
 
 ## Installation
 
@@ -23,16 +24,13 @@ npm run dev
 
 ## Fonctionnalités
 - ✅ Authentification (Login / Register)
-- ✅ Gestion des biens immobiliers
+- ✅ Gestion des biens immobiliers (Appartement & Airbnb)
 - ✅ Gestion des locataires
-- ✅ Suivi des paiements
-- ✅ Génération de documents PDF
-- ✅ Relances automatiques
+- ✅ Suivi des paiements (mensuel & à la nuit)
+- ✅ Génération de documents PDF (bail, quittance, relance)
+- ✅ Relances automatiques par email
 - ✅ Tableau de bord avec statistiques
 - ✅ Support devise GNF
+- ✅ Paramètres agence personnalisables
 
 ## Développé par keths21
-# Gestion-Locative-GN
-# Gestion-Locative-GN
-# Gestion-Locative-GN
-# Gestion-Locative-GN
