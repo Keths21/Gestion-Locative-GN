@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'GérerSeul Guinée - Gestion Locative',
+  title: 'CASA CHAMS - Gestion Locative',
   description: 'Application de gestion locative immobilière pour la Guinée',
 }
 

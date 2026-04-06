@@ -1,65 +1,125 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText } from 'lucide-react'
+import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText, Trash2, Moon, Home, TrendingUp, TrendingDown, Hourglass } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Paiement, Locataire, Bien } from '@/types'
-import { formatMontant, formatDate } from '@/lib/utils'
+import { formatMontant, formatDate, getMoisActuel } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { genererQuittance } from '@/lib/pdf'
 
-const statutConfig: Record<string, { label: string; color: string; icon: any }> = {
-  'payé':       { label: 'Payé',       color: 'bg-green-100 text-green-700',  icon: CheckCircle },
-  'en_attente': { label: 'En attente', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-  'impayé':     { label: 'Impayé',     color: 'bg-red-100 text-red-700',      icon: AlertCircle },
+const statutConfig: Record<string, { label: string; color: string; next: string }> = {
+  'payé':       { label: 'Payé',       color: 'bg-green-100 text-green-700',   next: 'impayé' },
+  'en_attente': { label: 'En attente', color: 'bg-yellow-100 text-yellow-700', next: 'payé' },
+  'impayé':     { label: 'Impayé',     color: 'bg-red-100 text-red-700',       next: 'en_attente' },
+}
+
+const EMPTY_FORM = {
+  locataire_id: '', bien_id: '', montant: '',
+  date_paiement: new Date().toISOString().split('T')[0],
+  mois_concerne: getMoisActuel(),
+  statut: 'payé', notes: '',
+  // Airbnb
+  prix_nuit: '', nb_nuits: '', date_debut: '', date_fin: '',
+}
+
+function nbNuits(d1: string, d2: string) {
+  if (!d1 || !d2) return 0
+  return Math.max(0, Math.round((new Date(d2).getTime() - new Date(d1).getTime()) / 86400000))
 }
 
 export default function PaiementsPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([])
   const [locataires, setLocataires] = useState<Locataire[]>([])
-  const [biens, setBiens] = useState<Bien[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const [filtre, setFiltre] = useState<'tous' | 'payé' | 'impayé' | 'en_attente'>('tous')
-  const [form, setForm] = useState({
-    locataire_id: '', bien_id: '', montant: '',
-    date_paiement: new Date().toISOString().split('T')[0],
-    mois_concerne: new Date().toISOString().slice(0, 7),
-    statut: 'payé', notes: ''
-  })
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [submitting, setSubmitting] = useState(false)
+  const [modeAirbnb, setModeAirbnb] = useState(false)
   const supabase = createClient()
 
   const fetchData = async () => {
-    const [{ data: pai }, { data: loc }, { data: bi }] = await Promise.all([
-      supabase.from('paiements').select('*, locataire:locataires(*), bien:biens(*)').order('created_at', { ascending: false }),
-      supabase.from('locataires').select('*, bien:biens(*)').is('date_sortie', null),
-      supabase.from('biens').select('*'),
+    const [{ data: pai }, { data: loc }] = await Promise.all([
+      supabase.from('paiements').select('*, locataire:locataires(nom, prenom), bien:biens(nom, mode_location)').order('created_at', { ascending: false }),
+      supabase.from('locataires').select('*, bien:biens(*)')
+        .or(`date_sortie.is.null,date_sortie.gt.${new Date().toISOString().split('T')[0]}`),
     ])
     setPaiements(pai || [])
     setLocataires(loc || [])
-    setBiens(bi || [])
     setLoading(false)
   }
 
   useEffect(() => { fetchData() }, [])
 
+  const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }))
+
   const handleLocataireChange = (locId: string) => {
     const loc = locataires.find(l => l.id === locId)
+    const bien = (loc as any)?.bien
+    const isAirbnb = bien?.mode_location === 'airbnb'
+    setModeAirbnb(isAirbnb)
     setForm(f => ({
       ...f,
       locataire_id: locId,
       bien_id: loc?.bien_id || '',
-      montant: String((loc as any)?.bien?.loyer_base || '')
+      montant: isAirbnb ? '' : String(bien?.loyer_base || ''),
+      prix_nuit: isAirbnb ? String(bien?.prix_nuit || '') : '',
     }))
+  }
+
+  // Recalcul montant Airbnb quand dates changent
+  const handleDateChange = (key: 'date_debut' | 'date_fin', val: string) => {
+    const updated = { ...form, [key]: val }
+    const nuits = nbNuits(
+      key === 'date_debut' ? val : form.date_debut,
+      key === 'date_fin' ? val : form.date_fin
+    )
+    const total = nuits > 0 && Number(form.prix_nuit) ? nuits * Number(form.prix_nuit) : 0
+    setForm({ ...updated, nb_nuits: nuits > 0 ? String(nuits) : '', montant: total > 0 ? String(total) : '' })
+  }
+
+  const handlePrixNuitChange = (val: string) => {
+    const nuits = nbNuits(form.date_debut, form.date_fin)
+    const total = nuits > 0 && Number(val) ? nuits * Number(val) : 0
+    setForm(f => ({ ...f, prix_nuit: val, montant: total > 0 ? String(total) : '' }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const payload = { ...form, montant: Number(form.montant) }
+    setSubmitting(true)
+    const moisConcerne = modeAirbnb && form.date_debut && form.date_fin
+      ? `${form.date_debut} → ${form.date_fin}`
+      : form.mois_concerne
+
+    const payload = {
+      locataire_id: form.locataire_id,
+      bien_id: form.bien_id,
+      montant: Number(form.montant),
+      date_paiement: form.date_paiement,
+      mois_concerne: moisConcerne,
+      statut: form.statut,
+      notes: form.notes || null,
+    }
     const { error } = await supabase.from('paiements').insert(payload)
-    if (error) { toast.error('Erreur lors de l\'enregistrement'); return }
+    if (error) { toast.error('Erreur : ' + error.message); setSubmitting(false); return }
     toast.success('Paiement enregistré !')
-    setShowForm(false)
-    setForm({ locataire_id: '', bien_id: '', montant: '', date_paiement: new Date().toISOString().split('T')[0], mois_concerne: new Date().toISOString().slice(0, 7), statut: 'payé', notes: '' })
+    setShowModal(false)
+    setForm(EMPTY_FORM)
+    setModeAirbnb(false)
+    setSubmitting(false)
+    fetchData()
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer ce paiement ?')) return
+    await supabase.from('paiements').delete().eq('id', id)
+    toast.success('Paiement supprimé')
+    fetchData()
+  }
+
+  const handleStatutChange = async (id: string, statut: string) => {
+    const next = statutConfig[statut]?.next || 'payé'
+    await supabase.from('paiements').update({ statut: next }).eq('id', id)
     fetchData()
   }
 
@@ -69,110 +129,81 @@ export default function PaiementsPage() {
   }
 
   const paiementsFiltres = filtre === 'tous' ? paiements : paiements.filter(p => p.statut === filtre)
+  const moisCourant = getMoisActuel()
 
   const totalEncaisse = paiements.filter(p => p.statut === 'payé').reduce((s, p) => s + p.montant, 0)
   const totalImpayes = paiements.filter(p => p.statut === 'impayé').reduce((s, p) => s + p.montant, 0)
+  const totalAttente = paiements.filter(p => p.statut === 'en_attente').reduce((s, p) => s + p.montant, 0)
+  const totalMois = paiements.filter(p => p.statut === 'payé' && p.mois_concerne?.startsWith(moisCourant)).reduce((s, p) => s + p.montant, 0)
+
+  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm'
 
   return (
     <div className="space-y-6">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Paiements</h1>
           <p className="text-gray-500 mt-1">{paiements.length} paiement(s) enregistré(s)</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-        >
+        <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
           <Plus className="h-4 w-4" /> Enregistrer un paiement
         </button>
       </div>
 
-      {/* Résumé */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-          <p className="text-sm text-green-600 font-medium">Total encaissé</p>
-          <p className="text-xl font-bold text-green-700 mt-1">{formatMontant(totalEncaisse)}</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="h-4 w-4 text-green-500" />
+            <p className="text-xs text-gray-500 font-medium">Total encaissé</p>
+          </div>
+          <p className="text-lg font-bold text-green-600">{formatMontant(totalEncaisse)}</p>
         </div>
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-          <p className="text-sm text-red-600 font-medium">Total impayés</p>
-          <p className="text-xl font-bold text-red-700 mt-1">{formatMontant(totalImpayes)}</p>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingDown className="h-4 w-4 text-red-500" />
+            <p className="text-xs text-gray-500 font-medium">Impayés</p>
+          </div>
+          <p className="text-lg font-bold text-red-600">{formatMontant(totalImpayes)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Hourglass className="h-4 w-4 text-yellow-500" />
+            <p className="text-xs text-gray-500 font-medium">En attente</p>
+          </div>
+          <p className="text-lg font-bold text-yellow-600">{formatMontant(totalAttente)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <CreditCard className="h-4 w-4 text-blue-500" />
+            <p className="text-xs text-gray-500 font-medium">Ce mois-ci</p>
+          </div>
+          <p className="text-lg font-bold text-blue-600">{formatMontant(totalMois)}</p>
         </div>
       </div>
 
-      {/* Formulaire */}
-      {showForm && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">Nouveau paiement</h2>
-            <button onClick={() => setShowForm(false)}><X className="h-5 w-5 text-gray-400" /></button>
-          </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Locataire</label>
-              <select
-                value={form.locataire_id}
-                onChange={e => handleLocataireChange(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                required
-              >
-                <option value="">-- Sélectionner --</option>
-                {locataires.map(l => <option key={l.id} value={l.id}>{l.prenom} {l.nom}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Montant (GNF)</label>
-              <input type="number" value={form.montant} onChange={e => setForm(f => ({...f, montant: e.target.value}))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date de paiement</label>
-              <input type="date" value={form.date_paiement} onChange={e => setForm(f => ({...f, date_paiement: e.target.value}))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mois concerné</label>
-              <input type="month" value={form.mois_concerne} onChange={e => setForm(f => ({...f, mois_concerne: e.target.value}))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-              <select value={form.statut} onChange={e => setForm(f => ({...f, statut: e.target.value}))}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="payé">Payé</option>
-                <option value="en_attente">En attente</option>
-                <option value="impayé">Impayé</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
-              <input type="text" value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))}
-                placeholder="Paiement espèces, virement..."
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div className="md:col-span-2 flex gap-3">
-              <button type="submit" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition font-medium">Enregistrer</button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition">Annuler</button>
-            </div>
-          </form>
-        </div>
-      )}
-
       {/* Filtres */}
       <div className="flex gap-2 flex-wrap">
-        {(['tous', 'payé', 'en_attente', 'impayé'] as const).map(f => (
-          <button key={f} onClick={() => setFiltre(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${filtre === f ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-            {f === 'tous' ? 'Tous' : f === 'en_attente' ? 'En attente' : f.charAt(0).toUpperCase() + f.slice(1)}
+        {([
+          { key: 'tous', label: 'Tous', count: paiements.length },
+          { key: 'payé', label: 'Payés', count: paiements.filter(p => p.statut === 'payé').length },
+          { key: 'en_attente', label: 'En attente', count: paiements.filter(p => p.statut === 'en_attente').length },
+          { key: 'impayé', label: 'Impayés', count: paiements.filter(p => p.statut === 'impayé').length },
+        ] as const).map(f => (
+          <button key={f.key} onClick={() => setFiltre(f.key)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+            {f.label}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${filtre === f.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>{f.count}</span>
           </button>
         ))}
       </div>
 
       {/* Liste */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-        </div>
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
       ) : paiementsFiltres.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
           <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -183,50 +214,184 @@ export default function PaiementsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-gray-600 font-medium">Locataire</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium">Montant</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium hidden lg:table-cell">Mois</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium hidden lg:table-cell">Date</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium">Statut</th>
-                <th className="px-6 py-3"></th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium">Locataire</th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium">Montant</th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden lg:table-cell">Période</th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden lg:table-cell">Date</th>
+                <th className="text-left px-5 py-3 text-gray-600 font-medium">Statut</th>
+                <th className="px-5 py-3 text-right text-gray-600 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paiementsFiltres.map(p => {
                 const s = statutConfig[p.statut] || statutConfig['en_attente']
-                const Icon = s.icon
+                const isAirbnb = (p as any).bien?.mode_location === 'airbnb'
                 return (
                   <tr key={p.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {(p as any).locataire?.prenom} {(p as any).locataire?.nom}
+                    <td className="px-5 py-3.5">
+                      <p className="font-medium text-gray-900">{(p as any).locataire?.prenom} {(p as any).locataire?.nom}</p>
+                      {(p as any).notes && <p className="text-xs text-gray-400 mt-0.5 italic">{(p as any).notes}</p>}
                     </td>
-                    <td className="px-6 py-4 text-gray-600 hidden md:table-cell">
-                      {(p as any).bien?.nom || '-'}
+                    <td className="px-5 py-3.5 hidden md:table-cell">
+                      <div className="flex items-center gap-1.5 text-gray-600">
+                        {isAirbnb
+                          ? <Moon className="h-3.5 w-3.5 text-pink-400 shrink-0" />
+                          : <Home className="h-3.5 w-3.5 text-blue-400 shrink-0" />}
+                        {(p as any).bien?.nom || '-'}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {formatMontant(p.montant)}
+                    <td className="px-5 py-3.5 font-semibold text-gray-900">{formatMontant(p.montant)}</td>
+                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">
+                      {p.mois_concerne?.includes('→')
+                        ? p.mois_concerne
+                        : p.mois_concerne}
                     </td>
-                    <td className="px-6 py-4 text-gray-600 hidden lg:table-cell">{p.mois_concerne}</td>
-                    <td className="px-6 py-4 text-gray-600 hidden lg:table-cell">{formatDate(p.date_paiement)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${s.color}`}>
-                        <Icon className="h-3 w-3" />{s.label}
-                      </span>
+                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">{formatDate(p.date_paiement)}</td>
+                    <td className="px-5 py-3.5">
+                      <button
+                        onClick={() => handleStatutChange(p.id, p.statut)}
+                        title="Cliquer pour changer le statut"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${s.color}`}>
+                        {p.statut === 'payé' && <CheckCircle className="h-3 w-3" />}
+                        {p.statut === 'en_attente' && <Clock className="h-3 w-3" />}
+                        {p.statut === 'impayé' && <AlertCircle className="h-3 w-3" />}
+                        {s.label}
+                      </button>
                     </td>
-                    <td className="px-6 py-4">
-                      {p.statut === 'payé' && (
-                        <button onClick={() => handleQuittance(p)} title="Générer quittance"
-                          className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600 transition">
-                          <FileText className="h-4 w-4" />
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1 justify-end">
+                        {p.statut === 'payé' && (
+                          <button onClick={() => handleQuittance(p)} title="Générer quittance"
+                            className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600 transition">
+                            <FileText className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button onClick={() => handleDelete(p.id)} title="Supprimer"
+                          className="p-1.5 hover:bg-red-50 rounded-lg text-red-400 transition">
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900 text-lg">Nouveau paiement</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition">
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+              {/* Locataire */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Locataire *</label>
+                <select value={form.locataire_id} onChange={e => handleLocataireChange(e.target.value)} required className={inputCls}>
+                  <option value="">-- Sélectionner un locataire --</option>
+                  {locataires.map(l => {
+                    const mode = (l as any).bien?.mode_location
+                    return (
+                      <option key={l.id} value={l.id}>
+                        {l.prenom} {l.nom} {mode === 'airbnb' ? '(Airbnb)' : mode === 'appartement' ? '(Mensuel)' : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+
+              {/* Badge mode */}
+              {form.locataire_id && (
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${modeAirbnb ? 'bg-pink-50 text-pink-700' : 'bg-blue-50 text-blue-700'}`}>
+                  {modeAirbnb ? <Moon className="h-4 w-4" /> : <Home className="h-4 w-4" />}
+                  {modeAirbnb ? 'Location Airbnb — paiement calculé par nuit' : 'Location mensuelle — loyer mensuel'}
+                </div>
+              )}
+
+              {modeAirbnb ? (
+                <>
+                  {/* Airbnb */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date d'arrivée *</label>
+                      <input type="date" value={form.date_debut} onChange={e => handleDateChange('date_debut', e.target.value)} required className={inputCls} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de départ *</label>
+                      <input type="date" value={form.date_fin} onChange={e => handleDateChange('date_fin', e.target.value)} required className={inputCls} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Prix / nuit (GNF)</label>
+                      <input type="number" value={form.prix_nuit} onChange={e => handlePrixNuitChange(e.target.value)} placeholder="150 000" className={inputCls} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de nuits</label>
+                      <input type="text" value={form.nb_nuits} readOnly placeholder="Auto" className={`${inputCls} bg-gray-50 text-gray-500`} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Montant total (GNF) *</label>
+                    <input type="number" value={form.montant} onChange={e => set('montant', e.target.value)} required placeholder="Calculé automatiquement" className={inputCls} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Appartement */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Montant (GNF) *</label>
+                      <input type="number" value={form.montant} onChange={e => set('montant', e.target.value)} required className={inputCls} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mois concerné *</label>
+                      <input type="month" value={form.mois_concerne} onChange={e => set('mois_concerne', e.target.value)} required className={inputCls} />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Communs */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date de paiement *</label>
+                  <input type="date" value={form.date_paiement} onChange={e => set('date_paiement', e.target.value)} required className={inputCls} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                  <select value={form.statut} onChange={e => set('statut', e.target.value)} className={inputCls}>
+                    <option value="payé">Payé</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="impayé">Impayé</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+                <input type="text" value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Espèces, virement, chèque..." className={inputCls} />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">
+                  {submitting ? 'Enregistrement...' : 'Enregistrer le paiement'}
+                </button>
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

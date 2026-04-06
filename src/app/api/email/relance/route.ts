@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
       <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:20px">
         <div style="max-width:580px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07)">
-          
+
           <!-- Header -->
           <div style="background:#dc2626;padding:32px;text-align:center">
             <h1 style="color:white;margin:0;font-size:22px">⚠️ Avis de Loyer Impayé</h1>
@@ -34,8 +34,8 @@ export async function POST(req: Request) {
           <div style="padding:32px">
             <p style="color:#374151;font-size:15px">Bonjour <strong>${locataire.prenom} ${locataire.nom}</strong>,</p>
             <p style="color:#6b7280;font-size:14px;line-height:1.6">
-              Sauf erreur de notre part, nous constatons que le(s) loyer(s) suivant(s) 
-              n'ont pas encore été réglés à ce jour. Nous vous remercions de bien vouloir 
+              Sauf erreur de notre part, nous constatons que le(s) loyer(s) suivant(s)
+              n'ont pas encore été réglés à ce jour. Nous vous remercions de bien vouloir
               régulariser votre situation dans les plus brefs délais.
             </p>
 
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
             <!-- Alerte -->
             <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:16px;margin:20px 0">
               <p style="margin:0;color:#92400e;font-size:13px">
-                ⏰ <strong>Important :</strong> Sans réponse de votre part dans les <strong>8 jours</strong>, 
+                ⏰ <strong>Important :</strong> Sans réponse de votre part dans les <strong>8 jours</strong>,
                 nous serons dans l'obligation d'engager les procédures légales nécessaires.
               </p>
             </div>
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center">
               ${agence?.nom_agence || 'Votre Agence'} · ${agence?.adresse || 'Conakry, Guinée'}<br>
               📞 ${agence?.telephone || ''} · ✉️ ${agence?.email || ''}<br><br>
-              <em>Document généré par GérerSeul Guinée</em>
+              <em>Document généré par CASA CHAMS</em>
             </p>
           </div>
         </div>
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: `${agence?.nom_agence || 'GérerSeul'} <onboarding@resend.dev>`,
+      from: `${agence?.nom_agence || 'CASA CHAMS'} <onboarding@resend.dev>`,
       to: locataire.email,
       subject: `⚠️ Rappel : Loyer(s) impayé(s) - ${formatGNF(totalDu)}`,
       html,

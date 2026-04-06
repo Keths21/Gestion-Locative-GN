@@ -27,6 +27,12 @@ export function formatDate(date: string) {
   }).format(new Date(date))
 }
 
+// Un locataire est actif si : pas de date_sortie, OU date_sortie dans le futur (cas Airbnb)
+export function isLocataireActif(locataire: { date_sortie?: string | null }): boolean {
+  if (!locataire.date_sortie) return true
+  return new Date(locataire.date_sortie) > new Date()
+}
+
 export function getMoisActuel() {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`

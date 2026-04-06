@@ -35,7 +35,7 @@ export async function POST(req: Request) {
             <p style="color:#9ca3af;font-size:12px;margin-top:24px">Fait à Conakry, le ${today}</p>
           </div>
           <div style="background:#f9fafb;padding:20px 32px;border-top:1px solid #e5e7eb;text-align:center">
-            <p style="margin:0;color:#9ca3af;font-size:12px">${agence?.nom_agence || 'Votre Agence'} · ${agence?.telephone || ''}<br><em>GérerSeul Guinée</em></p>
+            <p style="margin:0;color:#9ca3af;font-size:12px">${agence?.nom_agence || 'Votre Agence'} · ${agence?.telephone || ''}<br><em>CASA CHAMS</em></p>
           </div>
         </div>
       </body>
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: `${agence?.nom_agence || 'GérerSeul'} <onboarding@resend.dev>`,
+      from: `${agence?.nom_agence || 'CASA CHAMS'} <onboarding@resend.dev>`,
       to: locataire.email,
       subject: `✅ Quittance de loyer - ${paiement.mois_concerne}`,
       html,

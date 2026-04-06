@@ -6,22 +6,68 @@ import { Locataire, Bien } from '@/types'
 import { genererBail, genererRelance } from '@/lib/pdf'
 import toast from 'react-hot-toast'
 
+function supprimerFondBlanc(base64: string, seuil = 230): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const d = imageData.data
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2]
+        if (r >= seuil && g >= seuil && b >= seuil) d[i + 3] = 0
+      }
+      ctx.putImageData(imageData, 0, 0)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.src = base64
+  })
+}
+
 export default function DocumentsPage() {
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [loading, setLoading] = useState(true)
+  const [logo, setLogo] = useState<string | undefined>()
+  const [agence, setAgence] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    async function fetch() {
-      const { data } = await supabase.from('locataires').select('*, bien:biens(*)').is('date_sortie', null)
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      const today = new Date().toISOString().split('T')[0]
+      const [{ data }, { data: params }] = await Promise.all([
+        supabase.from('locataires').select('*, bien:biens(*)')
+          .or(`date_sortie.is.null,date_sortie.gt.${today}`),
+        supabase.from('parametres').select('*').eq('user_id', user?.id).single(),
+      ])
       setLocataires(data || [])
+      if (params) setAgence(params)
       setLoading(false)
+
+      // Chargement du logo avec suppression du fond blanc
+      try {
+        const res = await fetch('/innoveagroup_logo.jpeg')
+        if (res.ok) {
+          const blob = await res.blob()
+          const reader = new FileReader()
+          reader.onloadend = async () => {
+            const base64 = reader.result as string
+            const detoure = await supprimerFondBlanc(base64)
+            setLogo(detoure)
+          }
+          reader.readAsDataURL(blob)
+        }
+      } catch { /* pas de logo */ }
     }
-    fetch()
+    load()
   }, [])
 
   const handleBail = (loc: Locataire) => {
-    genererBail(loc, (loc as any).bien)
+    genererBail(loc, (loc as any).bien, logo, agence)
     toast.success('Bail généré !')
   }
 

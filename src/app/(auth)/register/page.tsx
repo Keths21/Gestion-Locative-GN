@@ -56,7 +56,7 @@ export default function RegisterPage() {
             <Building2 className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
-          <p className="text-gray-500 mt-1 text-sm">GérerSeul Guinée</p>
+          <p className="text-gray-500 mt-1 text-sm">CASA CHAMS</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">

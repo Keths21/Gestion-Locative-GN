@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-2">
               <Building2 className="h-8 w-8 text-blue-600" />
               <div>
-                <h1 className="font-bold text-gray-900 text-sm">GérerSeul</h1>
+                <h1 className="font-bold text-gray-900 text-sm">CASA CHAMS</h1>
                 <p className="text-xs text-gray-500">Guinée</p>
               </div>
             </div>
@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-blue-600" />
-            <span className="font-bold text-gray-900">GérerSeul Guinée</span>
+            <span className="font-bold text-gray-900">CASA CHAMS</span>
           </div>
         </header>
 
