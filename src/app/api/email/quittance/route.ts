@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: `${agence?.nom_agence || 'CASA CHAMS'} <onboarding@resend.dev>`,
+      from: `${agence?.nom_agence || 'CASA CHAMS'} <noreply@casachams.com>`,
       to: locataire.email,
       subject: `✅ Quittance de loyer - ${paiement.mois_concerne}`,
       html,
