@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { FileText, Download, FileCheck } from 'lucide-react'
+import { FileText, Download, FileCheck, Mail, MessageSquare, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { Locataire, Bien } from '@/types'
+import { Locataire } from '@/types'
 import { genererBail, genererRelance } from '@/lib/pdf'
 import toast from 'react-hot-toast'
 
@@ -33,6 +33,7 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true)
   const [logo, setLogo] = useState<string | undefined>()
   const [agence, setAgence] = useState<any>(null)
+  const [sending, setSending] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -48,7 +49,6 @@ export default function DocumentsPage() {
       if (params) setAgence(params)
       setLoading(false)
 
-      // Chargement du logo avec suppression du fond blanc
       try {
         const res = await fetch('/innoveagroup_logo.jpeg')
         if (res.ok) {
@@ -71,7 +71,7 @@ export default function DocumentsPage() {
     toast.success('Bail généré !')
   }
 
-  const handleRelance = async (loc: Locataire) => {
+  const handleRelancePDF = async (loc: Locataire) => {
     const { data: impayes } = await supabase.from('paiements')
       .select('*').eq('locataire_id', loc.id).eq('statut', 'impayé')
     if (!impayes || impayes.length === 0) {
@@ -80,6 +80,37 @@ export default function DocumentsPage() {
     }
     genererRelance(loc, impayes)
     toast.success('Lettre de relance générée !')
+  }
+
+  const handleRelanceSMS = async (loc: Locataire, canal: 'sms' | 'whatsapp') => {
+    if (!loc.telephone) {
+      toast.error('Numéro de téléphone manquant pour ce locataire')
+      return
+    }
+    const { data: impayes } = await supabase.from('paiements')
+      .select('*').eq('locataire_id', loc.id).eq('statut', 'impayé')
+    if (!impayes || impayes.length === 0) {
+      toast.error('Aucun impayé pour ce locataire')
+      return
+    }
+
+    const key = `${canal}-relance-${loc.id}`
+    setSending(key)
+    try {
+      const endpoint = canal === 'sms' ? '/api/sms/relance' : '/api/whatsapp/relance'
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locataire: loc, paiements: impayes, agence }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur envoi')
+      toast.success(`Relance ${canal === 'sms' ? 'SMS' : 'WhatsApp'} envoyée !`)
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l\'envoi')
+    } finally {
+      setSending(null)
+    }
   }
 
   return (
@@ -91,13 +122,13 @@ export default function DocumentsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { title: 'Quittances de loyer', desc: 'Générées depuis la page Paiements (icône 📄)', icon: FileCheck, color: 'blue', action: null },
-          { title: 'Contrats de bail', desc: 'Générer un bail pour chaque locataire', icon: FileText, color: 'green', action: 'bail' },
-          { title: 'Lettres de relance', desc: 'Pour les locataires avec impayés', icon: Download, color: 'red', action: 'relance' },
+          { title: 'Quittances de loyer', desc: 'Générées depuis la page Paiements (icône 📄)', icon: FileCheck, color: 'blue' },
+          { title: 'Contrats de bail', desc: 'Générer un bail pour chaque locataire', icon: FileText, color: 'green' },
+          { title: 'Lettres de relance', desc: 'PDF, SMS ou WhatsApp pour les impayés', icon: Download, color: 'red' },
         ].map(card => {
           const Icon = card.icon
           return (
-            <div key={card.title} className={`bg-white rounded-xl border border-gray-100 p-5 shadow-sm`}>
+            <div key={card.title} className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
               <div className={`w-10 h-10 rounded-lg bg-${card.color}-100 flex items-center justify-center mb-3`}>
                 <Icon className={`h-5 w-5 text-${card.color}-600`} />
               </div>
@@ -116,35 +147,63 @@ export default function DocumentsPage() {
         {loading ? (
           <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-gray-600 font-medium">Locataire</th>
-                <th className="text-left px-6 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
-                <th className="px-6 py-3 text-gray-600 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {locataires.map(loc => (
-                <tr key={loc.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-medium text-gray-900">{loc.prenom} {loc.nom}</td>
-                  <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{(loc as any).bien?.nom || '-'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button onClick={() => handleBail(loc)}
-                        className="flex items-center gap-1.5 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 transition font-medium">
-                        <FileText className="h-3.5 w-3.5" /> Bail PDF
-                      </button>
-                      <button onClick={() => handleRelance(loc)}
-                        className="flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-medium">
-                        <Download className="h-3.5 w-3.5" /> Relance PDF
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="text-left px-6 py-3 text-gray-600 font-medium">Locataire</th>
+                  <th className="text-left px-6 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
+                  <th className="text-left px-6 py-3 text-gray-600 font-medium hidden lg:table-cell">Téléphone</th>
+                  <th className="px-6 py-3 text-gray-600 font-medium text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {locataires.map(loc => (
+                  <tr key={loc.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 font-medium text-gray-900">{loc.prenom} {loc.nom}</td>
+                    <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{(loc as any).bien?.nom || '-'}</td>
+                    <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
+                      {loc.telephone ? (
+                        <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{loc.telephone}</span>
+                      ) : (
+                        <span className="text-gray-300 text-xs">Non renseigné</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 justify-end flex-wrap">
+                        {/* Bail PDF */}
+                        <button onClick={() => handleBail(loc)}
+                          className="flex items-center gap-1.5 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 transition font-medium">
+                          <FileText className="h-3.5 w-3.5" /> Bail
+                        </button>
+                        {/* Relance PDF */}
+                        <button onClick={() => handleRelancePDF(loc)}
+                          className="flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-medium">
+                          <Download className="h-3.5 w-3.5" /> PDF
+                        </button>
+                        {/* Relance SMS */}
+                        <button
+                          onClick={() => handleRelanceSMS(loc, 'sms')}
+                          disabled={sending === `sms-relance-${loc.id}`}
+                          className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition font-medium disabled:opacity-50">
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
+                        </button>
+                        {/* Relance WhatsApp */}
+                        <button
+                          onClick={() => handleRelanceSMS(loc, 'whatsapp')}
+                          disabled={sending === `whatsapp-relance-${loc.id}`}
+                          className="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition font-medium disabled:opacity-50">
+                          <Mail className="h-3.5 w-3.5" />
+                          {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
