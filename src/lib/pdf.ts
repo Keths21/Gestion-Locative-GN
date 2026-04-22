@@ -80,29 +80,26 @@ export async function genererQuittance(paiement: any) {
 
   const finalY = (doc as any).lastAutoTable.finalY || 160
 
-  // Mention légale — bloc dynamique
+  // Mention légale — bloc avec découpage manuel pour éviter tout débordement
   doc.setFontSize(9)
   const lh = 7
-  const maxW = 158
-  const l1 = 'Je soussigné(e), bailleur du logement désigné ci-dessus, reconnais avoir reçu'
-  const l2 = doc.splitTextToSize(
-    `la somme de ${formatMontantPDF(paiement.montant)} au titre du loyer et des charges du mois de ${paiement.mois_concerne}.`,
-    maxW
-  )
-  const l3 = 'Et lui en donne quittance, sous réserve de tous mes droits.'
-  const totalLines = 1 + l2.length + 1
-  const blockH = 10 + totalLines * lh + 4
+  const lines = [
+    'Je soussigné(e), bailleur du logement désigné ci-dessus, reconnais avoir reçu',
+    `la somme de ${formatMontantPDF(paiement.montant)}`,
+    `au titre du loyer et des charges du mois de ${paiement.mois_concerne}.`,
+    'Et lui en donne quittance, sous réserve de tous mes droits.',
+  ]
+  const blockH = 10 + lines.length * lh + 4
 
   doc.setFillColor(249, 250, 251)
   doc.rect(20, finalY + 10, 170, blockH, 'F')
   doc.setTextColor(100, 100, 100)
 
   let ty = finalY + 20
-  doc.text(l1, 105, ty, { align: 'center' })
-  ty += lh
-  doc.text(l2, 105, ty, { align: 'center' })
-  ty += l2.length * lh
-  doc.text(l3, 105, ty, { align: 'center' })
+  for (const line of lines) {
+    doc.text(line, 105, ty, { align: 'center' })
+    ty += lh
+  }
 
   const blockEndY = finalY + 10 + blockH
 
