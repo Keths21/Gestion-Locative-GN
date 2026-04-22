@@ -91,14 +91,23 @@ export async function genererQuittance(paiement: any) {
 
   // Date et signature
   const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  // Ligne de séparation
+  doc.setDrawColor(220, 220, 220)
+  doc.setLineWidth(0.3)
+  doc.line(20, finalY + 48, 190, finalY + 48)
+
   doc.setFontSize(10)
   doc.setTextColor(0, 0, 0)
-  doc.text(`Fait à Conakry, le ${today}`, 20, finalY + 55)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Fait à Conakry, le ${today}`, 20, finalY + 60)
 
+  // Zone signature bailleur (x=130 à x=190, centre=160)
   doc.setFont('helvetica', 'bold')
-  doc.text('Signature du bailleur :', 130, finalY + 55)
+  doc.text('Signature du bailleur :', 160, finalY + 60, { align: 'center' })
   if (cachetBase64) {
-    doc.addImage(cachetBase64, 'PNG', 128, finalY + 58, 42, 38)
+    // Centré sur x=160, largeur 48 → x_start = 136
+    doc.addImage(cachetBase64, 'PNG', 136, finalY + 63, 48, 44)
   }
 
   // Pied de page
