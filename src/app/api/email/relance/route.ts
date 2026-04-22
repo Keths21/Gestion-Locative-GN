@@ -1,19 +1,33 @@
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
+import { relanceBodySchema } from '@/lib/schemas'
+import { formatMontant } from '@/lib/utils'
+import { DELAI_RELANCE_JOURS } from '@/lib/constants'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
   try {
-    const { locataire, paiements, agence } = await req.json()
+    const body = await req.json()
+    const parsed = relanceBodySchema.safeParse(body)
 
-    const totalDu = paiements.reduce((s: number, p: any) => s + p.montant, 0)
-    const formatGNF = (n: number) => new Intl.NumberFormat('fr-GN', { style: 'currency', currency: 'GNF', maximumFractionDigits: 0 }).format(n)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    }
 
-    const lignesPaiements = paiements.map((p: any) => `
+    const { locataire, paiements, agence } = parsed.data
+
+    if (!locataire.email) {
+      return NextResponse.json({ error: 'Adresse email manquante' }, { status: 400 })
+    }
+
+    const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
+    const agenceNom = agence?.nom_agence || 'Votre Agence Immobilière'
+
+    const lignesPaiements = paiements.map((p) => `
       <tr>
         <td style="padding:8px 12px;border-bottom:1px solid #fee2e2">${p.mois_concerne}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #fee2e2;text-align:right;font-weight:600">${formatGNF(p.montant)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #fee2e2;text-align:right;font-weight:600">${formatMontant(p.montant)}</td>
       </tr>
     `).join('')
 
@@ -26,8 +40,8 @@ export async function POST(req: Request) {
 
           <!-- Header -->
           <div style="background:#dc2626;padding:32px;text-align:center">
-            <h1 style="color:white;margin:0;font-size:22px">⚠️ Avis de Loyer Impayé</h1>
-            <p style="color:#fecaca;margin:8px 0 0">${agence?.nom_agence || 'Votre Agence Immobilière'}</p>
+            <h1 style="color:white;margin:0;font-size:22px">Avis de Loyer Impaye</h1>
+            <p style="color:#fecaca;margin:8px 0 0">${agenceNom}</p>
           </div>
 
           <!-- Corps -->
@@ -51,7 +65,7 @@ export async function POST(req: Request) {
               <tfoot>
                 <tr style="background:#fef2f2">
                   <td style="padding:12px;font-weight:700;color:#dc2626">TOTAL DÛ</td>
-                  <td style="padding:12px;text-align:right;font-weight:700;color:#dc2626;font-size:16px">${formatGNF(totalDu)}</td>
+                  <td style="padding:12px;text-align:right;font-weight:700;color:#dc2626;font-size:16px">${formatMontant(totalDu)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -59,7 +73,7 @@ export async function POST(req: Request) {
             <!-- Alerte -->
             <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:16px;margin:20px 0">
               <p style="margin:0;color:#92400e;font-size:13px">
-                ⏰ <strong>Important :</strong> Sans réponse de votre part dans les <strong>8 jours</strong>,
+                <strong>Important :</strong> Sans réponse de votre part dans les <strong>${DELAI_RELANCE_JOURS} jours</strong>,
                 nous serons dans l'obligation d'engager les procédures légales nécessaires.
               </p>
             </div>
@@ -72,9 +86,8 @@ export async function POST(req: Request) {
           <!-- Footer -->
           <div style="background:#f9fafb;padding:20px 32px;border-top:1px solid #e5e7eb">
             <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center">
-              ${agence?.nom_agence || 'Votre Agence'} · ${agence?.adresse || 'Conakry, Guinée'}<br>
-              📞 ${agence?.telephone || ''} · ✉️ ${agence?.email || ''}<br><br>
-              <em>Document généré par CASA CHAMS</em>
+              ${agenceNom} · ${agence?.adresse || ''}<br>
+              ${agence?.telephone ? `${agence.telephone} · ` : ''}${agence?.email || ''}
             </p>
           </div>
         </div>
@@ -83,15 +96,15 @@ export async function POST(req: Request) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: `${agence?.nom_agence || 'CASA CHAMS'} <noreply@casachams.com>`,
+      from: `${agenceNom} <noreply@casachams.com>`,
       to: locataire.email,
-      subject: `⚠️ Rappel : Loyer(s) impayé(s) - ${formatGNF(totalDu)}`,
+      subject: `Rappel : Loyer(s) impayé(s) - ${formatMontant(totalDu)}`,
       html,
     })
 
-    if (error) return NextResponse.json({ error }, { status: 400 })
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ success: true, data })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

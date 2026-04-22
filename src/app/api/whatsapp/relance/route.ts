@@ -1,30 +1,40 @@
 import { NextResponse } from 'next/server'
-
-const formatGNF = (n: number) =>
-  n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' GNF'
+import { relanceBodySchema } from '@/lib/schemas'
+import { formatMontant } from '@/lib/utils'
+import { DELAI_RELANCE_JOURS } from '@/lib/constants'
 
 export async function POST(req: Request) {
   try {
-    const { locataire, paiements, agence } = await req.json()
+    const body = await req.json()
+    const parsed = relanceBodySchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    }
+
+    const { locataire, paiements, agence } = parsed.data
 
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })
     }
 
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN!
-    const agenceNom = agence?.nom_agence || 'CASA CHAMS'
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
+    if (!phoneNumberId || !accessToken) {
+      return NextResponse.json({ error: 'Configuration WhatsApp manquante' }, { status: 500 })
+    }
 
-    const totalDu = paiements.reduce((s: number, p: any) => s + p.montant, 0)
-    const moisListe = paiements.map((p: any) => `• ${p.mois_concerne} : ${formatGNF(p.montant)}`).join('\n')
+    const agenceNom = agence?.nom_agence || 'Votre Agence'
+    const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
+    const moisListe = paiements.map((p) => `• ${p.mois_concerne} : ${formatMontant(p.montant)}`).join('\n')
     const to = locataire.telephone.replace(/[\s+]/g, '')
 
-    const body = {
+    const messageBody = {
       messaging_product: 'whatsapp',
       to,
       type: 'text',
       text: {
-        body: `⚠️ *Avis de loyer impayé - ${agenceNom}*\n\nBonjour *${locataire.prenom} ${locataire.nom}*,\n\nSauf erreur, les loyers suivants restent impayés :\n\n${moisListe}\n\n💰 *Total dû : ${formatGNF(totalDu)}*\n\n⏰ Merci de régulariser votre situation dans les *8 jours*.\n\nPour tout arrangement, contactez-nous :\n📞 ${agence?.telephone || agenceNom}\n\n_${agenceNom}_`,
+        body: `*Avis de loyer impayé - ${agenceNom}*\n\nBonjour *${locataire.prenom} ${locataire.nom}*,\n\nSauf erreur, les loyers suivants restent impayés :\n\n${moisListe}\n\n*Total dû : ${formatMontant(totalDu)}*\n\nMerci de régulariser votre situation dans les *${DELAI_RELANCE_JOURS} jours*.\n\nPour tout arrangement, contactez-nous :\n${agence?.telephone || agenceNom}\n\n_${agenceNom}_`,
       },
     }
 
@@ -36,14 +46,14 @@ export async function POST(req: Request) {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(messageBody),
       }
     )
 
     const data = await res.json()
-    if (!res.ok) return NextResponse.json({ error: data }, { status: 400 })
+    if (!res.ok) return NextResponse.json({ error: 'Échec envoi WhatsApp' }, { status: 400 })
     return NextResponse.json({ success: true, data })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

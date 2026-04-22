@@ -1,29 +1,37 @@
 import { NextResponse } from 'next/server'
-
-const formatGNF = (n: number) =>
-  n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' GNF'
+import { quittanceBodySchema } from '@/lib/schemas'
+import { formatMontant } from '@/lib/utils'
 
 export async function POST(req: Request) {
   try {
-    const { locataire, paiement, bien, agence } = await req.json()
+    const body = await req.json()
+    const parsed = quittanceBodySchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    }
+
+    const { locataire, paiement, bien, agence } = parsed.data
 
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })
     }
 
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN!
-    const agenceNom = agence?.nom_agence || 'CASA CHAMS'
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN
+    if (!phoneNumberId || !accessToken) {
+      return NextResponse.json({ error: 'Configuration WhatsApp manquante' }, { status: 500 })
+    }
 
-    // Formatage du numéro : supprimer le + et les espaces
+    const agenceNom = agence?.nom_agence || 'Votre Agence'
     const to = locataire.telephone.replace(/[\s+]/g, '')
 
-    const body = {
+    const messageBody = {
       messaging_product: 'whatsapp',
       to,
       type: 'text',
       text: {
-        body: `✅ *Quittance de loyer - ${agenceNom}*\n\nBonjour *${locataire.prenom} ${locataire.nom}*,\n\nNous confirmons la réception de votre paiement :\n\n📅 Période : ${paiement.mois_concerne}\n💰 Montant : *${formatGNF(paiement.montant)}*\n🏠 Bien : ${bien?.nom || '-'}\n📍 Adresse : ${bien?.adresse || '-'}\n\nMerci de votre confiance.\n\n_${agenceNom}_`,
+        body: `*Quittance de loyer - ${agenceNom}*\n\nBonjour *${locataire.prenom} ${locataire.nom}*,\n\nNous confirmons la réception de votre paiement :\n\nPériode : ${paiement.mois_concerne}\nMontant : *${formatMontant(paiement.montant)}*\nBien : ${bien?.nom || '-'}\nAdresse : ${bien?.adresse || '-'}\n\nMerci de votre confiance.\n\n_${agenceNom}_`,
       },
     }
 
@@ -35,14 +43,14 @@ export async function POST(req: Request) {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(messageBody),
       }
     )
 
     const data = await res.json()
-    if (!res.ok) return NextResponse.json({ error: data }, { status: 400 })
+    if (!res.ok) return NextResponse.json({ error: 'Échec envoi WhatsApp' }, { status: 400 })
     return NextResponse.json({ success: true, data })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
