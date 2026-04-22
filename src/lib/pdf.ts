@@ -80,34 +80,48 @@ export async function genererQuittance(paiement: any) {
 
   const finalY = (doc as any).lastAutoTable.finalY || 160
 
-  // Mention légale
-  doc.setFillColor(249, 250, 251)
-  doc.rect(20, finalY + 10, 170, 30, 'F')
+  // Mention légale — bloc dynamique
   doc.setFontSize(9)
+  const lh = 7
+  const maxW = 158
+  const l1 = 'Je soussigné(e), bailleur du logement désigné ci-dessus, reconnais avoir reçu'
+  const l2 = doc.splitTextToSize(
+    `la somme de ${formatMontantPDF(paiement.montant)} au titre du loyer et des charges du mois de ${paiement.mois_concerne}.`,
+    maxW
+  )
+  const l3 = 'Et lui en donne quittance, sous réserve de tous mes droits.'
+  const totalLines = 1 + l2.length + 1
+  const blockH = 10 + totalLines * lh + 4
+
+  doc.setFillColor(249, 250, 251)
+  doc.rect(20, finalY + 10, 170, blockH, 'F')
   doc.setTextColor(100, 100, 100)
-  doc.text('Je soussigné(e), bailleur du logement désigné ci-dessus, reconnais avoir reçu', 105, finalY + 22, { align: 'center' })
-  doc.text(`la somme de ${formatMontantPDF(paiement.montant)} au titre du loyer et des charges du mois de ${paiement.mois_concerne}.`, 105, finalY + 29, { align: 'center' })
-  doc.text('Et lui en donne quittance, sous réserve de tous mes droits.', 105, finalY + 36, { align: 'center' })
+
+  let ty = finalY + 20
+  doc.text(l1, 105, ty, { align: 'center' })
+  ty += lh
+  doc.text(l2, 105, ty, { align: 'center' })
+  ty += l2.length * lh
+  doc.text(l3, 105, ty, { align: 'center' })
+
+  const blockEndY = finalY + 10 + blockH
 
   // Date et signature
   const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
-  // Ligne de séparation
   doc.setDrawColor(220, 220, 220)
   doc.setLineWidth(0.3)
-  doc.line(20, finalY + 48, 190, finalY + 48)
+  doc.line(20, blockEndY + 8, 190, blockEndY + 8)
 
   doc.setFontSize(10)
   doc.setTextColor(0, 0, 0)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Fait à Conakry, le ${today}`, 20, finalY + 60)
+  doc.text(`Fait à Conakry, le ${today}`, 20, blockEndY + 20)
 
-  // Zone signature bailleur (x=130 à x=190, centre=160)
   doc.setFont('helvetica', 'bold')
-  doc.text('Signature du bailleur :', 160, finalY + 60, { align: 'center' })
+  doc.text('Signature du bailleur :', 160, blockEndY + 20, { align: 'center' })
   if (cachetBase64) {
-    // Centré sur x=160, largeur 48 → x_start = 136
-    doc.addImage(cachetBase64, 'PNG', 136, finalY + 63, 48, 44)
+    doc.addImage(cachetBase64, 'PNG', 136, blockEndY + 23, 48, 44)
   }
 
   // Pied de page
