@@ -17,7 +17,7 @@ export async function genererQuittance(paiement: any) {
 
   let cachetBase64: string | null = null
   try {
-    cachetBase64 = await loadImageAsBase64('/innovea_cachet.jpeg')
+    cachetBase64 = await loadImageAsBase64('/innovea_cachet.png')
   } catch {
     // continue sans cachet
   }
@@ -98,7 +98,7 @@ export async function genererQuittance(paiement: any) {
   doc.setFont('helvetica', 'bold')
   doc.text('Signature du bailleur :', 130, finalY + 55)
   if (cachetBase64) {
-    doc.addImage(cachetBase64, 'JPEG', 128, finalY + 58, 42, 38)
+    doc.addImage(cachetBase64, 'PNG', 128, finalY + 58, 42, 38)
   }
 
   // Pied de page
