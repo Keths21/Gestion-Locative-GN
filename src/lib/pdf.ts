@@ -1,8 +1,26 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
-export function genererQuittance(paiement: any) {
+async function loadImageAsBase64(url: string): Promise<string> {
+  const response = await fetch(url)
+  const blob = await response.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+export async function genererQuittance(paiement: any) {
   const doc = new jsPDF()
+
+  let cachetBase64: string | null = null
+  try {
+    cachetBase64 = await loadImageAsBase64('/innovea_cachet.jpeg')
+  } catch {
+    // continue sans cachet
+  }
   const locataire = paiement.locataire
   const bien = paiement.bien
 
@@ -79,7 +97,9 @@ export function genererQuittance(paiement: any) {
 
   doc.setFont('helvetica', 'bold')
   doc.text('Signature du bailleur :', 130, finalY + 55)
-  doc.line(130, finalY + 70, 190, finalY + 70)
+  if (cachetBase64) {
+    doc.addImage(cachetBase64, 'JPEG', 128, finalY + 58, 42, 38)
+  }
 
   // Pied de page
   doc.setFontSize(8)

@@ -123,8 +123,8 @@ export default function PaiementsPage() {
     fetchData()
   }
 
-  const handleQuittance = (paiement: Paiement) => {
-    genererQuittance(paiement)
+  const handleQuittance = async (paiement: Paiement) => {
+    await genererQuittance(paiement)
     toast.success('Quittance générée !')
   }
 
