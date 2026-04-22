@@ -38,10 +38,19 @@ export default function RegisterPage() {
   if (success) return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
-        <div className="text-green-500 text-5xl mb-4">✅</div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Compte créé !</h2>
-        <p className="text-gray-500 text-sm mb-6">Vérifiez votre email pour confirmer votre compte.</p>
-        <Link href="/login" className="text-blue-600 hover:underline font-medium">
+        <div className="flex justify-center mb-4">
+          <div className="bg-green-100 p-4 rounded-full">
+            <div className="text-green-600 text-3xl">✓</div>
+          </div>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Compte créé avec succès !</h2>
+        <p className="text-gray-500 text-sm mb-2">
+          Vérifiez votre email pour confirmer votre adresse.
+        </p>
+        <p className="text-gray-500 text-sm mb-6">
+          Votre compte sera ensuite examiné par un administrateur avant que vous puissiez accéder à la plateforme.
+        </p>
+        <Link href="/login" className="text-blue-600 hover:underline font-medium text-sm">
           Retour à la connexion
         </Link>
       </div>

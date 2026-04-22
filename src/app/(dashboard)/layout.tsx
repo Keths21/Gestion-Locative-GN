@@ -1,11 +1,11 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, Building2, Users, CreditCard, 
-  FileText, Bell, Settings, LogOut, Menu, X
+import {
+  LayoutDashboard, Building2, Users, CreditCard,
+  FileText, Bell, Settings, LogOut, Menu, X, Shield
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -23,8 +23,17 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('profiles').select('role').eq('id', user.id).single()
+        .then(({ data }) => setIsAdmin(data?.role === 'admin'))
+    })
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -75,6 +84,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               )
             })}
+
+            {isAdmin && (
+              <>
+                <div className="pt-3 pb-1">
+                  <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
+                </div>
+                <Link
+                  href="/admin/users"
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    pathname.startsWith('/admin')
+                      ? "bg-purple-600 text-white"
+                      : "text-purple-700 hover:bg-purple-50"
+                  )}
+                >
+                  <Shield className="h-5 w-5 flex-shrink-0" />
+                  Utilisateurs
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Logout */}
