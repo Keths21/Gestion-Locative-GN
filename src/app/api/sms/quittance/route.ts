@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { quittanceBodySchema } from '@/lib/schemas'
-import { formatMontant } from '@/lib/utils'
 
 export async function POST(req: Request) {
   try {
@@ -23,17 +22,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Configuration Africa\'s Talking manquante' }, { status: 500 })
     }
 
-    const agenceNom = agence?.nom_agence || 'Votre Agence'
-    const message = `Quittance de loyer
-${agenceNom}
+    const agence_nom = (agence?.nom_agence || 'CasaChams').substring(0, 12)
+    const prenom = locataire.prenom.substring(0, 12)
+    const nom = locataire.nom.substring(0, 15)
+    const contact = agence?.telephone || agence_nom
+    const montantFG = Math.round(paiement.montant || 0) + 'FG'
 
-Bonjour ${locataire.prenom} ${locataire.nom},
-Paiement recu pour ${paiement.mois_concerne}.
-Montant : ${formatMontant(paiement.montant)}
-Bien : ${bien?.nom || '-'}
-
-Merci de votre confiance.
-${agenceNom}`
+    const message = `Quittance ${agence_nom}\nBj ${prenom} ${nom}, paiement recu.\nMois: ${paiement.mois_concerne} | ${montantFG}\nMerci. Contact: ${contact}`
 
     const isSandbox = process.env.AFRICASTALKING_SANDBOX === 'true'
     const url = isSandbox

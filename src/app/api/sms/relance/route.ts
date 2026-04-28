@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { relanceBodySchema } from '@/lib/schemas'
-import { formatMontant } from '@/lib/utils'
+import { formatMontantSMS } from '@/lib/utils'
 import { DELAI_RELANCE_JOURS } from '@/lib/constants'
 
 async function sendViaNimbaSMS(message: string, telephone: string, senderName: string) {
@@ -68,22 +68,22 @@ export async function POST(req: Request) {
     }
 
     const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
-    const agenceNom = agence?.nom_agence || 'Votre Agence'
-    const moisListe = paiements.map((p) => `- ${p.mois_concerne} : ${formatMontant(p.montant)}`).join('\n')
+    const agence_nom = (agence?.nom_agence || 'CasaChams').substring(0, 12)
+    const prenom = locataire.prenom.substring(0, 12)
+    const nom = locataire.nom.substring(0, 15)
+    const contact = agence?.telephone || agence_nom
 
-    const message = `Avis d'impaye ${agenceNom}
+    // Format détaillé (1 ligne par mois)
+    const moisListe = paiements.map(p => `${p.mois_concerne}: ${formatMontantSMS(p.montant)}`).join('\n')
+    const messageFull = `Avis impaye ${agence_nom}\nBj ${prenom} ${nom}, Impayes:\n${moisListe}\nTotal: ${formatMontantSMS(totalDu)}\nPayer sous ${DELAI_RELANCE_JOURS}j.\nContact: ${contact}`
 
-Bonjour ${locataire.prenom} ${locataire.nom},
-Loyer(s) impaye(s) :
-${moisListe}
+    // Format résumé si le détaillé dépasse 160 chars
+    const messageCompact = `Avis impaye ${agence_nom}\nBj ${prenom} ${nom}, ${paiements.length} mois impayes\nTotal: ${formatMontantSMS(totalDu)}\nPayer sous ${DELAI_RELANCE_JOURS}j.\nContact: ${contact}`
 
-Total du : ${formatMontant(totalDu)}
-
-Merci de regulariser sous ${DELAI_RELANCE_JOURS} jours.
-Contact : ${agence?.telephone || agenceNom}`
+    const message = messageFull.length <= 160 ? messageFull : messageCompact
 
     const provider = process.env.SMS_PROVIDER || 'africastalking'
-    const senderName = process.env.NIMBASMS_SENDER_NAME || agenceNom
+    const senderName = process.env.NIMBASMS_SENDER_NAME || agence_nom
 
     const { ok, text } = provider === 'nimbasms'
       ? await sendViaNimbaSMS(message, locataire.telephone, senderName)

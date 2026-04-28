@@ -37,3 +37,8 @@ export function getMoisActuel() {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
+
+// Format compact pour SMS : sans séparateurs, suffixe FG (ex: 8000000FG)
+export function formatMontantSMS(montant: number): string {
+  return Math.round(montant || 0) + 'FG'
+}
