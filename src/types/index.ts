@@ -46,6 +46,7 @@ export type Locataire = {
   date_entree: string
   date_sortie?: string
   depot_garantie: number
+  derniere_relance?: string | null
   created_at: string
   bien?: Bien
 }
@@ -55,7 +56,7 @@ export type Paiement = {
   locataire_id: string
   bien_id: string
   montant: number
-  date_paiement: string
+  date_paiement: string | null
   mois_concerne: string
   statut: 'payé' | 'en_attente' | 'impayé'
   created_at: string

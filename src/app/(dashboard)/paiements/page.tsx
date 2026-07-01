@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText, Trash2, Moon, Home, TrendingUp, TrendingDown, Hourglass } from 'lucide-react'
+import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText, Trash2, Moon, Home, TrendingUp, TrendingDown, Hourglass, CalendarPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Paiement, Locataire, Bien } from '@/types'
 import { formatMontant, formatDate, getMoisActuel } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { genererQuittance } from '@/lib/pdf'
+import { genererEcheancesMensuelles } from '@/lib/echeances'
 
 const statutConfig: Record<string, { label: string; color: string; next: string }> = {
   'payé':       { label: 'Payé',       color: 'bg-green-100 text-green-700',   next: 'impayé' },
@@ -36,6 +37,7 @@ export default function PaiementsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [modeAirbnb, setModeAirbnb] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const supabase = createClient()
 
   const fetchData = async () => {
@@ -49,7 +51,36 @@ export default function PaiementsPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchData() }, [])
+  // Génère les échéances du mois + promeut les impayés échus.
+  // silent = true : auto au chargement (pas de toast si rien à faire).
+  const runGeneration = async (silent = false) => {
+    setGenerating(true)
+    try {
+      const { crees, promus } = await genererEcheancesMensuelles(supabase)
+      if (!silent) {
+        if (crees || promus) {
+          toast.success(
+            `${crees} loyer(s) généré(s)${promus ? ` · ${promus} passé(s) en impayé` : ''}`
+          )
+        } else {
+          toast.success('Échéances déjà à jour')
+        }
+      }
+      if (crees || promus) await fetchData()
+    } catch {
+      if (!silent) toast.error('Erreur lors de la génération des loyers')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      await runGeneration(true) // génération auto silencieuse
+      await fetchData()
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }))
 
@@ -100,7 +131,26 @@ export default function PaiementsPage() {
       statut: form.statut,
       notes: form.notes || null,
     }
-    const { error } = await supabase.from('paiements').insert(payload)
+
+    // En location mensuelle, une échéance peut déjà exister pour ce mois
+    // (générée automatiquement) : on la met à jour au lieu de créer un doublon.
+    let error: { message: string } | null = null
+    if (!modeAirbnb) {
+      const { data: existant } = await supabase
+        .from('paiements')
+        .select('id')
+        .eq('locataire_id', form.locataire_id)
+        .eq('mois_concerne', moisConcerne)
+        .limit(1)
+      if (existant && existant.length > 0) {
+        ({ error } = await supabase.from('paiements').update(payload).eq('id', existant[0].id))
+      } else {
+        ({ error } = await supabase.from('paiements').insert(payload))
+      }
+    } else {
+      ({ error } = await supabase.from('paiements').insert(payload))
+    }
+
     if (error) { toast.error('Erreur : ' + error.message); setSubmitting(false); return }
     toast.success('Paiement enregistré !')
     setShowModal(false)
@@ -117,9 +167,14 @@ export default function PaiementsPage() {
     fetchData()
   }
 
-  const handleStatutChange = async (id: string, statut: string) => {
-    const next = statutConfig[statut]?.next || 'payé'
-    await supabase.from('paiements').update({ statut: next }).eq('id', id)
+  const handleStatutChange = async (p: Paiement) => {
+    const next = statutConfig[p.statut]?.next || 'payé'
+    const update: Record<string, unknown> = { statut: next }
+    // En passant à "payé", on date l'encaissement si l'échéance n'était pas encore réglée
+    if (next === 'payé' && !p.date_paiement) {
+      update.date_paiement = new Date().toISOString().split('T')[0]
+    }
+    await supabase.from('paiements').update(update).eq('id', p.id)
     fetchData()
   }
 
@@ -147,10 +202,18 @@ export default function PaiementsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Paiements</h1>
           <p className="text-gray-500 mt-1">{paiements.length} paiement(s) enregistré(s)</p>
         </div>
-        <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-          <Plus className="h-4 w-4" /> Enregistrer un paiement
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => runGeneration(false)} disabled={generating}
+            title="Créer les échéances de loyer du mois pour les locataires mensuels"
+            className="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition text-sm font-medium disabled:opacity-50">
+            <CalendarPlus className={`h-4 w-4 ${generating ? 'animate-pulse' : ''}`} />
+            {generating ? 'Génération...' : 'Générer les loyers'}
+          </button>
+          <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+            <Plus className="h-4 w-4" /> Enregistrer un paiement
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -247,10 +310,14 @@ export default function PaiementsPage() {
                         ? p.mois_concerne
                         : p.mois_concerne}
                     </td>
-                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">{formatDate(p.date_paiement)}</td>
+                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">
+                      {p.date_paiement
+                        ? formatDate(p.date_paiement)
+                        : <span className="italic text-gray-300">Non réglé</span>}
+                    </td>
                     <td className="px-5 py-3.5">
                       <button
-                        onClick={() => handleStatutChange(p.id, p.statut)}
+                        onClick={() => handleStatutChange(p)}
                         title="Cliquer pour changer le statut"
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${s.color}`}>
                         {p.statut === 'payé' && <CheckCircle className="h-3 w-3" />}

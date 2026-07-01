@@ -8,9 +8,11 @@ export const locataireSchema = z.object({
 })
 
 export const paiementSchema = z.object({
-  montant: z.number().positive(),
+  // montant peut arriver en string depuis la base (numeric) → on coerce
+  montant: z.coerce.number().positive(),
   mois_concerne: z.string().min(1),
-  date_paiement: z.string().min(1),
+  // Un impayé (échéance non réglée) n'a pas de date de paiement
+  date_paiement: z.string().min(1).optional().nullable(),
 })
 
 export const bienSchema = z.object({

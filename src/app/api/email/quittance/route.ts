@@ -38,7 +38,7 @@ export async function POST(req: Request) {
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;text-align:center">
               <p style="margin:0;color:#15803d;font-size:14px">Montant reçu</p>
               <p style="margin:8px 0 0;color:#15803d;font-size:28px;font-weight:700">${formatMontant(paiement.montant)}</p>
-              <p style="margin:4px 0 0;color:#86efac;font-size:12px">Payé le ${new Date(paiement.date_paiement).toLocaleDateString('fr-FR')}</p>
+              <p style="margin:4px 0 0;color:#86efac;font-size:12px">Payé le ${new Date(paiement.date_paiement || Date.now()).toLocaleDateString('fr-FR')}</p>
             </div>
             <table style="width:100%;border-collapse:collapse;font-size:13px">
               <tr><td style="padding:6px 0;color:#6b7280">Bien loué</td><td style="text-align:right;font-weight:600">${bien?.nom || '-'}</td></tr>
