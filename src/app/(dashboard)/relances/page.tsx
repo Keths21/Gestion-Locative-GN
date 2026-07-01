@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Bell, Mail, AlertTriangle, CheckCircle, Send, RefreshCw } from 'lucide-react'
+import { Bell, Mail, Phone, AlertTriangle, CheckCircle, Send, RefreshCw, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { formatMontant } from '@/lib/utils'
+import { envoyerRelanceMultiCanal, estRelancable } from '@/lib/relances'
 import toast from 'react-hot-toast'
 
 type LocataireImpayes = {
@@ -11,10 +12,26 @@ type LocataireImpayes = {
   total: number
 }
 
+function joursDepuis(iso: string): string {
+  const jours = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+  if (jours <= 0) return "aujourd'hui"
+  if (jours === 1) return 'il y a 1 jour'
+  return `il y a ${jours} jours`
+}
+
+// Suffixe indiquant les canaux qui seront utilisés, ex: " (SMS + email)"
+function canauxDispo(loc: { email?: string | null; telephone?: string | null }): string {
+  const canaux = []
+  if (loc.telephone) canaux.push('SMS')
+  if (loc.email) canaux.push('email')
+  return canaux.length ? ` (${canaux.join(' + ')})` : ''
+}
+
 export default function RelancesPage() {
   const [impayes, setImpayes] = useState<LocataireImpayes[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState<string | null>(null)
+  const [bulkSending, setBulkSending] = useState(false)
   const [agence, setAgence] = useState<any>(null)
   const supabase = createClient()
 
@@ -44,29 +61,58 @@ export default function RelancesPage() {
 
   useEffect(() => { fetchData() }, [])
 
+  const marquerRelance = async (locId: string) => {
+    await supabase.from('locataires').update({ derniere_relance: new Date().toISOString() }).eq('id', locId)
+  }
+
+  // Relance d'un locataire sur tous ses canaux disponibles (email + SMS)
   const envoyerRelance = async (item: LocataireImpayes) => {
-    if (!item.locataire.email) {
-      toast.error('Ce locataire n\'a pas d\'email enregistré')
+    if (!item.locataire.email && !item.locataire.telephone) {
+      toast.error('Ce locataire n\'a ni email ni téléphone')
       return
     }
     setSending(item.locataire.id)
     try {
-      const res = await fetch('/api/email/relance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locataire: item.locataire, paiements: item.paiements, agence })
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error.message || 'Erreur')
-      toast.success(`Relance envoyée à ${item.locataire.email} !`)
-    } catch (err: any) {
-      toast.error(err.message || 'Erreur lors de l\'envoi')
+      const results = await envoyerRelanceMultiCanal(item, agence)
+      const ok = results.filter(r => r.ok)
+      const ko = results.filter(r => !r.ok)
+      if (ok.length > 0) {
+        await marquerRelance(item.locataire.id)
+        const canaux = ok.map(r => (r.canal === 'sms' ? 'SMS' : 'email')).join(' + ')
+        toast.success(`Relance envoyée (${canaux})`)
+      }
+      if (ko.length > 0) {
+        toast.error(ok.length === 0
+          ? (ko[0].error || 'Échec de l\'envoi')
+          : `Échec partiel : ${ko.map(r => r.canal).join(', ')}`)
+      }
     } finally {
       setSending(null)
+      fetchData()
     }
   }
 
+  // Relance groupée : tous les impayés éligibles (non relancés depuis DELAI_RELANCE_JOURS)
+  const relancerTous = async () => {
+    const cibles = impayes.filter(i => estRelancable(i.locataire))
+    if (cibles.length === 0) return
+    setBulkSending(true)
+    let tenants = 0, sms = 0, email = 0, fails = 0
+    for (const item of cibles) {
+      const results = await envoyerRelanceMultiCanal(item, agence)
+      const ok = results.filter(r => r.ok)
+      ok.forEach(r => { if (r.canal === 'sms') sms++; else email++ })
+      fails += results.filter(r => !r.ok).length
+      if (ok.length > 0) { tenants++; await marquerRelance(item.locataire.id) }
+    }
+    if (tenants > 0) toast.success(`${tenants} locataire(s) relancé(s) — ${sms} SMS, ${email} email`)
+    if (fails > 0) toast.error(`${fails} envoi(s) en échec`)
+    setBulkSending(false)
+    fetchData()
+  }
+
   const totalImpayes = impayes.reduce((s, i) => s + i.total, 0)
+  const eligibles = impayes.filter(i => estRelancable(i.locataire))
 
   return (
     <div className="space-y-6">
@@ -75,9 +121,18 @@ export default function RelancesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Relances</h1>
           <p className="text-gray-500 mt-1">{impayes.length} locataire(s) avec impayés</p>
         </div>
-        <button onClick={fetchData} className="flex items-center gap-2 text-sm text-gray-600 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
-          <RefreshCw className="h-4 w-4" /> Actualiser
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={fetchData} className="flex items-center gap-2 text-sm text-gray-600 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+            <RefreshCw className="h-4 w-4" /> Actualiser
+          </button>
+          <button onClick={relancerTous} disabled={bulkSending || eligibles.length === 0}
+            title={eligibles.length === 0 ? 'Aucun locataire à relancer (déjà relancés récemment ou sans contact)' : 'Envoyer une relance SMS + email à tous les impayés éligibles'}
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            {bulkSending
+              ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi en cours...</>
+              : <><Zap className="h-4 w-4" /> Relancer tous les impayés ({eligibles.length})</>}
+          </button>
+        </div>
       </div>
 
       {/* Résumé */}
@@ -132,10 +187,22 @@ export default function RelancesPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">{item.locataire.prenom} {item.locataire.nom}</p>
-                    <p className="text-xs text-gray-400 flex items-center gap-1">
-                      <Mail className="h-3 w-3" />
-                      {item.locataire.email || <span className="text-red-400">Pas d&apos;email</span>}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {item.locataire.email || <span className="text-gray-300">—</span>}
+                      </span>
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {item.locataire.telephone || <span className="text-gray-300">—</span>}
+                      </span>
+                      {item.locataire.derniere_relance && (
+                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                          <Bell className="h-3 w-3" />
+                          Relancé {joursDepuis(item.locataire.derniere_relance)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -159,15 +226,18 @@ export default function RelancesPage() {
               <div className="px-5 py-3 flex gap-3">
                 <button
                   onClick={() => envoyerRelance(item)}
-                  disabled={sending === item.locataire.id || !item.locataire.email}
+                  disabled={sending === item.locataire.id || (!item.locataire.email && !item.locataire.telephone)}
+                  title={!item.locataire.email && !item.locataire.telephone ? 'Aucun email ni téléphone' : 'Envoyer par SMS et/ou email'}
                   className="flex items-center gap-2 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sending === item.locataire.id
                     ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi...</>
-                    : <><Send className="h-4 w-4" /> Envoyer relance par email</>
+                    : <><Send className="h-4 w-4" /> Relancer{canauxDispo(item.locataire)}</>
                   }
                 </button>
-                <button className="flex items-center gap-2 text-sm border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-gray-600">
+                <button
+                  onClick={async () => { await marquerRelance(item.locataire.id); toast.success('Marqué comme contacté'); fetchData() }}
+                  className="flex items-center gap-2 text-sm border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-gray-600">
                   <Bell className="h-4 w-4" /> Marquer comme contacté
                 </button>
               </div>
