@@ -1,0 +1,23 @@
+{
+  "name": "CASA CHAMS — Cartographie foncière",
+  "short_name": "CASA CHAMS",
+  "description": "Cartographier, mesurer et suivre ses parcelles, même sans réseau.",
+  "start_url": "/carte",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "navigation"],
+  "icons": [
+    { "src": "/icons/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Carte", "url": "/carte" },
+    { "name": "Parcelles", "url": "/parcelles" }
+  ]
+}

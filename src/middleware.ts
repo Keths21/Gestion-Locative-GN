@@ -108,6 +108,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Le service worker, le manifeste, les icônes et la page de repli doivent
+     * rester joignables sans session : sans cette exclusion, le contrôle
+     * d'authentification intercepte /sw.js, le worker ne s'installe jamais, et
+     * l'application ne démarre pas hors connexion. Le défaut est invisible
+     * tant qu'on teste en ligne.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|icons/|hors-ligne|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

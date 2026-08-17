@@ -18,6 +18,7 @@ import PanneauParcelle from '@/components/parcelles/PanneauParcelle'
 import DetailParcelle from '@/components/parcelles/DetailParcelle'
 import OutilCoordonnees from '@/components/parcelles/OutilCoordonnees'
 import OutilReleveGps from '@/components/parcelles/OutilReleveGps'
+import BarreEtatSync from '@/components/parcelles/BarreEtatSync'
 import type { PoigneeCarte } from '@/components/parcelles/CarteParcelles'
 import { FONDS, type CleFond } from '@/lib/fonds-carte'
 import { formaterSuperficie } from '@/lib/geo'
@@ -103,6 +104,11 @@ function Carte() {
           </div>
         </div>
       )}
+
+      {/* État de la synchronisation */}
+      <div className="absolute left-2 top-2 z-[1000] rounded-lg bg-white/95 shadow-lg backdrop-blur">
+        <BarreEtatSync />
+      </div>
 
       {/* Contrôles de couches */}
       <div className="absolute right-2 top-16 z-[1000] flex flex-col gap-2">

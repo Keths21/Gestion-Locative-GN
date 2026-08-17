@@ -2,18 +2,26 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import EnregistrementSW from '@/components/parcelles/EnregistrementSW'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'CASA CHAMS - Gestion Locative',
   description: 'Application de gestion locative immobilière pour la Guinée',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'CASA CHAMS', statusBarStyle: 'default' },
+}
+
+export const viewport = {
+  themeColor: '#2563eb',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
       <body className={inter.className}>
+        <EnregistrementSW />
         {children}
         <Toaster position="top-right" toastOptions={{
           duration: 3000,

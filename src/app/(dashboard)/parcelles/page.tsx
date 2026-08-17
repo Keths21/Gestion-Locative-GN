@@ -6,6 +6,7 @@ import { ChevronRight, Download, Link2, Map, Search, TriangleAlert, Upload, X } 
 import { FournisseurParcelles, useMagasin } from '@/components/parcelles/MagasinParcelles'
 import ImportParcelles from '@/components/parcelles/ImportParcelles'
 import DetailParcelle from '@/components/parcelles/DetailParcelle'
+import BarreEtatSync from '@/components/parcelles/BarreEtatSync'
 import { formaterSuperficie } from '@/lib/geo'
 import { formatMontant } from '@/lib/utils'
 import {
@@ -55,7 +56,10 @@ function Liste() {
     <div className="p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Parcelles</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">Parcelles</h1>
+            <BarreEtatSync />
+          </div>
           <p className="mt-1 text-sm text-gray-500">
             {filtrees.length} parcelle(s) · {formaterSuperficie(total)} au total
           </p>
