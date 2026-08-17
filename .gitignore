@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# reprise depuis CartographieBiens : données réelles, jamais versionnées
+/carto-export.json
+/carto-documents.tar.gz
+/documents/
+
 # vercel
 .vercel
 
