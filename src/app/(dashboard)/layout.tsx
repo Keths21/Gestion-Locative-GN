@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Building2, Users, CreditCard,
-  FileText, Bell, Settings, LogOut, Menu, X, Shield
+  FileText, Bell, Settings, LogOut, Menu, X, Shield, Map, LandPlot
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,8 @@ const navItems = [
   { href: '/biens', label: 'Biens', icon: Building2 },
   { href: '/locataires', label: 'Locataires', icon: Users },
   { href: '/paiements', label: 'Paiements', icon: CreditCard },
+  { href: '/carte', label: 'Carte', icon: Map },
+  { href: '/parcelles', label: 'Parcelles', icon: LandPlot },
   { href: '/documents', label: 'Documents', icon: FileText },
   { href: '/relances', label: 'Relances', icon: Bell },
   { href: '/parametres', label: 'Paramètres', icon: Settings },
