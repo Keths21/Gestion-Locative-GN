@@ -1,3 +1,10 @@
+-- ⚠️  Ce fichier décrit l'état initial du schéma et n'est plus la référence.
+--     Depuis le 16/08/2026, les évolutions sont versionnées dans
+--     supabase/migrations/ et appliquées dans l'ordre des noms de fichiers.
+--     En particulier, l'isolation RLS n'est plus « auth.uid() = user_id »
+--     mais l'appartenance à une organisation — voir
+--     20260816090100_rls_par_organisation.sql.
+
 -- Table des biens immobiliers
 CREATE TABLE biens (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
