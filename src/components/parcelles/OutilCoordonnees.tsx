@@ -232,7 +232,7 @@ export default function OutilCoordonnees({
           </div>
         </div>
 
-        <footer className="shrink-0 border-t border-gray-200 px-5 py-4">
+        <footer className="marge-bas-sure shrink-0 border-t border-gray-200 px-5 py-4">
           <button
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={!polygone || !simple}

@@ -69,6 +69,19 @@ textarea {
   font-family: inherit;
 }
 
+/* Application installée : réserve la barre d'accueil du téléphone, sinon le
+   dernier bouton d'une feuille glissante tombe sous la zone tactile système. */
+.marge-bas-sure {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* En plein écran, la carte ne doit pas rebondir au défilement : le geste
+   appartient à Leaflet, pas au navigateur. */
+.leaflet-container {
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: #9ca3af;

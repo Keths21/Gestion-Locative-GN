@@ -91,7 +91,7 @@ export default function OutilReleveGps({
     qualite === 'bonne' ? 'text-green-600' : qualite === 'moyenne' ? 'text-amber-600' : 'text-red-600'
 
   return (
-    <div className="pointer-events-auto absolute inset-x-2 bottom-2 z-[1000] rounded-2xl border border-gray-200 bg-white/97 p-3 shadow-2xl backdrop-blur sm:inset-x-auto sm:left-4 sm:w-96">
+    <div className="marge-bas-sure pointer-events-auto absolute inset-x-2 bottom-2 z-[1000] rounded-2xl border border-gray-200 bg-white/97 p-3 shadow-2xl backdrop-blur sm:inset-x-auto sm:left-4 sm:w-96">
       <div className="mb-3 flex items-start justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Relevé GPS sur le terrain</h3>

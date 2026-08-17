@@ -307,7 +307,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
           )}
         </div>
 
-        <footer className="flex shrink-0 items-center gap-3 border-t border-gray-200 px-5 py-4">
+        <footer className="marge-bas-sure flex shrink-0 items-center gap-3 border-t border-gray-200 px-5 py-4">
           {ecriture && (
             <span className="text-xs tabular-nums text-gray-500">
               {progression} / {total}

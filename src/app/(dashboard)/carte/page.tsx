@@ -71,7 +71,7 @@ function Carte() {
   )
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       <CarteParcelles
         ref={carte}
         parcelles={parcelles}
@@ -88,7 +88,7 @@ function Carte() {
 
       {/* Bandeau d'état */}
       {(chargement || message || mode !== 'navigation') && (
-        <div className="pointer-events-none absolute inset-x-0 top-2 z-[1100] flex justify-center px-2">
+        <div className="pointer-events-none absolute inset-x-0 top-2 z-[1000] flex justify-center px-2">
           <div
             className={`rounded-full px-4 py-1.5 text-xs font-medium shadow-lg ${
               message ? 'bg-red-600 text-white' : 'bg-gray-900/85 text-white'
@@ -136,7 +136,7 @@ function Carte() {
       </div>
 
       {couches && (
-        <div className="absolute right-14 top-16 z-[1100] w-56 rounded-xl bg-white p-3 shadow-xl">
+        <div className="absolute right-14 top-16 z-[1000] w-56 rounded-xl bg-white p-3 shadow-xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
             Fond de carte
           </p>
@@ -179,7 +179,10 @@ function Carte() {
       )}
 
       {/* Menu d'ajout */}
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col items-end gap-2">
+      <div
+        className="absolute right-4 z-[1000] flex flex-col items-end gap-2"
+        style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         {menuAjout && (
           <>
             <BoutonAjout

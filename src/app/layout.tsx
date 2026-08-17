@@ -15,6 +15,9 @@ export const metadata: Metadata = {
 
 export const viewport = {
   themeColor: '#2563eb',
+  // Nécessaire pour que env(safe-area-inset-*) soit non nul : sans cela,
+  // l'application installée passe sous l'encoche et la barre d'accueil.
+  viewportFit: 'cover' as const,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

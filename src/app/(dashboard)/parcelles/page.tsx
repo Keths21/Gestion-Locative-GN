@@ -53,7 +53,7 @@ function Liste() {
   const sansTrace = filtrees.filter((p) => !p.geom).length
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ function Liste() {
               </div>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <div className="marge-bas-sure min-h-0 flex-1 overflow-y-auto px-5 py-4">
               <DetailParcelle
                 parcelle={selection}
                 enLigne={enLigne}

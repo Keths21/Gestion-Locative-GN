@@ -77,7 +77,7 @@ export default function PanneauParcelle({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
+      <div className="marge-bas-sure min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
     </section>
   )
 }

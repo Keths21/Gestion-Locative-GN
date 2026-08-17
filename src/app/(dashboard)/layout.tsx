@@ -42,11 +42,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/login')
   }
 
+  // La carte occupe tout l'espace : ni marge intérieure, ni défilement.
+  const pleinEcran = pathname === '/carte'
+
+  /*
+   * Échelle d'empilement de l'application :
+   *   Leaflet et ses contrôles      jusqu'à ~800 (imposé par la bibliothèque)
+   *   surcouches de la carte        900 – 1000
+   *   habillage (en-tête, menu)     1100 – 1200   ← doit rester au-dessus
+   *   tiroirs et fenêtres modales   1500 +
+   *
+   * Le menu était en z-50, donc sous les contrôles de carte : il s'ouvrait
+   * bel et bien, mais derrière la carte, et paraissait inaccessible.
+   */
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto",
+        "fixed inset-y-0 left-0 z-[1200] w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
@@ -124,17 +137,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Overlay mobile */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/50 z-[1150] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header mobile */}
-        <header className="lg:hidden bg-white shadow-sm p-4 flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(true)}>
+        {/* Header mobile — au-dessus de la carte, et respectant l'encoche
+            de l'écran quand l'application est installée. */}
+        <header
+          className="lg:hidden relative z-[1100] shrink-0 bg-white shadow-sm p-4 flex items-center gap-4"
+          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+        >
+          <button onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center gap-2">
@@ -144,7 +161,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className={cn(
+          "flex-1 min-h-0",
+          pleinEcran ? "overflow-hidden" : "p-6 overflow-auto"
+        )}>
           {children}
         </main>
       </div>
