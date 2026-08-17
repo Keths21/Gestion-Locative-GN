@@ -1,16 +1,22 @@
 import { createServerSupabase, lireSession, peutEcrire } from '@/lib/supabase-server'
 import { enregistrerParcelle, journaliser } from '@/lib/parcelles'
 import { parcelleSchema } from '@/lib/schemas'
-import { polygoneEstSimple } from '@/lib/geo'
+import { analyserFichier } from '@/lib/import-parcelles'
 import { erreur, gerer, ok } from '@/lib/api'
-import type { PolygoneGeoJSON } from '@/types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const TAILLE_MAX = 10 * 1024 * 1024
 
-/** Import GeoJSON ou KML : chaque polygone devient une parcelle. */
+/**
+ * Import GeoJSON, KML ou GPX.
+ *
+ * L'analyse est déléguée à lib/import-parcelles, le même module que celui qui
+ * alimente l'aperçu dans l'interface : ce qui est montré à l'écran avant
+ * confirmation est donc exactement ce que produit cette route. Cette voie
+ * reste utile pour un import en ligne de commande ou depuis un script.
+ */
 export async function POST(req: Request) {
   try {
     const supabase = await createServerSupabase()
@@ -23,111 +29,56 @@ export async function POST(req: Request) {
     if (!(recu instanceof File)) return erreur('Aucun fichier reçu.', 400)
     if (recu.size > TAILLE_MAX) return erreur('Fichier trop volumineux (10 Mo maximum).', 413)
 
-    const texte = await recu.text()
-    const entrees = recu.name.toLowerCase().endsWith('.kml')
-      ? depuisKml(texte)
-      : depuisGeoJson(texte)
-
-    if (!entrees.length) return erreur('Aucun polygone exploitable dans ce fichier.', 422)
+    const rapport = analyserFichier(recu.name, await recu.text())
+    if (!rapport.parcelles.length) {
+      return erreur('Aucune parcelle exploitable dans ce fichier.', 422)
+    }
 
     const crees: string[] = []
-    const ignores: string[] = []
+    const ignores = rapport.ignores.map((i) => `${i.source} : ${i.motif}`)
 
-    for (const e of entrees) {
-      if (!polygoneEstSimple(e.geom)) {
-        ignores.push(`${e.nom} : tracé auto-sécant`)
-        continue
-      }
+    for (const p of rapport.parcelles) {
       try {
         const parcelle = await enregistrerParcelle(
           supabase,
           parcelleSchema.parse({
-            nom: e.nom,
-            source_trace: 'import',
-            geom: e.geom,
-            description: e.description ?? null,
+            nom: p.nom,
+            reference: p.reference,
+            type: p.type,
+            statut: p.statut,
+            statut_juridique: p.statut_juridique,
+            description: p.description,
+            region: p.region,
+            prefecture: p.prefecture,
+            commune: p.commune,
+            quartier: p.quartier,
+            adresse: p.adresse,
+            geom: p.geom,
+            point_geom: p.point_geom,
+            superficie_declaree_m2: p.superficie_declaree_m2,
+            prix_achat: p.prix_achat,
+            valeur_estimee: p.valeur_estimee,
+            date_acquisition: p.date_acquisition,
+            proprietaire: p.proprietaire,
+            occupant: p.occupant,
+            contact_telephone: p.contact_telephone,
+            source_trace: p.source_trace,
           })
         )
         crees.push(parcelle.id)
       } catch (err) {
-        ignores.push(`${e.nom} : ${err instanceof Error ? err.message : 'erreur'}`)
+        ignores.push(`${p.nom} : ${err instanceof Error ? err.message : 'erreur'}`)
       }
     }
 
-    await journaliser(supabase, null, 'import', { fichier: recu.name, crees: crees.length })
-    return ok({ crees: crees.length, ignores })
+    await journaliser(supabase, null, 'import', {
+      fichier: recu.name,
+      format: rapport.format,
+      crees: crees.length,
+    })
+
+    return ok({ format: rapport.format, crees: crees.length, ignores })
   } catch (e) {
     return gerer(e)
   }
-}
-
-interface EntreeImport {
-  nom: string
-  description?: string | null
-  geom: PolygoneGeoJSON
-}
-
-function depuisGeoJson(texte: string): EntreeImport[] {
-  const data = JSON.parse(texte)
-  const features = data.type === 'FeatureCollection' ? data.features : [data]
-  const sortie: EntreeImport[] = []
-
-  for (const [i, f] of (features as Record<string, never>[]).entries()) {
-    const g = (f.geometry ?? f) as { type?: string; coordinates?: unknown }
-    const props = (f.properties ?? {}) as Record<string, unknown>
-    const nom = String(props.nom ?? props.name ?? props.Name ?? `Parcelle importée ${i + 1}`)
-
-    if (g.type === 'Polygon') {
-      sortie.push({
-        nom,
-        description: (props.description as string) ?? null,
-        geom: g as PolygoneGeoJSON,
-      })
-    } else if (g.type === 'MultiPolygon') {
-      // Un multipolygone donne autant de parcelles qu'il a de composantes :
-      // le schéma n'accepte qu'un polygone simple par ligne.
-      ;(g.coordinates as number[][][][]).forEach((coords, j) => {
-        sortie.push({
-          nom: `${nom}${j > 0 ? ` (${j + 1})` : ''}`,
-          description: (props.description as string) ?? null,
-          geom: { type: 'Polygon', coordinates: coords as [number, number][][] },
-        })
-      })
-    }
-  }
-  return sortie
-}
-
-function depuisKml(texte: string): EntreeImport[] {
-  const sortie: EntreeImport[] = []
-  const placemarks = texte.match(/<Placemark[\s\S]*?<\/Placemark>/g) ?? []
-
-  placemarks.forEach((pm, i) => {
-    const nom = (pm.match(/<name>([\s\S]*?)<\/name>/)?.[1] ?? `Parcelle importée ${i + 1}`)
-      .replace(/<!\[CDATA\[|\]\]>/g, '')
-      .trim()
-    const description = (pm.match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? '')
-      .replace(/<!\[CDATA\[|\]\]>/g, '')
-      .trim()
-
-    const anneaux = pm.match(/<outerBoundaryIs>[\s\S]*?<coordinates>([\s\S]*?)<\/coordinates>/g) ?? []
-    for (const bloc of anneaux) {
-      const brut = bloc.match(/<coordinates>([\s\S]*?)<\/coordinates>/)?.[1] ?? ''
-      const coords = brut
-        .trim()
-        .split(/\s+/)
-        .map((t) => t.split(',').map(Number))
-        .filter((c) => c.length >= 2 && Number.isFinite(c[0]) && Number.isFinite(c[1]))
-        .map((c) => [c[0], c[1]] as [number, number])
-
-      if (coords.length >= 3) {
-        const [x0, y0] = coords[0]
-        const [xn, yn] = coords[coords.length - 1]
-        if (x0 !== xn || y0 !== yn) coords.push([x0, y0])
-        sortie.push({ nom, description, geom: { type: 'Polygon', coordinates: [coords] } })
-      }
-    }
-  })
-
-  return sortie
 }

@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Download, Link2, Map, Search, TriangleAlert } from 'lucide-react'
+import { Download, Link2, Map, Search, TriangleAlert, Upload } from 'lucide-react'
 import { FournisseurParcelles, useMagasin } from '@/components/parcelles/MagasinParcelles'
+import ImportParcelles from '@/components/parcelles/ImportParcelles'
 import { formaterSuperficie } from '@/lib/geo'
 import { formatMontant } from '@/lib/utils'
 import {
@@ -23,9 +24,11 @@ const couleursStatut: Record<StatutParcelle, string> = {
 }
 
 function Liste() {
-  const { parcelles, chargement } = useMagasin()
+  const { parcelles, chargement, recharger } = useMagasin()
   const [recherche, setRecherche] = useState('')
   const [statut, setStatut] = useState('')
+  const [importOuvert, setImportOuvert] = useState(false)
+  const [messageImport, setMessageImport] = useState<string | null>(null)
 
   const filtrees = useMemo(() => {
     const q = recherche.trim().toLowerCase()
@@ -54,6 +57,12 @@ function Liste() {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setImportOuvert(true)}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <Upload size={16} /> Importer
+          </button>
           <a
             href="/api/export?format=geojson"
             className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
@@ -68,6 +77,24 @@ function Liste() {
           </Link>
         </div>
       </div>
+
+      {messageImport && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
+          <Upload size={16} className="shrink-0" />
+          {messageImport}
+        </div>
+      )}
+
+      {importOuvert && (
+        <ImportParcelles
+          onFerme={() => setImportOuvert(false)}
+          onTermine={async (crees) => {
+            setImportOuvert(false)
+            setMessageImport(`${crees} parcelle(s) importée(s).`)
+            await recharger()
+          }}
+        />
+      )}
 
       {sansTrace > 0 && (
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
