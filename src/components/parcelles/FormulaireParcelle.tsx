@@ -65,6 +65,8 @@ export default function FormulaireParcelle({
   const [biens, setBiens] = useState<{ id: string; nom: string; adresse: string }[]>([])
   const [enregistrement, setEnregistrement] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
+  // Une suppression se confirme : un relevé de terrain ne se refait pas.
+  const [confirmeSuppression, setConfirmeSuppression] = useState(false)
 
   const [f, setF] = useState({
     nom: parcelle.nom,
@@ -415,6 +417,32 @@ export default function FormulaireParcelle({
         <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</div>
       )}
 
+      {confirmeSuppression && onSupprimer && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-sm font-medium text-red-800">
+            Supprimer « {parcelle.nom} » ?
+          </p>
+          <p className="mt-1 text-xs text-red-700">
+            Le tracé et les documents rattachés seront retirés. Un relevé de terrain ne se refait
+            pas d&apos;un clic.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={onSupprimer}
+              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              Oui, supprimer
+            </button>
+            <button
+              onClick={() => setConfirmeSuppression(false)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 pb-2">
         <button
           onClick={soumettre}
@@ -430,9 +458,9 @@ export default function FormulaireParcelle({
         >
           <X size={16} />
         </button>
-        {onSupprimer && (
+        {onSupprimer && !confirmeSuppression && (
           <button
-            onClick={onSupprimer}
+            onClick={() => setConfirmeSuppression(true)}
             className="rounded-lg border border-red-200 px-4 py-2.5 text-red-600 hover:bg-red-50"
             aria-label="Supprimer la parcelle"
           >

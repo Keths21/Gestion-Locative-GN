@@ -15,10 +15,9 @@ import {
 } from 'lucide-react'
 import { FournisseurParcelles, useMagasin } from '@/components/parcelles/MagasinParcelles'
 import PanneauParcelle from '@/components/parcelles/PanneauParcelle'
-import FormulaireParcelle from '@/components/parcelles/FormulaireParcelle'
+import DetailParcelle from '@/components/parcelles/DetailParcelle'
 import OutilCoordonnees from '@/components/parcelles/OutilCoordonnees'
 import OutilReleveGps from '@/components/parcelles/OutilReleveGps'
-import GalerieDocuments from '@/components/parcelles/GalerieDocuments'
 import type { PoigneeCarte } from '@/components/parcelles/CarteParcelles'
 import { FONDS, type CleFond } from '@/lib/fonds-carte'
 import { formaterSuperficie } from '@/lib/geo'
@@ -256,18 +255,10 @@ function Carte() {
             ) : null
           }
         >
-          <div className="mb-5 border-b border-gray-200 pb-5">
-            <h3 className="mb-2 text-sm font-semibold text-gray-900">Photos et documents</h3>
-            <GalerieDocuments
-              parcelleId={selection.id}
-              organisationId={selection.organisation_id}
-              enLigne={enLigne}
-              position={position ? { lat: position.lat, lon: position.lon } : null}
-            />
-          </div>
-
-          <FormulaireParcelle
+          <DetailParcelle
             parcelle={selection}
+            enLigne={enLigne}
+            position={position ? { lat: position.lat, lon: position.lon } : null}
             onEnregistrer={(champs) => modifier(selection.id, champs)}
             onSupprimer={async () => {
               await supprimer(selection.id)
