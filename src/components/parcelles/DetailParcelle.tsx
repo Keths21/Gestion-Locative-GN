@@ -2,6 +2,7 @@
 
 import GalerieDocuments from '@/components/parcelles/GalerieDocuments'
 import FormulaireParcelle from '@/components/parcelles/FormulaireParcelle'
+import ItineraireParcelle from '@/components/parcelles/ItineraireParcelle'
 import type { Parcelle } from '@/types'
 
 /**
@@ -28,6 +29,8 @@ export default function DetailParcelle({
 }) {
   return (
     <>
+      <ItineraireParcelle parcelle={parcelle} />
+
       <div className="mb-5 border-b border-gray-200 pb-5">
         <h3 className="mb-2 text-sm font-semibold text-gray-900">Photos et documents</h3>
         <GalerieDocuments

@@ -174,6 +174,23 @@ function construire(
   const champsDetectes: string[] = []
   const avertissements: string[] = []
 
+  // Point de passage unique de toute géométrie importée : c'est ici, et
+  // nulle part ailleurs, qu'on vérifie l'ordre des coordonnées.
+  if (geom?.coordinates?.[0]) {
+    const r = redresserCoordonnees(geom.coordinates[0])
+    if (r.motif) {
+      geom = { type: 'Polygon', coordinates: [r.coords] }
+      avertissements.push(r.motif)
+    }
+  }
+  if (point?.coordinates) {
+    const r = redresserCoordonnees([point.coordinates])
+    if (r.motif) {
+      point = { type: 'Point', coordinates: r.coords[0] }
+      avertissements.push(r.motif)
+    }
+  }
+
   /** Retient la valeur et note le champ comme reconnu, pour l'aperçu. */
   const prendre = <V extends string | number | null>(valeur: V, etiquette: string): V => {
     if (valeur !== null) champsDetectes.push(etiquette)
@@ -235,6 +252,61 @@ function construire(
     champsDetectes: [...new Set(champsDetectes)],
     avertissements,
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Ordre des coordonnées                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Emprise attendue des données. Le GeoJSON impose l'ordre [lon, lat], mais
+ * beaucoup d'outils écrivent [lat, lon] : un fichier inversé place la parcelle
+ * à des milliers de kilomètres, sans que rien ne le signale.
+ *
+ * À élargir le jour où le portefeuille sortira de Guinée.
+ */
+export const EMPRISE_ATTENDUE = { lonMin: -15.5, lonMax: -7.5, latMin: 7.0, latMax: 12.8 }
+
+function dansEmprise([lon, lat]: [number, number]): boolean {
+  return (
+    lon >= EMPRISE_ATTENDUE.lonMin &&
+    lon <= EMPRISE_ATTENDUE.lonMax &&
+    lat >= EMPRISE_ATTENDUE.latMin &&
+    lat <= EMPRISE_ATTENDUE.latMax
+  )
+}
+
+/**
+ * Détecte et redresse un couple inversé.
+ *
+ * Deux signaux, du plus sûr au plus faible :
+ *  1. une latitude au-delà de 90° est mathématiquement impossible ;
+ *  2. aucun point dans l'emprise attendue alors que l'inversion les y place.
+ *
+ * La correction n'est jamais silencieuse : elle remonte dans l'aperçu, et
+ * l'utilisateur voit ce qui a été redressé avant que quoi que ce soit ne soit
+ * écrit.
+ */
+export function redresserCoordonnees(
+  coords: [number, number][]
+): { coords: [number, number][]; motif: string | null } {
+  if (!coords.length) return { coords, motif: null }
+
+  const inverser = (): [number, number][] => coords.map(([a, b]) => [b, a] as [number, number])
+
+  if (coords.some(([, lat]) => Math.abs(lat) > 90)) {
+    return { coords: inverser(), motif: 'latitude hors bornes : ordre lat/lon inversé, redressé' }
+  }
+
+  const dedans = coords.filter(dansEmprise).length
+  if (dedans === 0) {
+    const inverses = inverser()
+    if (inverses.filter(dansEmprise).length === inverses.length) {
+      return { coords: inverses, motif: 'coordonnées hors zone : ordre lat/lon inversé, redressé' }
+    }
+  }
+
+  return { coords, motif: null }
 }
 
 function fermerAnneau(coords: [number, number][]): [number, number][] {
