@@ -68,3 +68,52 @@ export const COULEURS_PARCELLE = [
   '#14b8a6',
   '#f97316',
 ] as const
+
+// ---------------------------------------------------------------------------
+// Travaux & Chantier
+// ---------------------------------------------------------------------------
+
+import type { NatureChantier, StatutChantier } from '@/types'
+
+export const LIBELLES_NATURE_CHANTIER: Record<NatureChantier, string> = {
+  construction: 'Construction',
+  renovation: 'Rénovation',
+  extension: 'Extension',
+  amenagement: 'Aménagement',
+}
+
+export const LIBELLES_STATUT_CHANTIER: Record<StatutChantier, string> = {
+  prevu: 'Prévu',
+  en_cours: 'En cours',
+  suspendu: 'Suspendu',
+  livre: 'Livré',
+  abandonne: 'Abandonné',
+}
+
+export type CorpsEtat =
+  | 'viabilisation' | 'gros_oeuvre' | 'second_oeuvre'
+  | 'finitions' | 'equipements' | 'honoraires' | 'divers'
+
+export const LIBELLES_CORPS_ETAT: Record<CorpsEtat, string> = {
+  viabilisation: 'Viabilisation',
+  gros_oeuvre: 'Gros œuvre',
+  second_oeuvre: 'Second œuvre',
+  finitions: 'Finitions',
+  equipements: 'Équipements',
+  honoraires: 'Honoraires',
+  divers: 'Divers',
+}
+
+/** Un devis engage, une facture dépense, un avenant augmente le prévu. */
+export const LIBELLES_TYPE_DEPENSE = {
+  devis: 'Devis',
+  facture: 'Facture',
+  avenant: 'Avenant',
+} as const
+
+export const LIBELLES_STATUT_DEPENSE = {
+  en_attente: 'En attente',
+  valide: 'Validé',
+  paye: 'Payé',
+  annule: 'Annulé',
+} as const
