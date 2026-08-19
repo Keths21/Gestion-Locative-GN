@@ -1,0 +1,16 @@
+-- Lot D — journal de chantier : photos, notes et signalements géolocalisés.
+-- Contenu appliqué en base le 19/08/2026 (voir l'historique des migrations
+-- Supabase). Ce fichier tient lieu de référence versionnée.
+--
+-- Deux choix structurants :
+--
+-- 1. Bucket `chantiers` distinct de `parcelles`. Ses policies doivent
+--    connaître la seconde voie d'accès : un architecte invité n'est pas
+--    membre de l'organisation, et resterait sinon incapable de voir les
+--    photos du chantier auquel on l'a pourtant convié.
+--    Chemin : {organisation_id}/{chantier_id}/{uuid}.{ext}
+--
+-- 2. Regroupement spatial par ST_ClusterDBSCAN plutôt qu'un étiquetage
+--    manuel : les prises faites au même endroit à des dates différentes
+--    forment la séquence avant / pendant / après. Personne ne pense à
+--    étiqueter ses photos sur un chantier.

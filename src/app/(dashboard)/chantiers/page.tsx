@@ -1,11 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { GanttChartSquare, HardHat, Link2, MapPin, Plus, Search, Wallet, X } from 'lucide-react'
+import { BookImage, GanttChartSquare, HardHat, Link2, MapPin, Plus, Search, Wallet, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { creerChantier, creerPhasesStandard, listerChantiers, syntheseBudget } from '@/lib/chantiers'
 import TableauBudget from '@/components/chantiers/TableauBudget'
 import FriseAvancement from '@/components/chantiers/FriseAvancement'
+import JournalChantier from '@/components/chantiers/JournalChantier'
 import { formatMontant } from '@/lib/utils'
 import { LIBELLES_NATURE_CHANTIER, LIBELLES_STATUT_CHANTIER } from '@/lib/constants'
 import type { Chantier, NatureChantier, StatutChantier } from '@/types'
@@ -29,7 +30,7 @@ export default function PageChantiers() {
   const [recherche, setRecherche] = useState('')
   const [selectionId, setSelectionId] = useState<string | null>(null)
   const [creation, setCreation] = useState(false)
-  const [onglet, setOnglet] = useState<'budget' | 'avancement'>('budget')
+  const [onglet, setOnglet] = useState<'budget' | 'avancement' | 'journal'>('budget')
   const [erreur, setErreur] = useState<string | null>(null)
 
   const [n, setN] = useState({
@@ -241,7 +242,7 @@ export default function PageChantiers() {
             </header>
             <div className="shrink-0 border-b border-gray-200 px-5">
               <div className="flex gap-1">
-                {([['budget', 'Budget', Wallet], ['avancement', 'Avancement', GanttChartSquare]] as const).map(
+                {([['budget', 'Budget', Wallet], ['avancement', 'Avancement', GanttChartSquare], ['journal', 'Journal', BookImage]] as const).map(
                   ([cle, libelle, Icone]) => (
                     <button
                       key={cle}
@@ -262,8 +263,13 @@ export default function PageChantiers() {
             <div className="marge-bas-sure min-h-0 flex-1 overflow-y-auto px-5 py-4">
               {onglet === 'budget' ? (
                 <TableauBudget chantierId={selection.id} />
-              ) : (
+              ) : onglet === 'avancement' ? (
                 <FriseAvancement chantierId={selection.id} />
+              ) : (
+                <JournalChantier
+                  chantierId={selection.id}
+                  organisationId={selection.organisation_id}
+                />
               )}
             </div>
           </aside>
