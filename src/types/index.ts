@@ -193,3 +193,73 @@ export type ParcelleDocument = {
   cree_par: string | null
   cree_le: string
 }
+
+// ---------------------------------------------------------------------------
+// Travaux & Chantier (migration 20260819100000)
+//
+// Un chantier peut exister sans bien ni parcelle : il porte alors sa propre
+// localisation. Les rattachements sont nullables et modifiables — on construit
+// souvent avant d'avoir enregistré le foncier.
+// ---------------------------------------------------------------------------
+
+export type NatureChantier = 'construction' | 'renovation' | 'extension' | 'amenagement'
+
+export type StatutChantier = 'prevu' | 'en_cours' | 'suspendu' | 'livre' | 'abandonne'
+
+export type RoleAccesChantier = 'lecteur' | 'contributeur'
+
+export type Chantier = {
+  id: string
+  organisation_id: string
+  /** Rattachements facultatifs, modifiables à tout moment. */
+  bien_id: string | null
+  parcelle_id: string | null
+
+  nom: string
+  reference: string | null
+  nature: NatureChantier
+  statut: StatutChantier
+  description: string | null
+
+  pays: string | null
+  region: string | null
+  prefecture: string | null
+  commune: string | null
+  quartier: string | null
+  adresse: string | null
+  /** Repère propre au chantier : sans lui, le journal géolocalisé n'a pas d'ancrage. */
+  point_geom: PointGeoJSON | null
+
+  budget_initial: number | null
+  /** Distincte du budget : répond à « combien puis-je encore absorber ? ». */
+  reserve_imprevus: number | null
+  devise: string | null
+
+  date_debut_prevue: string | null
+  date_fin_prevue: string | null
+  date_debut_reelle: string | null
+  date_fin_reelle: string | null
+
+  cree_par: string | null
+  cree_le: string
+  modifie_le: string
+  supprime_le: string | null
+  version: number
+
+  bien?: Bien
+  parcelle?: Parcelle
+}
+
+/** Accès accordé à un tiers — architecte, maître d'œuvre, co-propriétaire. */
+export type AccesChantier = {
+  id: string
+  chantier_id: string
+  email: string
+  /** Renseigné à la première connexion de l'invité. */
+  user_id: string | null
+  role: RoleAccesChantier
+  /** null = sans limite. Un accès daté s'éteint sans geste d'administration. */
+  expire_le: string | null
+  invite_par: string | null
+  cree_le: string
+}
