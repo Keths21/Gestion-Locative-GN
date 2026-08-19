@@ -1,10 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { HardHat, Link2, MapPin, Plus, Search, Wallet, X } from 'lucide-react'
+import { GanttChartSquare, HardHat, Link2, MapPin, Plus, Search, Wallet, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { creerChantier, listerChantiers, syntheseBudget } from '@/lib/chantiers'
+import { creerChantier, creerPhasesStandard, listerChantiers, syntheseBudget } from '@/lib/chantiers'
 import TableauBudget from '@/components/chantiers/TableauBudget'
+import FriseAvancement from '@/components/chantiers/FriseAvancement'
 import { formatMontant } from '@/lib/utils'
 import { LIBELLES_NATURE_CHANTIER, LIBELLES_STATUT_CHANTIER } from '@/lib/constants'
 import type { Chantier, NatureChantier, StatutChantier } from '@/types'
@@ -28,6 +29,7 @@ export default function PageChantiers() {
   const [recherche, setRecherche] = useState('')
   const [selectionId, setSelectionId] = useState<string | null>(null)
   const [creation, setCreation] = useState(false)
+  const [onglet, setOnglet] = useState<'budget' | 'avancement'>('budget')
   const [erreur, setErreur] = useState<string | null>(null)
 
   const [n, setN] = useState({
@@ -82,6 +84,7 @@ export default function PageChantiers() {
         budget_initial: n.budget_initial ? Number(n.budget_initial.replace(/\s/g, '')) : null,
         reserve_imprevus: n.reserve_imprevus ? Number(n.reserve_imprevus.replace(/\s/g, '')) : null,
       })
+      await creerPhasesStandard(supabase, c.id)
       setCreation(false)
       setN({ nom: '', nature: 'construction', commune: '', quartier: '', budget_initial: '', reserve_imprevus: '' })
       await charger()
@@ -134,7 +137,7 @@ export default function PageChantiers() {
                  value={n.reserve_imprevus} onChange={(e) => setN({ ...n, reserve_imprevus: e.target.value })} />
           <p className="text-xs text-gray-500 sm:col-span-2">
             Un chantier peut exister sans bien ni parcelle : le rattachement se fera plus tard, quand
-            le foncier sera enregistré. Les postes de budget usuels sont créés automatiquement.
+            le foncier sera enregistré. Les postes de budget et les phases usuelles sont créés automatiquement.
           </p>
           <div className="flex gap-2 sm:col-span-2">
             <button onClick={creer}
@@ -236,11 +239,32 @@ export default function PageChantiers() {
                 <X size={18} />
               </button>
             </header>
+            <div className="shrink-0 border-b border-gray-200 px-5">
+              <div className="flex gap-1">
+                {([['budget', 'Budget', Wallet], ['avancement', 'Avancement', GanttChartSquare]] as const).map(
+                  ([cle, libelle, Icone]) => (
+                    <button
+                      key={cle}
+                      onClick={() => setOnglet(cle)}
+                      className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                        onglet === cle
+                          ? 'border-blue-600 text-blue-700'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <Icone size={15} /> {libelle}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
             <div className="marge-bas-sure min-h-0 flex-1 overflow-y-auto px-5 py-4">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                <Wallet size={15} /> Pilotage financier
-              </h3>
-              <TableauBudget chantierId={selection.id} />
+              {onglet === 'budget' ? (
+                <TableauBudget chantierId={selection.id} />
+              ) : (
+                <FriseAvancement chantierId={selection.id} />
+              )}
             </div>
           </aside>
         </>

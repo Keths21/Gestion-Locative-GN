@@ -223,3 +223,91 @@ export async function ajouterPoste(
   const { error } = await sb.from('postes_budget').insert({ chantier_id: chantierId, ...poste })
   if (error) throw new Error(error.message)
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Planning, jalons et avancement                                             */
+/* -------------------------------------------------------------------------- */
+
+export interface JalonSynthese {
+  id: string
+  nom: string
+  date_prevue: string | null
+  date_validation: string | null
+  montant_a_liberer: number | null
+  en_retard: boolean
+}
+
+export interface PhaseSynthese {
+  id: string
+  nom: string
+  ordre: number
+  avancement_pct: number
+  montant_prevu: number
+  /** Part de cette phase dans le budget total — null si aucun montant saisi. */
+  poids_pct: number | null
+  date_prevue_debut: string | null
+  date_prevue_fin: string | null
+  date_reelle_debut: string | null
+  date_reelle_fin: string | null
+  jalons: JalonSynthese[]
+}
+
+export interface SyntheseAvancement {
+  avancement_global: number
+  /** « budget » si les phases portent un montant, « egale » sinon. */
+  ponderation: 'budget' | 'egale'
+  phases_total: number
+  jalons_total: number
+  jalons_valides: number
+  montant_libere: number
+  montant_a_venir: number
+  jalons_en_retard: number
+  phases: PhaseSynthese[]
+}
+
+export async function syntheseAvancement(sb: Client, chantierId: string): Promise<SyntheseAvancement> {
+  const { data, error } = await sb.rpc('synthese_avancement_chantier', { c: chantierId })
+  if (error) throw new Error(error.message)
+  return data as SyntheseAvancement
+}
+
+export async function creerPhasesStandard(sb: Client, chantierId: string): Promise<number> {
+  const { data, error } = await sb.rpc('creer_phases_standard', { c: chantierId })
+  if (error) throw new Error(error.message)
+  return data as number
+}
+
+export async function modifierPhase(
+  sb: Client,
+  id: string,
+  champs: { avancement_pct?: number; montant_prevu?: number; nom?: string
+            date_prevue_debut?: string | null; date_prevue_fin?: string | null }
+): Promise<void> {
+  const { error } = await sb.from('phases_chantier').update(champs).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function ajouterJalon(
+  sb: Client,
+  chantierId: string,
+  jalon: { nom: string; phase_id?: string | null; date_prevue?: string | null
+           montant_a_liberer?: number | null; ordre?: number }
+): Promise<void> {
+  const { error } = await sb.from('jalons_chantier').insert({ chantier_id: chantierId, ...jalon })
+  if (error) throw new Error(error.message)
+}
+
+/** Idempotente : un double clic ne libère pas le paiement deux fois. */
+export async function validerJalon(
+  sb: Client,
+  jalonId: string
+): Promise<{ deja_valide: boolean; montant_libere: number }> {
+  const { data, error } = await sb.rpc('valider_jalon', { j: jalonId })
+  if (error) throw new Error(error.message)
+  return data as { deja_valide: boolean; montant_libere: number }
+}
+
+export async function supprimerJalon(sb: Client, id: string): Promise<void> {
+  const { error } = await sb.from('jalons_chantier').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
