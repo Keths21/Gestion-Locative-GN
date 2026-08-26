@@ -1,0 +1,20 @@
+-- Lots E et F — annuaire des intervenants, et échéancier de paiement.
+-- Contenu appliqué en base le 26/08/2026 ; ce fichier tient lieu de référence
+-- versionnée.
+--
+-- Trois choix structurants :
+--
+-- 1. L'annuaire appartient à l'organisation, l'affectation au chantier : un
+--    maçon travaille sur plusieurs chantiers, sa décennale ne doit être
+--    saisie qu'une fois.
+--
+-- 2. La lecture des intervenants suit la double voie d'accès. Sans cela, un
+--    architecte invité verrait la fiche du chantier sans savoir qui y
+--    travaille — l'information la plus utile à un maître d'œuvre.
+--
+-- 3. valider_jalon rend exigibles les échéances qui en dépendent. C'est le
+--    lien entre l'avancement constaté et le décaissement : tant que l'ouvrage
+--    n'est pas réceptionné, l'échéance reste verrouillée.
+--
+-- echeances_a_alerter écarte ce qui a été notifié dans les sept derniers
+-- jours : un rappel qui se répète cesse d'être lu.

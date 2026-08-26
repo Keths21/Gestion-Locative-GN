@@ -1,12 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { BookImage, GanttChartSquare, HardHat, Link2, MapPin, Plus, Search, Wallet, X } from 'lucide-react'
+import { BookImage, CalendarClock, GanttChartSquare, HardHat, Link2, MapPin, Plus, Search, Users, Wallet, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { creerChantier, creerPhasesStandard, listerChantiers, syntheseBudget } from '@/lib/chantiers'
 import TableauBudget from '@/components/chantiers/TableauBudget'
 import FriseAvancement from '@/components/chantiers/FriseAvancement'
 import JournalChantier from '@/components/chantiers/JournalChantier'
+import Intervenants from '@/components/chantiers/Intervenants'
+import Echeancier from '@/components/chantiers/Echeancier'
 import { formatMontant } from '@/lib/utils'
 import { LIBELLES_NATURE_CHANTIER, LIBELLES_STATUT_CHANTIER } from '@/lib/constants'
 import type { Chantier, NatureChantier, StatutChantier } from '@/types'
@@ -30,7 +32,7 @@ export default function PageChantiers() {
   const [recherche, setRecherche] = useState('')
   const [selectionId, setSelectionId] = useState<string | null>(null)
   const [creation, setCreation] = useState(false)
-  const [onglet, setOnglet] = useState<'budget' | 'avancement' | 'journal'>('budget')
+  const [onglet, setOnglet] = useState<'budget' | 'avancement' | 'journal' | 'intervenants' | 'echeancier'>('budget')
   const [erreur, setErreur] = useState<string | null>(null)
 
   const [n, setN] = useState({
@@ -241,8 +243,8 @@ export default function PageChantiers() {
               </button>
             </header>
             <div className="shrink-0 border-b border-gray-200 px-5">
-              <div className="flex gap-1">
-                {([['budget', 'Budget', Wallet], ['avancement', 'Avancement', GanttChartSquare], ['journal', 'Journal', BookImage]] as const).map(
+              <div className="flex gap-1 overflow-x-auto">
+                {([['budget', 'Budget', Wallet], ['avancement', 'Avancement', GanttChartSquare], ['journal', 'Journal', BookImage], ['intervenants', 'Intervenants', Users], ['echeancier', 'Échéancier', CalendarClock]] as const).map(
                   ([cle, libelle, Icone]) => (
                     <button
                       key={cle}
@@ -265,11 +267,15 @@ export default function PageChantiers() {
                 <TableauBudget chantierId={selection.id} />
               ) : onglet === 'avancement' ? (
                 <FriseAvancement chantierId={selection.id} />
-              ) : (
+              ) : onglet === 'journal' ? (
                 <JournalChantier
                   chantierId={selection.id}
                   organisationId={selection.organisation_id}
                 />
+              ) : onglet === 'intervenants' ? (
+                <Intervenants chantierId={selection.id} />
+              ) : (
+                <Echeancier chantierId={selection.id} />
               )}
             </div>
           </aside>
