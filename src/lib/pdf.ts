@@ -137,40 +137,71 @@ function blocIdentite(
   return y + hEntete + lignes.length * hLigne
 }
 
-/** Cartouche « PAYÉ », incliné comme un tampon apposé à la main. */
-function tamponPaye(doc: jsPDF, x: number, y: number, date: string) {
-  const w = 62
-  const h = 30
-  const angle = -12
+/**
+ * Cartouche « PAYÉ », incliné comme un tampon apposé à la main.
+ *
+ * Le cadre est tracé segment par segment plutôt qu'avec une matrice de
+ * transformation : setCurrentTransformationMatrix travaille dans le repère
+ * PDF, dont l'origine est en bas à gauche, alors que tous les autres appels
+ * de jsPDF utilisent le repère écran, origine en haut à gauche. Les mélanger
+ * dessine bien le tampon — mais ailleurs, souvent hors de la page.
+ *
+ * Ici, seules `line()` et l'option `angle` de `text()` sont employées : deux
+ * primitives de base, au comportement identique dans tous les contextes.
+ *
+ * (cx, cy) est le CENTRE du tampon.
+ */
+function tamponPaye(doc: jsPDF, cx: number, cy: number, date: string) {
+  const w = 58
+  const h = 27
+  const angle = 11 // degrés, sens anti-horaire — comme un tampon posé de biais
 
-  doc.saveGraphicsState()
-  // jsPDF ne fait pas tourner un groupe : on incline le repère via la matrice.
   const rad = (angle * Math.PI) / 180
   const cos = Math.cos(rad)
   const sin = Math.sin(rad)
-  // Matrix et setCurrentTransformationMatrix appartiennent au module avancé
-  // de jsPDF, absent des types publiés.
-  const avance = doc as unknown as {
-    Matrix: new (a: number, b: number, c: number, d: number, e: number, f: number) => unknown
-    setCurrentTransformationMatrix: (m: unknown) => void
+
+  // L'axe des ordonnées descend : une rotation visuellement anti-horaire
+  // s'obtient donc en soustrayant la composante en sinus.
+  const pivot = (dx: number, dy: number): [number, number] => [
+    cx + dx * cos + dy * sin,
+    cy - dx * sin + dy * cos,
+  ]
+
+  const cadre = (demiL: number, demiH: number) => {
+    const coins = [
+      pivot(-demiL, -demiH),
+      pivot(demiL, -demiH),
+      pivot(demiL, demiH),
+      pivot(-demiL, demiH),
+    ]
+    for (let i = 0; i < 4; i++) {
+      const [x1, y1] = coins[i]
+      const [x2, y2] = coins[(i + 1) % 4]
+      doc.line(x1, y1, x2, y2)
+    }
   }
-  avance.setCurrentTransformationMatrix(new avance.Matrix(cos, sin, -sin, cos, x, y))
 
   doc.setDrawColor(...VERT)
-  doc.setLineWidth(1.6)
-  doc.roundedRect(0, 0, w, h, 3, 3)
-  doc.setLineWidth(0.5)
-  doc.roundedRect(2.5, 2.5, w - 5, h - 5, 2, 2)
+  doc.setLineWidth(1.5)
+  cadre(w / 2, h / 2)
+  doc.setLineWidth(0.4)
+  cadre(w / 2 - 2.5, h / 2 - 2.5)
 
   doc.setTextColor(...VERT)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(22)
-  doc.text('PAYÉ', w / 2, 15, { align: 'center' })
-  doc.setFontSize(8.5)
-  doc.setFont('helvetica', 'italic')
-  doc.text(`LE ${date}`, w / 2, 23, { align: 'center' })
+  doc.setFontSize(21)
+  const [xp, yp] = pivot(0, -1.5)
+  doc.text('PAYÉ', xp, yp, { align: 'center', angle })
 
-  doc.restoreGraphicsState()
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'italic')
+  const [xd, yd] = pivot(0, 7)
+  doc.text(`LE ${date}`, xd, yd, { align: 'center', angle })
+
+  // La couleur de trait est restaurée : les tracés suivants ne doivent pas
+  // hériter du vert.
+  doc.setDrawColor(200, 208, 218)
+  doc.setLineWidth(0.4)
 }
 
 export async function genererQuittance(
@@ -344,10 +375,20 @@ export async function genererQuittance(
 
   /* -------------------------- Tampon et signatures ------------------------ */
 
-  const estPaye = paiement.statut === 'payé' || paiement.statut === 'paye'
-  if (estPaye) tamponPaye(doc, MARGE + 8, ty + 16, datePaiement)
-
   const ySignature = 258
+
+  const estPaye = paiement.statut === 'payé' || paiement.statut === 'paye'
+  if (estPaye) {
+    // Le tampon se centre dans l'espace libre entre le cartouche de totaux et
+    // la zone de signature. Sans ce calcul, une ligne de charges suffirait à
+    // le faire chevaucher les signatures.
+    const hautDisponible = ty + 6
+    const basDisponible = ySignature - 52
+    const centre = (hautDisponible + basDisponible) / 2
+    // En dessous de cette hauteur libre le tampon mordrait sur le reste :
+    // mieux vaut alors le poser au plus haut possible.
+    tamponPaye(doc, MARGE + 45, Math.max(hautDisponible + 19, Math.min(centre, basDisponible)), datePaiement)
+  }
   doc.setDrawColor(200, 208, 218)
   doc.setLineWidth(0.4)
   doc.line(MARGE, ySignature, MARGE + 62, ySignature)
