@@ -179,8 +179,15 @@ export default function PaiementsPage() {
   }
 
   const handleQuittance = async (paiement: Paiement) => {
-    await genererQuittance(paiement)
-    toast.success('Quittance générée !')
+    // Les coordonnées de l'agence figurent en tête du reçu : sans elles, le
+    // document sortirait au nom générique de l'application.
+    const { data: agence } = await supabase
+      .from('parametres')
+      .select('nom_agence, adresse, ville, telephone, email')
+      .maybeSingle()
+
+    await genererQuittance(paiement, agence)
+    toast.success('Reçu généré')
   }
 
   const paiementsFiltres = filtre === 'tous' ? paiements : paiements.filter(p => p.statut === filtre)

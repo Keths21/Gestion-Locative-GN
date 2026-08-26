@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { montantEnLettres } from '@/lib/montant-en-lettres'
 
 async function loadImageAsBase64(url: string): Promise<string> {
   const response = await fetch(url)
@@ -12,124 +13,370 @@ async function loadImageAsBase64(url: string): Promise<string> {
   })
 }
 
-export async function genererQuittance(paiement: any) {
-  const doc = new jsPDF()
+/* -------------------------------------------------------------------------- */
+/*  Reçu de paiement                                                           */
+/* -------------------------------------------------------------------------- */
 
-  let cachetBase64: string | null = null
-  try {
-    cachetBase64 = await loadImageAsBase64('/innovea_cachet.png')
-  } catch {
-    // continue sans cachet
-  }
-  const locataire = paiement.locataire
-  const bien = paiement.bien
+// Charte du document : bleu marine dominant, rouge sombre pour le sous-titre,
+// vert pour la mention d'acquittement.
+const MARINE: [number, number, number] = [31, 56, 100]
+const ROUGE: [number, number, number] = [155, 35, 53]
+const VERT: [number, number, number] = [46, 125, 77]
+const BLEU_PALE: [number, number, number] = [234, 240, 248]
+const GRIS: [number, number, number] = [110, 118, 130]
 
-  // En-tête
-  doc.setFillColor(37, 99, 235)
-  doc.rect(0, 0, 210, 35, 'F')
+const MARGE = 18
+const LARGEUR = 210
+
+/**
+ * Données nécessaires au reçu. Volontairement souple sur les relations :
+ * l'appelant transmet le paiement tel que Supabase le renvoie, avec ses
+ * jointures locataire et bien.
+ */
+export type PaiementQuittance = {
+  id?: string
+  montant: number
+  mois_concerne: string
+  date_paiement?: string | null
+  statut?: string
+  numero_recu?: string | null
+  mode_paiement?: string | null
+  locataire?: { nom?: string; prenom?: string; telephone?: string | null; email?: string | null } | null
+  bien?: { nom?: string; adresse?: string; ville?: string; loyer_base?: number | null; charges?: number | null } | null
+}
+
+export type AgenceQuittance = {
+  nom_agence?: string | null
+  adresse?: string | null
+  ville?: string | null
+  telephone?: string | null
+  email?: string | null
+}
+
+/** Numéro de reçu lisible et ordonné : RECU-2026-0042. */
+function numeroRecu(paiement: PaiementQuittance): string {
+  if (paiement.numero_recu) return paiement.numero_recu
+  const annee = (paiement.date_paiement ?? paiement.mois_concerne ?? '').slice(0, 4)
+                || new Date().getFullYear().toString()
+  // À défaut de compteur, les 4 derniers caractères de l'identifiant donnent
+  // une référence stable et non ambiguë pour un même paiement.
+  const suffixe = String(paiement.id ?? '').replace(/-/g, '').slice(-4).toUpperCase()
+  return `RECU-${annee}-${suffixe || '0001'}`
+}
+
+function moisEnClair(mois: string): string {
+  const m = /^(\d{4})-(\d{2})/.exec(mois ?? '')
+  if (!m) return mois ?? ''
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, 1)
+  const libelle = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  return libelle.charAt(0).toUpperCase() + libelle.slice(1)
+}
+
+/** Premier et dernier jour du mois concerné, pour la colonne « Période ». */
+function bornesDuMois(mois: string): string {
+  const m = /^(\d{4})-(\d{2})/.exec(mois ?? '')
+  if (!m) return ''
+  const annee = Number(m[1])
+  const index = Number(m[2]) - 1
+  const debut = new Date(annee, index, 1)
+  const fin = new Date(annee, index + 1, 0)
+  const fmt = (d: Date) => d.toLocaleDateString('fr-FR')
+  return `du ${fmt(debut)} au ${fmt(fin)}`
+}
+
+/**
+ * Deux tableaux d'identification côte à côte, en-tête plein et lignes
+ * alternées, comme sur le modèle fourni.
+ */
+function blocIdentite(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  largeur: number,
+  titre: string,
+  lignes: [string, string][]
+): number {
+  const hEntete = 9
+  const hLigne = 9
+  const largeurLabel = largeur * 0.37
+
+  doc.setFillColor(...MARINE)
+  doc.rect(x, y, largeur, hEntete, 'F')
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
-  doc.text('QUITTANCE DE LOYER', 105, 18, { align: 'center' })
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'normal')
-  doc.text('CASA CHAMS - Gestion Locative', 105, 28, { align: 'center' })
+  doc.setFontSize(9.5)
+  doc.text(titre, x + 4, y + 6.2)
 
-  // Période
-  doc.setTextColor(0, 0, 0)
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`Quittance du mois de : ${paiement.mois_concerne}`, 20, 50)
+  let ly = y + hEntete
+  lignes.forEach(([label, valeur], i) => {
+    if (i % 2 === 0) {
+      doc.setFillColor(...BLEU_PALE)
+      doc.rect(x, ly, largeurLabel, hLigne, 'F')
+    } else {
+      doc.setFillColor(...BLEU_PALE)
+      doc.rect(x, ly, largeurLabel, hLigne, 'F')
+    }
+    doc.setDrawColor(214, 222, 234)
+    doc.setLineWidth(0.2)
+    doc.line(x, ly + hLigne, x + largeur, ly + hLigne)
 
-  // Infos bailleur
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100, 100, 100)
-  doc.text('BAILLEUR', 20, 65)
-  doc.setTextColor(0, 0, 0)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Votre Agence Immobilière', 20, 72)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Conakry, République de Guinée', 20, 79)
+    doc.setTextColor(...MARINE)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9)
+    doc.text(label, x + 4, ly + 6)
 
-  // Infos locataire
-  doc.setTextColor(100, 100, 100)
-  doc.text('LOCATAIRE', 120, 65)
-  doc.setTextColor(0, 0, 0)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`${locataire?.prenom || ''} ${locataire?.nom || ''}`, 120, 72)
-  doc.setFont('helvetica', 'normal')
-  doc.text(bien?.adresse || '', 120, 79)
-  doc.text(bien?.ville || 'Conakry', 120, 86)
-
-  // Tableau des montants
-  autoTable(doc, {
-    startY: 100,
-    head: [['Désignation', 'Montant (GNF)']],
-    body: [
-      ['Loyer principal', formatMontantPDF(bien?.loyer_base || paiement.montant)],
-      ['Charges', formatMontantPDF(bien?.charges || 0)],
-      ['Total reçu', formatMontantPDF(paiement.montant)],
-    ],
-    theme: 'striped',
-    headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
-    foot: [['TOTAL PAYÉ', formatMontantPDF(paiement.montant)]],
-    footStyles: { fillColor: [240, 253, 244], textColor: [22, 163, 74], fontStyle: 'bold' },
-    columnStyles: { 1: { halign: 'right' } }
+    doc.setTextColor(35, 40, 48)
+    doc.setFont('helvetica', i === 0 ? 'bold' : 'normal')
+    doc.text(String(valeur || '—').slice(0, 34), x + largeurLabel + 4, ly + 6)
+    ly += hLigne
   })
 
-  const finalY = (doc as any).lastAutoTable.finalY || 160
+  doc.setDrawColor(...MARINE)
+  doc.setLineWidth(0.4)
+  doc.rect(x, y, largeur, hEntete + lignes.length * hLigne)
+  return y + hEntete + lignes.length * hLigne
+}
 
-  // Mention légale — bloc avec découpage manuel pour éviter tout débordement
-  doc.setFontSize(9)
-  const lh = 7
-  const lines = [
-    'Je soussigné(e), bailleur du logement désigné ci-dessus, reconnais avoir reçu',
-    `la somme de ${formatMontantPDF(paiement.montant)}`,
-    `au titre du loyer et des charges du mois de ${paiement.mois_concerne}.`,
-    'Et lui en donne quittance, sous réserve de tous mes droits.',
-  ]
-  const blockH = 10 + lines.length * lh + 4
+/** Cartouche « PAYÉ », incliné comme un tampon apposé à la main. */
+function tamponPaye(doc: jsPDF, x: number, y: number, date: string) {
+  const w = 62
+  const h = 30
+  const angle = -12
 
-  doc.setFillColor(249, 250, 251)
-  doc.rect(20, finalY + 10, 170, blockH, 'F')
-  doc.setTextColor(100, 100, 100)
-
-  let ty = finalY + 20
-  for (const line of lines) {
-    doc.text(line, 105, ty, { align: 'center' })
-    ty += lh
+  doc.saveGraphicsState()
+  // jsPDF ne fait pas tourner un groupe : on incline le repère via la matrice.
+  const rad = (angle * Math.PI) / 180
+  const cos = Math.cos(rad)
+  const sin = Math.sin(rad)
+  // Matrix et setCurrentTransformationMatrix appartiennent au module avancé
+  // de jsPDF, absent des types publiés.
+  const avance = doc as unknown as {
+    Matrix: new (a: number, b: number, c: number, d: number, e: number, f: number) => unknown
+    setCurrentTransformationMatrix: (m: unknown) => void
   }
+  avance.setCurrentTransformationMatrix(new avance.Matrix(cos, sin, -sin, cos, x, y))
 
-  const blockEndY = finalY + 10 + blockH
+  doc.setDrawColor(...VERT)
+  doc.setLineWidth(1.6)
+  doc.roundedRect(0, 0, w, h, 3, 3)
+  doc.setLineWidth(0.5)
+  doc.roundedRect(2.5, 2.5, w - 5, h - 5, 2, 2)
 
-  // Date et signature
-  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-
-  doc.setDrawColor(220, 220, 220)
-  doc.setLineWidth(0.3)
-  doc.line(20, blockEndY + 8, 190, blockEndY + 8)
-
-  doc.setFontSize(10)
-  doc.setTextColor(0, 0, 0)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Fait à Conakry, le ${today}`, 20, blockEndY + 20)
-
+  doc.setTextColor(...VERT)
   doc.setFont('helvetica', 'bold')
-  doc.text('Signature du bailleur :', 160, blockEndY + 20, { align: 'center' })
-  if (cachetBase64) {
-    doc.addImage(cachetBase64, 'PNG', 136, blockEndY + 23, 48, 44)
+  doc.setFontSize(22)
+  doc.text('PAYÉ', w / 2, 15, { align: 'center' })
+  doc.setFontSize(8.5)
+  doc.setFont('helvetica', 'italic')
+  doc.text(`LE ${date}`, w / 2, 23, { align: 'center' })
+
+  doc.restoreGraphicsState()
+}
+
+export async function genererQuittance(
+  paiement: PaiementQuittance,
+  agence?: AgenceQuittance | null
+) {
+  const doc = new jsPDF()
+
+  const [logo, cachet] = await Promise.all([
+    loadImageAsBase64('/innoveagroup_logo.jpeg').catch(() => null),
+    loadImageAsBase64('/innovea_cachet.png').catch(() => null),
+  ])
+
+  const locataire = paiement.locataire ?? {}
+  const bien = paiement.bien ?? {}
+  const nomAgence = agence?.nom_agence || 'CASA CHAMS'
+  const montant = Number(paiement.montant) || 0
+  const datePaiement = paiement.date_paiement
+    ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR')
+    : new Date().toLocaleDateString('fr-FR')
+
+  /* ------------------------------- En-tête -------------------------------- */
+
+  if (logo) doc.addImage(logo, 'JPEG', MARGE, 12, 26, 22)
+
+  doc.setTextColor(...MARINE)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(16)
+  doc.text(nomAgence.toUpperCase(), LARGEUR - MARGE, 20, { align: 'right' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9.5)
+  doc.setTextColor(...GRIS)
+  const coordonnees = [
+    agence?.adresse ? `${agence.adresse}${agence.ville ? `, ${agence.ville}` : ''}` : 'Conakry, Guinée',
+    agence?.telephone,
+    agence?.email,
+  ].filter(Boolean) as string[]
+  coordonnees.forEach((ligne, i) => {
+    doc.text(ligne, LARGEUR - MARGE, 27 + i * 5.5, { align: 'right' })
+  })
+
+  doc.setDrawColor(...MARINE)
+  doc.setLineWidth(0.9)
+  doc.line(MARGE, 41, LARGEUR - MARGE, 41)
+
+  /* -------------------------------- Titre --------------------------------- */
+
+  doc.setTextColor(...MARINE)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(26)
+  doc.text('REÇU DE PAIEMENT', MARGE, 57)
+
+  doc.setTextColor(...ROUGE)
+  doc.setFontSize(10)
+  const sousTitre = [
+    'QUITTANCE DE LOYER',
+    moisEnClair(paiement.mois_concerne).toUpperCase(),
+    bien?.nom ? String(bien.nom).toUpperCase() : null,
+  ].filter(Boolean).join(' — ')
+  doc.text(sousTitre, MARGE, 65)
+
+  /* -------------------------- Blocs d'identité ---------------------------- */
+
+  const largeurBloc = (LARGEUR - 2 * MARGE - 8) / 2
+  const basGauche = blocIdentite(doc, MARGE, 74, largeurBloc, 'REÇU', [
+    ['N° Reçu', numeroRecu(paiement)],
+    ['Date', datePaiement],
+    ['Période', moisEnClair(paiement.mois_concerne)],
+    ['Mode', paiement.mode_paiement || 'Espèces'],
+  ])
+  const basDroite = blocIdentite(doc, MARGE + largeurBloc + 8, 74, largeurBloc, 'LOCATAIRE', [
+    ['Nom', `${locataire.prenom ?? ''} ${locataire.nom ?? ''}`.trim()],
+    ['Bien loué', bien?.nom ?? '—'],
+    ['Adresse', [bien?.adresse, bien?.ville].filter(Boolean).join(', ')],
+    ['Contact', locataire.telephone ?? locataire.email ?? '—'],
+  ])
+
+  /* ---------------------------- Détail chiffré ---------------------------- */
+
+  let y = Math.max(basGauche, basDroite) + 14
+
+  doc.setTextColor(...MARINE)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text('DÉTAIL DU PAIEMENT', MARGE, y)
+  doc.setLineWidth(0.6)
+  doc.line(MARGE, y + 2.5, LARGEUR - MARGE, y + 2.5)
+
+  const loyer = Number(bien?.loyer_base) || montant
+  const charges = Number(bien?.charges) || 0
+  const lignes: string[][] = [[
+    '1',
+    `Loyer — ${moisEnClair(paiement.mois_concerne)}`,
+    bornesDuMois(paiement.mois_concerne),
+    '1',
+    formatMontantSec(loyer),
+    formatMontantSec(loyer),
+  ]]
+  // Les charges n'apparaissent que si elles existent : une ligne à zéro
+  // encombre le reçu sans rien apprendre.
+  if (charges > 0) {
+    lignes.push(['2', 'Charges locatives', bornesDuMois(paiement.mois_concerne), '1',
+                 formatMontantSec(charges), formatMontantSec(charges)])
   }
 
-  // Pied de page
-  doc.setFontSize(8)
-  doc.setTextColor(150, 150, 150)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Document généré par CASA CHAMS - casachams.com', 105, 285, { align: 'center' })
+  autoTable(doc, {
+    startY: y + 7,
+    margin: { left: MARGE, right: MARGE },
+    head: [['N°', 'DÉSIGNATION', 'PÉRIODE', 'QTÉ', 'PU (GNF)', 'TOTAL (GNF)']],
+    body: lignes,
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: 3, lineColor: [214, 222, 234], lineWidth: 0.2 },
+    headStyles: { fillColor: MARINE, textColor: 255, fontStyle: 'bold', fontSize: 8.5, halign: 'left' },
+    columnStyles: {
+      0: { cellWidth: 12, halign: 'center' },
+      2: { halign: 'center' },
+      3: { cellWidth: 14, halign: 'center' },
+      4: { halign: 'right' },
+      5: { halign: 'right', fontStyle: 'bold' },
+    },
+  })
 
-  // Téléchargement
-  const filename = `quittance_${locataire?.nom || 'locataire'}_${paiement.mois_concerne}.pdf`
-  doc.save(filename)
+  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12
+
+  /* --------------------- Montant en lettres et totaux --------------------- */
+
+  const largeurTotaux = 78
+  const xTotaux = LARGEUR - MARGE - largeurTotaux
+
+  doc.setTextColor(...GRIS)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9.5)
+  doc.text('Arrêté le présent reçu à la somme de :', MARGE, y + 4)
+
+  doc.setTextColor(35, 40, 48)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(10)
+  // Le montant en lettres peut être long : on le replie sur la largeur libre.
+  const enLettres = doc.splitTextToSize(montantEnLettres(montant), xTotaux - MARGE - 6)
+  doc.text(enLettres, MARGE, y + 12)
+
+  const hLigneTotal = 11
+  const totaux: [string, string, boolean][] = [
+    ['Sous-total', `${formatMontantSec(montant)} GNF`, false],
+    ['TOTAL DÛ', `${formatMontantSec(montant)} GNF`, true],
+    ['Montant payé', `${formatMontantSec(montant)} GNF`, false],
+  ]
+  let ty = y
+  for (const [libelle, valeur, fort] of totaux) {
+    if (fort) {
+      doc.setFillColor(...MARINE)
+      doc.rect(xTotaux, ty, largeurTotaux, hLigneTotal, 'F')
+      doc.setTextColor(255, 255, 255)
+    } else {
+      doc.setFillColor(...BLEU_PALE)
+      doc.rect(xTotaux, ty, largeurTotaux * 0.52, hLigneTotal, 'F')
+      doc.setTextColor(...MARINE)
+    }
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.text(libelle, xTotaux + 4, ty + 7.2)
+    doc.setTextColor(fort ? 255 : 35, fort ? 255 : 40, fort ? 255 : 48)
+    doc.text(valeur, xTotaux + largeurTotaux - 4, ty + 7.2, { align: 'right' })
+
+    doc.setDrawColor(...MARINE)
+    doc.setLineWidth(0.3)
+    doc.rect(xTotaux, ty, largeurTotaux, hLigneTotal)
+    ty += hLigneTotal
+  }
+
+  /* -------------------------- Tampon et signatures ------------------------ */
+
+  const estPaye = paiement.statut === 'payé' || paiement.statut === 'paye'
+  if (estPaye) tamponPaye(doc, MARGE + 8, ty + 16, datePaiement)
+
+  const ySignature = 258
+  doc.setDrawColor(200, 208, 218)
+  doc.setLineWidth(0.4)
+  doc.line(MARGE, ySignature, MARGE + 62, ySignature)
+  doc.line(LARGEUR - MARGE - 62, ySignature, LARGEUR - MARGE, ySignature)
+
+  doc.setTextColor(...MARINE)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.text('Le locataire', MARGE, ySignature - 44)
+  doc.text(`Pour ${nomAgence.toUpperCase()}`, LARGEUR - MARGE, ySignature - 44, { align: 'right' })
+
+  if (cachet) doc.addImage(cachet, 'PNG', LARGEUR - MARGE - 44, ySignature - 40, 40, 37)
+
+  doc.setTextColor(...GRIS)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  doc.text('Signature et cachet', LARGEUR - MARGE, ySignature + 5, { align: 'right' })
+
+  /* ------------------------------ Pied de page ---------------------------- */
+
+  doc.setFontSize(7.5)
+  doc.setTextColor(165, 172, 182)
+  doc.text(
+    `${numeroRecu(paiement)} · Document généré par CASA CHAMS — casachams.com`,
+    LARGEUR / 2, 288, { align: 'center' }
+  )
+
+  const nom = `${locataire.nom ?? 'locataire'}`.replace(/\s+/g, '-')
+  doc.save(`recu_${nom}_${paiement.mois_concerne}.pdf`)
 }
 
 export function genererBail(locataire: any, bien: any, logo?: string, agence?: any) {
@@ -522,6 +769,11 @@ export function genererRelance(locataire: any, paiements: any[]) {
   doc.line(20, finalY + 95, 90, finalY + 95)
 
   doc.save(`relance_${locataire?.nom}_${today}.pdf`)
+}
+
+/** Montant sans devise : le tableau porte déjà « (GNF) » en en-tête. */
+function formatMontantSec(montant: number): string {
+  return Math.round(montant || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
 function formatMontantPDF(montant: number): string {
