@@ -38,6 +38,9 @@ yarn-error.log*
 /carto-documents.tar.gz
 /documents/
 
+# déploiement : point de retour écrit par scripts/deploy.sh sur le serveur
+/.dernier-deploiement
+
 # vercel
 .vercel
 
