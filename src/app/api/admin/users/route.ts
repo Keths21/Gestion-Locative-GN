@@ -46,6 +46,20 @@ async function checkIsAdmin(request: NextRequest): Promise<boolean> {
   return profile?.role === 'admin'
 }
 
+// Adresse publique de l'environnement, pour les liens des courriels.
+//
+// Volontairement SANS le préfixe NEXT_PUBLIC_, et il ne faut pas le rétablir
+// « par cohérence » : Next remplace les NEXT_PUBLIC_* par leur valeur au moment
+// de la construction. Préfixée, cette adresse serait figée dans l'image Docker,
+// et l'image validée en recette enverrait des liens vers dev.casachams.com une
+// fois promue en production. Sans préfixe, elle est lue au démarrage, ce qui
+// permet à une même image de servir les deux environnements.
+//
+// Ce code ne tourne que côté serveur : le navigateur n'a jamais besoin de la lire.
+function adresseApplication(): string {
+  return process.env.APP_URL || 'https://casachams.com'
+}
+
 function buildApprovalEmail(name: string): string {
   return `
     <!DOCTYPE html>
@@ -74,7 +88,7 @@ function buildApprovalEmail(name: string): string {
           </p>
 
           <div style="text-align:center;margin:32px 0">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://casachams.com'}/login"
+            <a href="${adresseApplication()}/login"
                style="display:inline-block;background:#2563eb;color:white;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px">
               Se connecter
             </a>

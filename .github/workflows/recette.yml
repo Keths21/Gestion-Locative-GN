@@ -58,10 +58,13 @@ jobs:
           # pas des secrets — la clé anon est faite pour aller au navigateur —
           # mais elles passent par le coffre pour ne pas être écrites en clair
           # dans un dépôt public.
+          #
+          # Rien d'autre ici : l'adresse publique de l'environnement est lue au
+          # démarrage (APP_URL, dans le app.env du serveur), justement pour que
+          # cette image reste promouvable en production sans reconstruction.
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            NEXT_PUBLIC_APP_URL=https://dev.casachams.com
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
