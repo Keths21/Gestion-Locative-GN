@@ -19,7 +19,7 @@ export default function HorsLigne() {
       </p>
       <Link
         href="/carte"
-        className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+        className="rounded-lg bg-primaire px-5 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui"
       >
         Revenir à la carte
       </Link>

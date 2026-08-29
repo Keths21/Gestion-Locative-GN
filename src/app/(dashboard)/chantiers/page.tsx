@@ -15,14 +15,14 @@ import type { Chantier, NatureChantier, StatutChantier } from '@/types'
 
 const couleursStatut: Record<StatutChantier, string> = {
   prevu: 'bg-gray-100 text-gray-700',
-  en_cours: 'bg-blue-100 text-blue-700',
+  en_cours: 'bg-primaire-tenue text-primaire',
   suspendu: 'bg-amber-100 text-amber-800',
   livre: 'bg-green-100 text-green-700',
   abandonne: 'bg-gray-100 text-gray-500',
 }
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function PageChantiers() {
   const supabase = useMemo(() => createClient(), [])
@@ -110,7 +110,7 @@ export default function PageChantiers() {
         </div>
         <button
           onClick={() => setCreation(true)}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
         >
           <Plus size={16} /> Nouveau chantier
         </button>
@@ -144,7 +144,7 @@ export default function PageChantiers() {
           </p>
           <div className="flex gap-2 sm:col-span-2">
             <button onClick={creer}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                    className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
               Créer
             </button>
             <button onClick={() => setCreation(false)}
@@ -159,7 +159,7 @@ export default function PageChantiers() {
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input value={recherche} onChange={(e) => setRecherche(e.target.value)}
                placeholder="Nom, référence, commune…"
-               className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+               className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primaire" />
       </div>
 
       {chargement ? (
@@ -176,7 +176,7 @@ export default function PageChantiers() {
             const depasse = (r?.depassement ?? 0) > 0
             return (
               <button key={c.id} onClick={() => setSelectionId(c.id)}
-                      className="rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-blue-300 hover:bg-blue-50/40">
+                      className="rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-primaire hover:bg-primaire-tenue">
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <span className="font-semibold text-gray-900">{c.nom}</span>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${couleursStatut[c.statut]}`}>
@@ -191,7 +191,7 @@ export default function PageChantiers() {
                     </span>
                   )}
                   {(c.bien_id || c.parcelle_id) && (
-                    <span className="inline-flex items-center gap-1 text-blue-600">
+                    <span className="inline-flex items-center gap-1 text-primaire">
                       <Link2 size={11} /> rattaché
                     </span>
                   )}
@@ -210,7 +210,7 @@ export default function PageChantiers() {
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
                       <div
-                        className={`h-full rounded-full ${depasse ? 'bg-red-500' : 'bg-blue-500'}`}
+                        className={`h-full rounded-full ${depasse ? 'bg-red-500' : 'bg-primaire'}`}
                         style={{ width: `${Math.min(100, (r.realise / r.prevu) * 100)}%` }}
                       />
                     </div>
@@ -251,7 +251,7 @@ export default function PageChantiers() {
                       onClick={() => setOnglet(cle)}
                       className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
                         onglet === cle
-                          ? 'border-blue-600 text-blue-700'
+                          ? 'border-primaire text-primaire'
                           : 'border-transparent text-gray-500 hover:text-gray-700'
                       }`}
                     >

@@ -32,7 +32,7 @@ import {
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function TableauBudget({
   chantierId,
@@ -170,7 +170,7 @@ export default function TableauBudget({
         {[
           ['Budget prévu', synthese.prevu_total, 'text-gray-900'],
           ['Engagé (devis)', synthese.engage_total, 'text-amber-700'],
-          ['Réalisé (factures)', synthese.realise_total, 'text-blue-700'],
+          ['Réalisé (factures)', synthese.realise_total, 'text-primaire'],
           ['Payé', synthese.paye_total, 'text-green-700'],
         ].map(([libelle, valeur, couleur]) => (
           <div key={libelle as string} className="rounded-lg border border-gray-200 bg-white px-3 py-3">
@@ -227,7 +227,7 @@ export default function TableauBudget({
                       <input
                         defaultValue={p.base}
                         onBlur={(e) => void majPrevu(p.id, e.target.value)}
-                        className="w-32 rounded border border-gray-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-32 rounded border border-gray-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                         inputMode="decimal"
                         aria-label={`Budget prévu — ${p.libelle}`}
                       />
@@ -236,7 +236,7 @@ export default function TableauBudget({
                   <td className="px-4 py-2.5 text-right tabular-nums text-amber-700">
                     {p.engage ? formatMontant(p.engage) : '—'}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-blue-700">
+                  <td className="px-4 py-2.5 text-right tabular-nums text-primaire">
                     {p.realise ? formatMontant(p.realise) : '—'}
                   </td>
                   <td
@@ -260,7 +260,7 @@ export default function TableauBudget({
           {!lectureSeule && (
             <button
               onClick={() => setSaisie(!saisie)}
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+              className="flex items-center gap-1.5 rounded-lg bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui"
             >
               <Plus size={14} /> Ajouter
             </button>
@@ -319,7 +319,7 @@ export default function TableauBudget({
             <div className="sm:col-span-2">
               <button
                 onClick={ajouter}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                className="flex items-center gap-2 rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
               >
                 <Check size={15} /> Enregistrer
               </button>
@@ -349,7 +349,7 @@ export default function TableauBudget({
                       ? 'bg-amber-100 text-amber-800'
                       : d.type === 'devis'
                         ? 'bg-gray-100 text-gray-700'
-                        : 'bg-blue-100 text-blue-800'
+                        : 'bg-primaire-tenue text-primaire'
                   }`}
                 >
                   {LIBELLES_TYPE_DEPENSE[d.type]}

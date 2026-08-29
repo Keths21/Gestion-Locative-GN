@@ -148,7 +148,7 @@ function Carte() {
                   key={k}
                   onClick={() => setFond(k)}
                   className={`rounded-md px-3 py-2 text-left text-sm ${
-                    fond === k ? 'bg-blue-50 font-semibold text-blue-700' : 'hover:bg-gray-50'
+                    fond === k ? 'bg-primaire-tenue font-semibold text-primaire' : 'hover:bg-gray-50'
                   }`}
                 >
                   {FONDS[k].nom}
@@ -161,7 +161,7 @@ function Carte() {
                 type="checkbox"
                 checked={reperes}
                 onChange={(e) => setReperes(e.target.checked)}
-                className="accent-blue-600"
+                className="accent-primaire"
               />
               Noms et repères
             </label>
@@ -170,7 +170,7 @@ function Carte() {
                 type="checkbox"
                 checked={etiquettes}
                 onChange={(e) => setEtiquettes(e.target.checked)}
-                className="accent-blue-600"
+                className="accent-primaire"
               />
               Étiquettes des parcelles
             </label>
@@ -229,7 +229,7 @@ function Carte() {
         )}
         <button
           onClick={() => setMenuAjout(!menuAjout)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-primaire text-white shadow-xl hover:bg-primaire-appui"
           aria-label={menuAjout ? 'Fermer le menu' : 'Ajouter une parcelle'}
         >
           {menuAjout ? <X size={22} /> : <Plus size={22} />}
@@ -315,7 +315,7 @@ function BoutonAjout({
       onClick={onClick}
       className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-gray-800 shadow-lg hover:bg-gray-50"
     >
-      <span className="text-blue-600">{icone}</span>
+      <span className="text-primaire">{icone}</span>
       {libelle}
     </button>
   )

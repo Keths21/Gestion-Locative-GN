@@ -145,9 +145,9 @@ export default function RelancesPage() {
           <p className="text-sm text-orange-600 font-medium">Locataires concernés</p>
           <p className="text-2xl font-bold text-orange-700 mt-1">{impayes.length}</p>
         </div>
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-          <p className="text-sm text-blue-600 font-medium">Paiements en retard</p>
-          <p className="text-2xl font-bold text-blue-700 mt-1">{impayes.reduce((s, i) => s + i.paiements.length, 0)}</p>
+        <div className="bg-primaire-tenue border border-primaire/20 rounded-xl p-4">
+          <p className="text-sm text-primaire font-medium">Paiements en retard</p>
+          <p className="text-2xl font-bold text-primaire mt-1">{impayes.reduce((s, i) => s + i.paiements.length, 0)}</p>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export default function RelancesPage() {
       {/* Liste des impayés */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire"></div>
         </div>
       ) : impayes.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100">

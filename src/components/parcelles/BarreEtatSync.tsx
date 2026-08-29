@@ -33,7 +33,7 @@ export default function BarreEtatSync({ compact }: { compact?: boolean }) {
   const etat = !enLigne
     ? { texte: 'Hors ligne', classe: 'text-amber-600 hover:bg-amber-50', Icone: CloudOff }
     : syncEnCours
-      ? { texte: 'Synchronisation…', classe: 'text-blue-600 hover:bg-blue-50', Icone: RefreshCw }
+      ? { texte: 'Synchronisation…', classe: 'text-primaire hover:bg-primaire-tenue', Icone: RefreshCw }
       : enAttente > 0
         ? {
             texte: `${enAttente} en attente`,

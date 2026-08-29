@@ -27,7 +27,7 @@ function InputField({ label, icon: Icon, value, onChange, type = 'text', placeho
         <input
           type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm"
         />
       </div>
     </div>
@@ -38,7 +38,7 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <Icon className="h-4 w-4 text-blue-600" />
+        <Icon className="h-4 w-4 text-primaire" />
         <h2 className="font-semibold text-gray-900 text-sm">{title}</h2>
       </div>
       <div className="p-6">{children}</div>
@@ -62,11 +62,11 @@ function CompletionBar({ form }: { form: typeof EMPTY_FORM }) {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-gray-700">Profil complété</span>
-        <span className={`text-sm font-bold ${pct === 100 ? 'text-green-600' : pct >= 60 ? 'text-blue-600' : 'text-yellow-600'}`}>{pct}%</span>
+        <span className={`text-sm font-bold ${pct === 100 ? 'text-green-600' : pct >= 60 ? 'text-primaire' : 'text-yellow-600'}`}>{pct}%</span>
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
         <div
-          className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-green-500' : pct >= 60 ? 'bg-blue-500' : 'bg-yellow-500'}`}
+          className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-green-500' : pct >= 60 ? 'bg-primaire' : 'bg-yellow-500'}`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -89,13 +89,13 @@ function AperçuDocument({ form }: { form: typeof EMPTY_FORM }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <Eye className="h-4 w-4 text-blue-600" />
+        <Eye className="h-4 w-4 text-primaire" />
         <h2 className="font-semibold text-gray-900 text-sm">Aperçu dans les documents PDF</h2>
       </div>
       <div className="p-6">
         <div className="border border-dashed border-gray-200 rounded-lg p-4 bg-gray-50 text-sm space-y-1">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-primaire rounded-lg flex items-center justify-center">
               <Building2 className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -178,7 +178,7 @@ export default function ParametresPage() {
 
   if (loading) return (
     <div className="flex justify-center py-20">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" />
     </div>
   )
 
@@ -203,7 +203,7 @@ export default function ParametresPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea value={form.description} onChange={e => set('description', e.target.value)}
                     placeholder="Spécialiste de la gestion locative à Conakry..."
-                    rows={2} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" />
+                    rows={2} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <InputField label="RCCM" icon={FileText} value={form.rccm} onChange={v => set('rccm', v)} placeholder="GN-CON-2024-B-1234" />
@@ -234,7 +234,7 @@ export default function ParametresPage() {
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <select value={form.devise} onChange={e => set('devise', e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm appearance-none">
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm appearance-none">
                     {DEVISES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                   </select>
                 </div>
@@ -242,7 +242,7 @@ export default function ParametresPage() {
             </Section>
 
             <button type="submit" disabled={saving}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50">
+              className="w-full flex items-center justify-center gap-2 bg-primaire hover:bg-primaire-appui text-white font-semibold py-3 rounded-lg transition disabled:opacity-50">
               {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
               {saving ? 'Sauvegarde en cours...' : 'Sauvegarder les paramètres'}
             </button>
@@ -273,18 +273,18 @@ export default function ParametresPage() {
           </Section>
 
           {/* Emails */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-            <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2 text-sm">
+          <div className="bg-primaire-tenue border border-primaire/20 rounded-xl p-5">
+            <h3 className="font-semibold text-primaire mb-3 flex items-center gap-2 text-sm">
               <Mail className="h-4 w-4" /> Emails — Resend
             </h3>
-            <ol className="space-y-1.5 text-xs text-blue-800">
+            <ol className="space-y-1.5 text-xs text-primaire">
               <li className="flex gap-2"><span className="font-bold">1.</span> Crée un compte sur <strong>resend.com</strong></li>
               <li className="flex gap-2"><span className="font-bold">2.</span> Dashboard → API Keys → Create</li>
-              <li className="flex gap-2"><span className="font-bold">3.</span> Copie la clé dans <code className="bg-blue-100 px-1 rounded">.env.local</code></li>
-              <li className="flex gap-2"><span className="font-bold">4.</span> <code className="bg-blue-100 px-1 rounded">RESEND_API_KEY=re_xxx</code></li>
-              <li className="flex gap-2"><span className="font-bold">5.</span> Redémarre <code className="bg-blue-100 px-1 rounded">npm run dev</code></li>
+              <li className="flex gap-2"><span className="font-bold">3.</span> Copie la clé dans <code className="bg-primaire-tenue px-1 rounded">.env.local</code></li>
+              <li className="flex gap-2"><span className="font-bold">4.</span> <code className="bg-primaire-tenue px-1 rounded">RESEND_API_KEY=re_xxx</code></li>
+              <li className="flex gap-2"><span className="font-bold">5.</span> Redémarre <code className="bg-primaire-tenue px-1 rounded">npm run dev</code></li>
             </ol>
-            <p className="text-xs text-blue-600 mt-3 font-medium">3 000 emails/mois gratuits</p>
+            <p className="text-xs text-primaire mt-3 font-medium">3 000 emails/mois gratuits</p>
           </div>
         </div>
       </div>

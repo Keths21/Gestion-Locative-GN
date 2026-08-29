@@ -1,35 +1,171 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   JETONS
+
+   L'application n'en avait aucun : chaque écran redécidait ses couleurs, d'où
+   sept teintes de marque concurrentes (bleu, violet, rose, émeraude…) et la
+   même chaîne de classes recopiée d'un fichier à l'autre. Tout part désormais
+   d'ici.
+
+   Direction retenue : suisse/minimale — celle que la recherche donne pour les
+   outils professionnels denses, avec un risque d'accessibilité faible et aucun
+   coût de rendu. Écartés au passage : le verre dépoli, qui coûte cher en flou
+   sur les téléphones d'entrée de gamme, et la palette sombre — l'application
+   sert aussi dehors, en plein soleil, pour relever une parcelle ou un chantier.
+
+   Un point de vigilance a guidé le choix des couleurs : vert, ambre et rouge
+   sont DÉJÀ porteurs de sens ici (payé, en attente, impayé). La couleur de
+   marque devait donc leur être étrangère, sans quoi un bouton d'action se
+   lirait comme un état de paiement. D'où le sarcelle.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- Neutres ------------------------------------------------------------ */
+  --fond: #f8fafc;
+  --surface: #ffffff;
+  --surface-appuyee: #f1f5f9;
+  --bordure: #e2e8f0;
+  --bordure-forte: #cbd5e1;
+
+  /* Trois niveaux de texte, pas davantage. Le gris-sur-gris de l'ancienne
+     interface (text-gray-400 sur fond blanc) tombait sous le seuil lisible. */
+  --texte: #0f172a;        /* 17:1 sur blanc */
+  --texte-doux: #475569;   /* 7.5:1 */
+  --texte-faible: #64748b; /* 5.0:1 — plancher, jamais en dessous */
+
+  /* --- Marque ------------------------------------------------------------- */
+  --primaire: #0f766e;
+  --primaire-appui: #0d9488;
+  --primaire-tenue: #f0fdfa;
+  --sur-primaire: #ffffff;
+
+  /* --- États -------------------------------------------------------------- */
+  /* Volontairement assombris par rapport aux -500 de Tailwind : un vert 500
+     sur blanc plafonne à 2,8:1, illisible pour un montant. */
+  --succes: #15803d;
+  --succes-tenue: #f0fdf4;
+  --alerte: #b45309;
+  --alerte-tenue: #fffbeb;
+  --danger: #b91c1c;
+  --danger-tenue: #fef2f2;
+  --info: #1d4ed8;
+  --info-tenue: #eff6ff;
+
+  /* --- Élévation ---------------------------------------------------------- */
+  /* Deux niveaux suffisent. L'ombre porte l'information « ceci flotte », pas
+     un effet décoratif. */
+  --ombre-carte: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --ombre-flottante: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 10px 20px -4px rgba(15, 23, 42, 0.1);
+
+  --rayon: 0.625rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-fond: var(--fond);
+  --color-surface: var(--surface);
+  --color-surface-appuyee: var(--surface-appuyee);
+  --color-bordure: var(--bordure);
+  --color-bordure-forte: var(--bordure-forte);
+  --color-texte: var(--texte);
+  --color-texte-doux: var(--texte-doux);
+  --color-texte-faible: var(--texte-faible);
+  --color-primaire: var(--primaire);
+  --color-primaire-appui: var(--primaire-appui);
+  --color-primaire-tenue: var(--primaire-tenue);
+  --color-sur-primaire: var(--sur-primaire);
+  --color-succes: var(--succes);
+  --color-succes-tenue: var(--succes-tenue);
+  --color-alerte: var(--alerte);
+  --color-alerte-tenue: var(--alerte-tenue);
+  --color-danger: var(--danger);
+  --color-danger-tenue: var(--danger-tenue);
+  --color-info: var(--info);
+  --color-info-tenue: var(--info-tenue);
+  --shadow-carte: var(--ombre-carte);
+  --shadow-flottante: var(--ombre-flottante);
+  --radius-jeton: var(--rayon);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--fond);
+  color: var(--texte);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHIFFRES
+
+   Sans cela, les montants d'une colonne ne s'alignent pas : les chiffres
+   proportionnels donnent au 1 une chasse plus étroite qu'au 8, et l'œil ne
+   peut plus comparer deux loyers en les survolant. C'est la raison d'être de
+   la police à chasse fixe dans cette interface — pas un effet de style.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.chiffres {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOCUS
+
+   L'anneau était laissé au défaut du navigateur, donc invisible sur plusieurs
+   fonds. WCAG 2.2 demande un périmètre d'au moins 2px et un contraste d'état
+   de 3:1 — d'où ces deux pixels pleins plutôt qu'une ombre diffuse.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--primaire);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* L'en-tête mobile est collant : sans cette réserve, la cible qui reçoit le
+   focus au clavier peut se retrouver dessous, hors de vue. */
+main {
+  scroll-padding-top: 4rem;
 }
 
 input,
 select,
 textarea {
-  color: #111827;
-  background-color: #ffffff;
+  color: var(--texte);
+  background-color: var(--surface);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--texte-faible);
+}
+
+/* Correction du fond bleu/jaune des autofills navigateur */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset;
+  -webkit-text-fill-color: var(--texte);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOUVEMENT
+
+   Réglé sur « subtil » : une application de travail ne doit pas faire attendre
+   celui qui la connaît par cœur. Et le réglage système est respecté — le
+   mouvement peut déclencher des malaises, ce n'est pas une préférence
+   esthétique.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -40,11 +176,11 @@ textarea {
    --------------------------------------------------------------------------- */
 
 .etiquette-parcelle {
-  background: rgba(17, 24, 39, 0.82);
+  background: rgba(15, 23, 42, 0.84);
   border: none;
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  color: #f9fafb;
+  box-shadow: var(--ombre-flottante);
+  color: #f8fafc;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
@@ -64,7 +200,6 @@ textarea {
   opacity: 0.75;
 }
 
-/* Les panneaux flottants de la carte passent au-dessus des contrôles Leaflet. */
 .leaflet-container {
   font-family: inherit;
 }
@@ -80,18 +215,4 @@ textarea {
 .leaflet-container {
   overscroll-behavior: none;
   touch-action: pan-x pan-y;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #9ca3af;
-}
-
-/* Correction du fond bleu/jaune des autofills navigateur */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
-  -webkit-text-fill-color: #111827;
-  transition: background-color 5000s ease-in-out 0s;
 }

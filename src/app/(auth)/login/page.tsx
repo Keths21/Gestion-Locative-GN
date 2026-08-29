@@ -4,6 +4,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
+
+// L'anneau de focus est désormais posé globalement (globals.css) : le champ
+// n'a plus à le redéfinir, il lui suffit de ne pas le supprimer.
+const champ = cn(
+  'w-full rounded-[var(--rayon)] border border-bordure-forte bg-surface px-3.5',
+  'min-h-11 text-sm text-texte transition-colors duration-150',
+  'hover:border-texte-faible',
+)
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -30,42 +39,55 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-blue-600 p-3 rounded-xl mb-4">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">CASA CHAMS</h1>
-          <p className="text-gray-500 mt-1 text-sm">Connectez-vous à votre espace</p>
+    <div className="flex min-h-dvh items-center justify-center bg-fond p-4">
+      <div className="w-full max-w-md rounded-[var(--rayon)] border border-bordure bg-surface p-8 shadow-flottante">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="mb-4 rounded-[var(--rayon)] bg-primaire p-3" aria-hidden>
+            <Building2 className="h-7 w-7 text-sur-primaire" />
+          </span>
+          <h1 className="text-xl font-semibold tracking-tight text-texte">CASA CHAMS</h1>
+          <p className="mt-1 text-sm text-texte-doux">Connectez-vous à votre espace</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
+          {/* role=alert : l'erreur doit être annoncée au moment où elle
+              apparaît, sans quoi elle passe inaperçue au clavier. */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div
+              role="alert"
+              className="rounded-[var(--rayon)] border border-danger/20 bg-danger-tenue px-4 py-3 text-sm text-danger"
+            >
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="courriel" className="mb-1.5 block text-sm font-medium text-texte">
+              Email
+            </label>
             <input
+              id="courriel"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              className={champ}
               placeholder="votre@email.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+            <label htmlFor="motdepasse" className="mb-1.5 block text-sm font-medium text-texte">
+              Mot de passe
+            </label>
             <input
+              id="motdepasse"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              className={champ}
               placeholder="••••••••"
               required
             />
@@ -74,16 +96,20 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className={cn(
+              'flex min-h-11 w-full cursor-pointer items-center justify-center gap-2',
+              'rounded-[var(--rayon)] bg-primaire px-4 text-sm font-semibold text-sur-primaire',
+              'transition-colors duration-150 hover:bg-primaire-appui disabled:opacity-50',
+            )}
           >
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+            {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="mt-6 text-center text-sm text-texte-doux">
           Pas encore de compte ?{' '}
-          <Link href="/register" className="text-blue-600 hover:underline font-medium">
+          <Link href="/register" className="font-medium text-primaire hover:underline">
             S&apos;inscrire
           </Link>
         </p>

@@ -52,7 +52,7 @@ export default function ItineraireParcelle({ parcelle }: { parcelle: Parcelle })
           href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`}
           target="_blank"
           rel="noreferrer"
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
         >
           <Signpost size={15} /> Itinéraire
         </a>

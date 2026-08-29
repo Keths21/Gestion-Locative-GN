@@ -19,7 +19,7 @@ import { formatMontant } from '@/lib/utils'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function Echeancier({
   chantierId,
@@ -114,7 +114,7 @@ export default function Echeancier({
           ['Total prévu', s.total_prevu, 'text-gray-900'],
           ['Déjà versé', s.total_paye, 'text-green-700'],
           ['Exigible', s.exigible_maintenant, 'text-amber-700'],
-          ['Reste à payer', s.reste_a_payer, 'text-blue-700'],
+          ['Reste à payer', s.reste_a_payer, 'text-primaire'],
         ] as const).map(([libelle, valeur, couleur]) => (
           <div key={libelle} className="rounded-lg border border-gray-200 bg-white px-3 py-3">
             <div className={`text-base font-semibold tabular-nums ${couleur}`}>
@@ -135,7 +135,7 @@ export default function Echeancier({
       <div className="flex flex-wrap gap-2">
         {!lectureSeule && (
           <button onClick={() => setSaisie(!saisie)}
-                  className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                  className="flex items-center gap-1.5 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
             <Plus size={15} /> Ajouter une échéance
           </button>
         )}
@@ -148,7 +148,7 @@ export default function Echeancier({
         )}
       </div>
 
-      {message && <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800">{message}</div>}
+      {message && <div className="rounded-lg bg-primaire-tenue px-3 py-2 text-sm text-primaire">{message}</div>}
       {erreur && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</div>}
 
       {saisie && !lectureSeule && (
@@ -172,7 +172,7 @@ export default function Echeancier({
           </p>
           <div className="sm:col-span-2">
             <button onClick={ajouter}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                    className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
               Enregistrer
             </button>
           </div>

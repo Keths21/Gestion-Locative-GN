@@ -36,7 +36,7 @@ export default function RegisterPage() {
   }
 
   if (success) return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-fond to-surface-appuyee flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-green-100 p-4 rounded-full">
@@ -50,7 +50,7 @@ export default function RegisterPage() {
         <p className="text-gray-500 text-sm mb-6">
           Votre compte sera ensuite examiné par un administrateur avant que vous puissiez accéder à la plateforme.
         </p>
-        <Link href="/login" className="text-blue-600 hover:underline font-medium text-sm">
+        <Link href="/login" className="text-primaire hover:underline font-medium text-sm">
           Retour à la connexion
         </Link>
       </div>
@@ -58,10 +58,10 @@ export default function RegisterPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-fond to-surface-appuyee flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-blue-600 p-3 rounded-xl mb-4">
+          <div className="bg-primaire p-3 rounded-xl mb-4">
             <Building2 className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
@@ -79,7 +79,7 @@ export default function RegisterPage() {
               type="text"
               value={nom}
               onChange={(e) => setNom(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="Votre nom"
               required
             />
@@ -91,7 +91,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="votre@email.com"
               required
             />
@@ -103,7 +103,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="Min. 8 caractères"
               minLength={8}
               required
@@ -113,7 +113,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-primaire hover:bg-primaire-appui text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
             {loading ? 'Création...' : 'Créer mon compte'}
@@ -122,7 +122,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Déjà un compte ?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline font-medium">Se connecter</Link>
+          <Link href="/login" className="text-primaire hover:underline font-medium">Se connecter</Link>
         </p>
       </div>
     </div>

@@ -163,7 +163,7 @@ export default function OutilReleveGps({
             step={1}
             value={seuil}
             onChange={(e) => setSeuil(Number(e.target.value))}
-            className="flex-1 accent-blue-600"
+            className="flex-1 accent-primaire"
           />
           <span className="w-9 text-right text-gray-800">{seuil} m</span>
         </label>
@@ -171,7 +171,7 @@ export default function OutilReleveGps({
 
       <div className="grid grid-cols-4 gap-2">
         <button
-          className="col-span-2 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40"
+          className="col-span-2 flex items-center justify-center gap-2 rounded-lg bg-primaire px-3 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:opacity-40"
           onClick={ajouter}
           disabled={!position}
           title={position ? undefined : 'Position GPS indisponible'}
@@ -200,7 +200,7 @@ export default function OutilReleveGps({
       </div>
 
       <button
-        className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primaire px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:cursor-not-allowed disabled:opacity-40"
         disabled={!polygone || !simple}
         onClick={() => polygone && onValider(polygone, precisionMoyenne)}
       >

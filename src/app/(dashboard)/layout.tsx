@@ -56,30 +56,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    * Le menu était en z-50, donc sous les contrôles de carte : il s'ouvrait
    * bel et bien, mais derrière la carte, et paraissait inaccessible.
    */
+  // Une seule définition du lien de navigation, état actif compris : la barre
+  // latérale et la section Administration divergeaient auparavant (bleu ici,
+  // violet là), ce qui laissait croire à deux natures de navigation.
+  const lienNav = (actif: boolean) => cn(
+    'flex items-center gap-3 rounded-[var(--rayon)] px-3 text-sm font-medium',
+    'transition-colors duration-150 min-h-11',
+    actif
+      ? 'bg-primaire text-sur-primaire'
+      : 'text-texte-doux hover:bg-surface-appuyee hover:text-texte',
+  )
+
   return (
-    <div className="flex h-dvh overflow-hidden bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex h-dvh overflow-hidden bg-fond">
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-[1200] w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        'fixed inset-y-0 left-0 z-[1200] w-64 border-r border-bordure bg-surface',
+        'transform transition-transform duration-300 lg:static lg:inset-auto lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
       )}>
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-blue-600" />
+        <div className="flex h-full flex-col">
+          {/* Marque */}
+          <div className="flex items-center justify-between border-b border-bordure p-5">
+            <div className="flex items-center gap-2.5">
+              <span className="rounded-[var(--rayon)] bg-primaire p-1.5" aria-hidden>
+                <Building2 className="h-5 w-5 text-sur-primaire" />
+              </span>
               <div>
-                <h1 className="font-bold text-gray-900 text-sm">CASA CHAMS</h1>
-                <p className="text-xs text-gray-500">Guinée</p>
+                <p className="text-sm font-semibold tracking-tight text-texte">CASA CHAMS</p>
+                <p className="text-xs text-texte-faible">Guinée</p>
               </div>
             </div>
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="cursor-pointer rounded p-1 text-texte-doux hover:bg-surface-appuyee lg:hidden"
+              aria-label="Fermer le menu"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -88,14 +104,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
+                  // aria-current : le seul indice de la page courante était la
+                  // couleur, invisible pour un lecteur d'écran.
+                  aria-current={isActive ? 'page' : undefined}
+                  className={lienNav(isActive)}
                 >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
                   {item.label}
                 </Link>
               )
@@ -103,68 +117,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {isAdmin && (
               <>
-                <div className="pt-3 pb-1">
-                  <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</p>
-                </div>
+                <p className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-texte-faible">
+                  Administration
+                </p>
                 <Link
                   href="/admin/users"
                   onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    pathname.startsWith('/admin')
-                      ? "bg-purple-600 text-white"
-                      : "text-purple-700 hover:bg-purple-50"
-                  )}
+                  aria-current={pathname.startsWith('/admin') ? 'page' : undefined}
+                  className={lienNav(pathname.startsWith('/admin'))}
                 >
-                  <Shield className="h-5 w-5 flex-shrink-0" />
+                  <Shield className="h-[18px] w-[18px] shrink-0" aria-hidden />
                   Utilisateurs
                 </Link>
               </>
             )}
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t">
+          <div className="border-t border-bordure p-3">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition-colors"
+              className={cn(
+                'flex w-full cursor-pointer items-center gap-3 rounded-[var(--rayon)] px-3',
+                'min-h-11 text-sm font-medium text-texte-doux',
+                'transition-colors duration-150 hover:bg-danger-tenue hover:text-danger',
+              )}
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-[18px] w-[18px]" aria-hidden />
               Déconnexion
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Overlay mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[1150] lg:hidden"
+          className="fixed inset-0 z-[1150] bg-texte/40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden
         />
       )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header mobile — au-dessus de la carte, et respectant l'encoche
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* En-tête mobile — au-dessus de la carte, et respectant l'encoche
             de l'écran quand l'application est installée. */}
         <header
-          className="lg:hidden relative z-[1100] shrink-0 bg-white shadow-sm p-4 flex items-center gap-4"
-          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+          className={cn(
+            'relative z-[1100] flex shrink-0 items-center gap-3 lg:hidden',
+            'border-b border-bordure bg-surface px-4 pb-3',
+          )}
+          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
         >
-          <button onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
-            <Menu className="h-6 w-6" />
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Ouvrir le menu"
+            className="-ml-2 cursor-pointer rounded p-2 text-texte-doux hover:bg-surface-appuyee"
+          >
+            <Menu className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-blue-600" />
-            <span className="font-bold text-gray-900">CASA CHAMS</span>
+            <span className="rounded-md bg-primaire p-1" aria-hidden>
+              <Building2 className="h-4 w-4 text-sur-primaire" />
+            </span>
+            <span className="font-semibold tracking-tight text-texte">CASA CHAMS</span>
           </div>
         </header>
 
-        {/* Page content */}
         <main className={cn(
-          "flex-1 min-h-0",
-          pleinEcran ? "overflow-hidden" : "p-6 overflow-auto"
+          'min-h-0 flex-1',
+          pleinEcran ? 'overflow-hidden' : 'overflow-auto p-5 lg:p-6',
         )}>
           {children}
         </main>

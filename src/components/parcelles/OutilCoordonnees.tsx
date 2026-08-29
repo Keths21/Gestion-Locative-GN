@@ -127,7 +127,7 @@ export default function OutilCoordonnees({
                 Ordre des colonnes
               </label>
               <select
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
                 value={ordre}
                 onChange={(e) => setOrdre(e.target.value as 'lat_lon' | 'lon_lat')}
               >
@@ -143,7 +143,7 @@ export default function OutilCoordonnees({
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Zone UTM</label>
                 <input
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
                   inputMode="numeric"
                   value={zone}
                   onChange={(e) => setZone(e.target.value)}
@@ -153,7 +153,7 @@ export default function OutilCoordonnees({
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Hémisphère</label>
                 <select
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
                   value={hemisphere}
                   onChange={(e) => setHemisphere(e.target.value as 'N' | 'S')}
                 >
@@ -169,14 +169,14 @@ export default function OutilCoordonnees({
               <label className="text-sm font-medium text-gray-700">Sommets</label>
               <button
                 type="button"
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-primaire hover:underline"
                 onClick={() => setTexte(systeme === 'geo' ? EXEMPLE_GEO : EXEMPLE_UTM)}
               >
                 Insérer un exemple
               </button>
             </div>
             <textarea
-              className="min-h-44 w-full rounded-lg border border-gray-300 px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="min-h-44 w-full rounded-lg border border-gray-300 px-4 py-2.5 font-mono text-sm outline-none focus:ring-2 focus:ring-primaire"
               value={texte}
               onChange={(e) => setTexte(e.target.value)}
               placeholder={systeme === 'geo' ? EXEMPLE_GEO : EXEMPLE_UTM}
@@ -234,7 +234,7 @@ export default function OutilCoordonnees({
 
         <footer className="marge-bas-sure shrink-0 border-t border-gray-200 px-5 py-4">
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primaire px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:cursor-not-allowed disabled:opacity-40"
             disabled={!polygone || !simple}
             onClick={() => polygone && onValider(polygone)}
           >

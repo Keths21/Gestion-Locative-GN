@@ -145,7 +145,7 @@ export default function DocumentsPage() {
           <h2 className="font-semibold text-gray-900">Générer un document par locataire</h2>
         </div>
         {loading ? (
-          <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+          <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primaire"></div></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

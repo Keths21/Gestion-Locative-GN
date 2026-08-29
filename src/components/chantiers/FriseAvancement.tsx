@@ -24,7 +24,7 @@ import { formatMontant } from '@/lib/utils'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function FriseAvancement({
   chantierId,
@@ -111,7 +111,7 @@ export default function FriseAvancement({
               await creerPhasesStandard(supabase, chantierId)
               await charger()
             }}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
           >
             Créer les phases usuelles
           </button>
@@ -132,7 +132,7 @@ export default function FriseAvancement({
           </span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-          <div className="h-full rounded-full bg-blue-600" style={{ width: `${s.avancement_global}%` }} />
+          <div className="h-full rounded-full bg-primaire" style={{ width: `${s.avancement_global}%` }} />
         </div>
         <p className="mt-2 flex items-start gap-1.5 text-xs text-gray-500">
           <Info size={12} className="mt-0.5 shrink-0" />
@@ -184,14 +184,14 @@ export default function FriseAvancement({
                       placeholder="Montant"
                       inputMode="decimal"
                       aria-label={`Montant prévu — ${p.nom}`}
-                      className="w-28 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-28 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                     />
                     <input
                       defaultValue={p.avancement_pct}
                       onBlur={(e) => void majPhase(p.id, 'avancement_pct', e.target.value)}
                       inputMode="numeric"
                       aria-label={`Avancement — ${p.nom}`}
-                      className="w-14 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-14 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                     />
                   </>
                 )}
@@ -203,7 +203,7 @@ export default function FriseAvancement({
 
             <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-gray-100">
               <div
-                className={`h-full rounded-full ${p.avancement_pct === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                className={`h-full rounded-full ${p.avancement_pct === 100 ? 'bg-green-500' : 'bg-primaire'}`}
                 style={{ width: `${p.avancement_pct}%` }}
               />
             </div>
@@ -231,7 +231,7 @@ export default function FriseAvancement({
                     {!jl.date_validation && !lectureSeule && (
                       <button
                         onClick={() => void valider(jl.id)}
-                        className="shrink-0 rounded-md bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700"
+                        className="shrink-0 rounded-md bg-primaire px-2 py-1 text-xs font-semibold text-white hover:bg-primaire-appui"
                       >
                         <Check size={12} className="inline" /> Valider
                       </button>
@@ -264,7 +264,7 @@ export default function FriseAvancement({
                          value={j.montant} onChange={(e) => setJ({ ...j, montant: e.target.value })} />
                   <div className="flex gap-2 sm:col-span-3">
                     <button onClick={() => void creerJalon(p.id)}
-                            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                            className="rounded-lg bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui">
                       Ajouter
                     </button>
                     <button onClick={() => setSaisieJalon(null)}
@@ -275,7 +275,7 @@ export default function FriseAvancement({
                 </div>
               ) : (
                 <button onClick={() => setSaisieJalon(p.id)}
-                        className="mt-2 flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                        className="mt-2 flex items-center gap-1 text-xs text-primaire hover:underline">
                   <Plus size={12} /> Ajouter un jalon
                 </button>
               )

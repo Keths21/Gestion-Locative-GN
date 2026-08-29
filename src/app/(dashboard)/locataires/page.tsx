@@ -13,7 +13,7 @@ const EMPTY_FORM = {
 
 function Avatar({ prenom, nom }: { prenom: string; nom: string }) {
   const initiales = `${prenom?.[0] || ''}${nom?.[0] || ''}`.toUpperCase()
-  const couleurs = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500']
+  const couleurs = ['bg-primaire', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500']
   const idx = (prenom.charCodeAt(0) || 0) % couleurs.length
   return (
     <div className={`w-10 h-10 rounded-full ${couleurs[idx]} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
@@ -119,7 +119,7 @@ export default function LocatairesPage() {
 
   const getBienMode = (loc: Locataire) => (loc as any).bien?.mode_location
 
-  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm'
+  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm'
 
   return (
     <div className="space-y-6">
@@ -130,7 +130,7 @@ export default function LocatairesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Locataires</h1>
           <p className="text-gray-500 mt-1">{locataires.length} locataire(s) enregistré(s)</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+        <button onClick={openAdd} className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-lg hover:bg-primaire-appui transition text-sm font-medium">
           <Plus className="h-4 w-4" /> Ajouter un locataire
         </button>
       </div>
@@ -160,13 +160,13 @@ export default function LocatairesPage() {
         <input
           type="text" placeholder="Rechercher par nom, téléphone, email..."
           value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm bg-white"
         />
       </div>
 
       {/* Liste */}
       {loading ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
           <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -190,7 +190,7 @@ export default function LocatairesPage() {
                           {actif ? 'Actif' : 'Sorti'}
                         </span>
                         {mode && (
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${mode === 'airbnb' ? 'bg-pink-100 text-pink-600' : 'bg-blue-100 text-blue-600'}`}>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${mode === 'airbnb' ? 'bg-pink-100 text-pink-600' : 'bg-primaire-tenue text-primaire'}`}>
                             {mode === 'airbnb' ? <Moon className="h-2.5 w-2.5" /> : <Home className="h-2.5 w-2.5" />}
                             {mode === 'airbnb' ? 'Airbnb' : 'Mensuel'}
                           </span>
@@ -222,7 +222,7 @@ export default function LocatairesPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-3 border-t border-gray-100">
-                  <button onClick={() => openEdit(loc)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium">
+                  <button onClick={() => openEdit(loc)} className="flex items-center gap-1 text-xs text-primaire hover:text-primaire-appui font-medium">
                     <Pencil className="h-3.5 w-3.5" /> Modifier
                   </button>
                   <button onClick={() => handleDelete(loc.id, loc.bien_id)} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium ml-auto">
@@ -315,7 +315,7 @@ export default function LocatairesPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-lg hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
                   {submitting ? 'Enregistrement...' : editItem ? 'Enregistrer les modifications' : 'Ajouter le locataire'}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">

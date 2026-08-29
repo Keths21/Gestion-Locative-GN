@@ -20,7 +20,7 @@ const couleursStatut: Record<StatutParcelle, string> = {
   possede: 'bg-green-100 text-green-700',
   en_vente: 'bg-amber-100 text-amber-700',
   vendu: 'bg-gray-100 text-gray-600',
-  loue: 'bg-blue-100 text-blue-700',
+  loue: 'bg-primaire-tenue text-primaire',
   reserve: 'bg-purple-100 text-purple-700',
   prospect: 'bg-gray-100 text-gray-600',
 }
@@ -79,7 +79,7 @@ function Liste() {
           </a>
           <Link
             href="/carte"
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="flex items-center gap-2 rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
           >
             <Map size={16} /> Ouvrir la carte
           </Link>
@@ -174,13 +174,13 @@ function Liste() {
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Nom, référence, commune, propriétaire…"
-            className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primaire"
           />
         </div>
         <select
           value={statut}
           onChange={(e) => setStatut(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
         >
           <option value="">Tous les statuts</option>
           {Object.entries(LIBELLES_STATUT_PARCELLE).map(([k, l]) => (
@@ -196,7 +196,7 @@ function Liste() {
       ) : filtrees.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
           <p className="text-sm text-gray-500">Aucune parcelle.</p>
-          <Link href="/carte" className="mt-2 inline-block text-sm text-blue-600 hover:underline">
+          <Link href="/carte" className="mt-2 inline-block text-sm text-primaire hover:underline">
             Tracer la première sur la carte
           </Link>
         </div>
@@ -219,7 +219,7 @@ function Liste() {
                 <tr
                   key={p.id}
                   onClick={() => setSelectionId(p.id)}
-                  className="cursor-pointer border-b border-gray-100 last:border-0 hover:bg-blue-50/60"
+                  className="cursor-pointer border-b border-gray-100 last:border-0 hover:bg-primaire-tenue"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ function Liste() {
                           {p.nom}
                           {p.bien_id && (
                             <span title="Rattachée à un bien locatif">
-                              <Link2 size={13} className="text-blue-500" />
+                              <Link2 size={13} className="text-primaire" />
                             </span>
                           )}
                         </div>

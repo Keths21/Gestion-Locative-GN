@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-7 w-7 text-blue-600" />
+        <Shield className="h-7 w-7 text-primaire" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
           <p className="text-sm text-gray-500">Validez ou refusez les demandes d&apos;accès</p>
@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
               filter === f
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primaire text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -109,7 +109,7 @@ export default function AdminUsersPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16 text-gray-400">
-            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3" />
+            <div className="animate-spin h-6 w-6 border-2 border-primaire border-t-transparent rounded-full mr-3" />
             Chargement...
           </div>
         ) : filtered.length === 0 ? (

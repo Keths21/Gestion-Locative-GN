@@ -198,7 +198,7 @@ export default function PaiementsPage() {
   const totalAttente = paiements.filter(p => p.statut === 'en_attente').reduce((s, p) => s + p.montant, 0)
   const totalMois = paiements.filter(p => p.statut === 'payé' && p.mois_concerne?.startsWith(moisCourant)).reduce((s, p) => s + p.montant, 0)
 
-  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm'
+  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm'
 
   return (
     <div className="space-y-6">
@@ -217,7 +217,7 @@ export default function PaiementsPage() {
             {generating ? 'Génération...' : 'Générer les loyers'}
           </button>
           <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+            className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-lg hover:bg-primaire-appui transition text-sm font-medium">
             <Plus className="h-4 w-4" /> Enregistrer un paiement
           </button>
         </div>
@@ -248,10 +248,10 @@ export default function PaiementsPage() {
         </div>
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-1">
-            <CreditCard className="h-4 w-4 text-blue-500" />
+            <CreditCard className="h-4 w-4 text-primaire" />
             <p className="text-xs text-gray-500 font-medium">Ce mois-ci</p>
           </div>
-          <p className="text-lg font-bold text-blue-600">{formatMontant(totalMois)}</p>
+          <p className="text-lg font-bold text-primaire">{formatMontant(totalMois)}</p>
         </div>
       </div>
 
@@ -264,7 +264,7 @@ export default function PaiementsPage() {
           { key: 'impayé', label: 'Impayés', count: paiements.filter(p => p.statut === 'impayé').length },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setFiltre(f.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
             {f.label}
             <span className={`text-xs px-1.5 py-0.5 rounded-full ${filtre === f.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>{f.count}</span>
           </button>
@@ -273,7 +273,7 @@ export default function PaiementsPage() {
 
       {/* Liste */}
       {loading ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" /></div>
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" /></div>
       ) : paiementsFiltres.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
           <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -307,7 +307,7 @@ export default function PaiementsPage() {
                       <div className="flex items-center gap-1.5 text-gray-600">
                         {isAirbnb
                           ? <Moon className="h-3.5 w-3.5 text-pink-400 shrink-0" />
-                          : <Home className="h-3.5 w-3.5 text-blue-400 shrink-0" />}
+                          : <Home className="h-3.5 w-3.5 text-texte-faible shrink-0" />}
                         {(p as any).bien?.nom || '-'}
                       </div>
                     </td>
@@ -337,7 +337,7 @@ export default function PaiementsPage() {
                       <div className="flex items-center gap-1 justify-end">
                         {p.statut === 'payé' && (
                           <button onClick={() => handleQuittance(p)} title="Générer quittance"
-                            className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600 transition">
+                            className="p-1.5 hover:bg-primaire-tenue rounded-lg text-primaire transition">
                             <FileText className="h-4 w-4" />
                           </button>
                         )}
@@ -386,7 +386,7 @@ export default function PaiementsPage() {
 
               {/* Badge mode */}
               {form.locataire_id && (
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${modeAirbnb ? 'bg-pink-50 text-pink-700' : 'bg-blue-50 text-blue-700'}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${modeAirbnb ? 'bg-pink-50 text-pink-700' : 'bg-primaire-tenue text-primaire'}`}>
                   {modeAirbnb ? <Moon className="h-4 w-4" /> : <Home className="h-4 w-4" />}
                   {modeAirbnb ? 'Location Airbnb — paiement calculé par nuit' : 'Location mensuelle — loyer mensuel'}
                 </div>
@@ -457,7 +457,7 @@ export default function PaiementsPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-lg hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
                   {submitting ? 'Enregistrement...' : 'Enregistrer le paiement'}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">

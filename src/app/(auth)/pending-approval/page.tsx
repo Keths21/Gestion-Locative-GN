@@ -13,10 +13,10 @@ export default function PendingApprovalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-fond to-surface-appuyee flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
         <div className="flex justify-center mb-4">
-          <div className="bg-blue-600 p-3 rounded-xl">
+          <div className="bg-primaire p-3 rounded-xl">
             <Building2 className="h-8 w-8 text-white" />
           </div>
         </div>

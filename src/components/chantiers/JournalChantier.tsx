@@ -22,7 +22,7 @@ import {
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 const couleursGravite: Record<GraviteSignalement, string> = {
   info: 'bg-gray-100 text-gray-700',
@@ -166,7 +166,7 @@ export default function JournalChantier({
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button onClick={() => input.current?.click()} disabled={envoi}
-                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                    className="flex items-center gap-2 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui disabled:opacity-50">
               {envoi ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
               Prendre une photo
             </button>
@@ -186,7 +186,7 @@ export default function JournalChantier({
         {([['fil', 'Fil chronologique'], ['emplacement', 'Par emplacement']] as const).map(([k, l]) => (
           <button key={k} onClick={() => setVue(k)}
                   className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                    vue === k ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500'
+                    vue === k ? 'border-primaire text-primaire' : 'border-transparent text-gray-500'
                   }`}>
             {l}
           </button>

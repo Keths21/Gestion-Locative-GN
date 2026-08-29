@@ -20,7 +20,7 @@ import { LIBELLES_CORPS_ETAT, type CorpsEtat } from '@/lib/constants'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function Intervenants({
   chantierId,
@@ -117,7 +117,7 @@ export default function Intervenants({
 
       {!lectureSeule && !formOuvert && (
         <button onClick={() => setFormOuvert(true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                className="flex items-center gap-2 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
           <Plus size={15} /> Affecter un intervenant
         </button>
       )}
@@ -181,7 +181,7 @@ export default function Intervenants({
 
             <div className="sm:col-span-2">
               <button onClick={affecter}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                      className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
                 Affecter
               </button>
             </div>
@@ -218,7 +218,7 @@ export default function Intervenants({
                       <span>Lot {LIBELLES_CORPS_ETAT[iv.lot as CorpsEtat]}</span>
                       {iv.montant_marche ? <span>{formatMontant(iv.montant_marche)}</span> : null}
                       {p?.telephone && (
-                        <a href={`tel:${p.telephone}`} className="inline-flex items-center gap-1 text-blue-600">
+                        <a href={`tel:${p.telephone}`} className="inline-flex items-center gap-1 text-primaire">
                           <Phone size={11} /> {p.telephone}
                         </a>
                       )}

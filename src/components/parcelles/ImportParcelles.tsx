@@ -146,7 +146,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
               }}
               onClick={() => input.current?.click()}
               className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-                survol ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                survol ? 'border-primaire bg-primaire-tenue' : 'border-gray-300 hover:bg-gray-50'
               }`}
             >
               <Upload size={28} className="text-gray-400" />
@@ -165,7 +165,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
                   <FileUp size={13} /> {nomFichier}
                 </span>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                <span className="rounded-full bg-primaire-tenue px-3 py-1 text-xs font-medium text-primaire">
                   {LIBELLES_FORMAT[rapport.format]}
                 </span>
                 <button
@@ -175,7 +175,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
                     setEchecs([])
                     if (input.current) input.current.value = ''
                   }}
-                  className="ml-auto text-xs text-blue-600 hover:underline"
+                  className="ml-auto text-xs text-primaire hover:underline"
                 >
                   Changer de fichier
                 </button>
@@ -322,7 +322,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
           <button
             onClick={importer}
             disabled={!total || ecriture}
-            className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center justify-center gap-2 rounded-lg bg-primaire px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:cursor-not-allowed disabled:opacity-40"
           >
             {ecriture ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {ecriture ? 'Import en cours…' : `Importer ${total || ''} parcelle(s)`}

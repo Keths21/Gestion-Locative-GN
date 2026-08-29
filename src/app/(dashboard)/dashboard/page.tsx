@@ -1,56 +1,93 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Building2, Users, CreditCard, AlertTriangle, TrendingUp, CheckCircle, Clock, Moon, Home, ArrowUpRight, ArrowDownRight, BellRing } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { formatMontant, formatDate, isLocataireActif } from '@/lib/utils'
+import { Carte, EnTetePage, Pastille, Tuile, RienAAfficher, type Ton } from '@/components/ui'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts'
 
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc']
-const COLORS_PIE = ['#3b82f6','#f59e0b','#6b7280']
-const COLORS_BAR = { appartement: '#3b82f6', airbnb: '#ec4899' }
 
-const statutBadge: Record<string, string> = {
-  'payé': 'bg-green-100 text-green-700',
-  'en_attente': 'bg-yellow-100 text-yellow-700',
-  'impayé': 'bg-red-100 text-red-700',
+// Le camembert porte des ÉTATS : ses couleurs doivent donc dire quelque chose.
+// L'ancienne suite bleu/ambre/gris laissait « loué » et « vacant » également
+// neutres, alors que l'un est la situation voulue et l'autre celle qui appelle
+// une action.
+const COULEURS_ETAT: Record<string, string> = {
+  'Loués': 'var(--succes)',
+  'Vacants': 'var(--alerte)',
+  'Travaux': 'var(--info)',
+}
+
+// Les barres, elles, portent des CATÉGORIES sans hiérarchie : deux teintes
+// simplement distinctes, choisies hors du vert/ambre/rouge déjà réservés aux
+// états de paiement, et distinguables en cas de daltonisme.
+const COULEURS_BARRE = { appartement: '#0f766e', airbnb: '#4f46e5' }
+
+const TON_STATUT: Record<string, Ton> = {
+  'payé': 'succes',
+  'en_attente': 'alerte',
+  'impayé': 'danger',
 }
 const statutLabel: Record<string, string> = {
   'payé': 'Payé', 'en_attente': 'En attente', 'impayé': 'Impayé'
 }
 
-function StatCard({ label, value, sub, icon: Icon, iconBg, trend, trendUp }: any) {
+/** En-tête d'un panneau : même composition partout, une seule définition. */
+function TitrePanneau({
+  icone: Icone,
+  children,
+  compteur,
+  ton = 'neutre',
+  lien,
+}: {
+  icone: LucideIcon
+  children: React.ReactNode
+  compteur?: number
+  ton?: Ton
+  lien?: { href: string; libelle: string }
+}) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`${iconBg} p-2.5 rounded-lg`}>
-          <Icon className="h-5 w-5 text-white" />
-        </div>
-        {trend !== undefined && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${trendUp ? 'text-green-600' : 'text-red-500'}`}>
-            {trendUp ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-            {trend}
-          </div>
-        )}
-      </div>
-      <p className="text-xl font-bold text-gray-900 leading-tight">{value}</p>
-      <p className="text-sm text-gray-500 mt-0.5">{label}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    <div className="flex items-center gap-2 border-b border-bordure px-5 py-3.5">
+      <Icone className="h-4 w-4 text-texte-faible" aria-hidden />
+      <h2 className="text-sm font-semibold text-texte">{children}</h2>
+      {compteur !== undefined && compteur > 0 && (
+        <Pastille ton={ton} className="ml-auto">{compteur}</Pastille>
+      )}
+      {lien && (
+        <Link
+          href={lien.href}
+          className="ml-auto text-xs font-medium text-primaire hover:underline"
+        >
+          {lien.libelle}
+        </Link>
+      )}
     </div>
   )
 }
 
-function OccupationBar({ taux }: { taux: number }) {
+function BarreOccupation({ taux }: { taux: number }) {
   return (
-    <div className="mt-2">
-      <div className="flex justify-between text-xs text-gray-400 mb-1">
-        <span>Taux d'occupation</span>
-        <span className="font-semibold text-blue-600">{taux}%</span>
+    <div className="mt-3">
+      <div className="mb-1 flex justify-between text-xs">
+        <span className="text-texte-faible">Taux d&apos;occupation</span>
+        <span className="chiffres font-semibold text-primaire">{taux}%</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${taux}%` }} />
+      {/* role/aria : sans eux, la barre ne dit rien à un lecteur d'écran —
+          l'information n'existait que visuellement. */}
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-surface-appuyee"
+        role="progressbar"
+        aria-valuenow={taux}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Taux d'occupation"
+      >
+        <div className="h-full rounded-full bg-primaire transition-all" style={{ width: `${taux}%` }} />
       </div>
     </div>
   )
@@ -161,8 +198,9 @@ export default function DashboardPage() {
   }, [])
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+    <div className="flex h-64 items-center justify-center" role="status" aria-live="polite">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-bordure border-t-primaire" />
+      <span className="sr-only">Chargement du tableau de bord…</span>
     </div>
   )
 
@@ -172,232 +210,268 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-        <p className="text-gray-500 mt-1">Vue d'ensemble — {moisNom} {new Date().getFullYear()}</p>
-      </div>
+      <EnTetePage
+        titre="Tableau de bord"
+        sous={`Vue d'ensemble — ${moisNom} ${new Date().getFullYear()}`}
+      />
 
-      {/* Stats principales */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-blue-500 p-2.5 rounded-lg">
-              <Building2 className="h-5 w-5 text-white" />
-            </div>
+      {/* Chiffres clés */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Tuile
+          libelle="Biens"
+          valeur={d.totalBiens}
+          icone={Building2}
+          className="col-span-2 lg:col-span-1"
+          accessoire={
             <div className="flex gap-1.5">
-              <span className="flex items-center gap-1 text-xs bg-pink-100 text-pink-600 px-1.5 py-0.5 rounded-full font-medium">
-                <Moon className="h-2.5 w-2.5" />{d.nbAirbnb}
-              </span>
-              <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-medium">
-                <Home className="h-2.5 w-2.5" />{d.nbAppt}
-              </span>
+              <Pastille ton="info" icone={Moon}>{d.nbAirbnb}</Pastille>
+              <Pastille ton="neutre" icone={Home}>{d.nbAppt}</Pastille>
             </div>
-          </div>
-          <p className="text-xl font-bold text-gray-900">{d.totalBiens}</p>
-          <p className="text-sm text-gray-500 mt-0.5">Biens</p>
-          <OccupationBar taux={d.tauxOccupation} />
-        </div>
+          }
+        >
+          <BarreOccupation taux={d.tauxOccupation} />
+        </Tuile>
 
-        <StatCard label="Locataires actifs" value={d.totalLocataires} icon={Users} iconBg="bg-emerald-500"
-          sub={`${d.biensVacants} bien(s) vacant(s)`} />
+        <Tuile
+          libelle="Locataires actifs"
+          valeur={d.totalLocataires}
+          icone={Users}
+          detail={`${d.biensVacants} bien(s) vacant(s)`}
+        />
 
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-green-500 p-2.5 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-white" />
-            </div>
-            {d.evolutionMois !== null && (
-              <div className={`flex items-center gap-1 text-xs font-medium ${d.evolutionMois >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {d.evolutionMois >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
-                {Math.abs(d.evolutionMois)}%
-              </div>
-            )}
-          </div>
-          <p className="text-xl font-bold text-gray-900">{formatMontant(d.encaisseMois)}</p>
-          <p className="text-sm text-gray-500 mt-0.5">Encaissé ce mois</p>
-          <p className="text-xs text-gray-400 mt-1">Total : {formatMontant(d.totalEncaisse)}</p>
-        </div>
+        <Tuile
+          libelle="Encaissé ce mois"
+          valeur={formatMontant(d.encaisseMois)}
+          icone={CheckCircle}
+          ton="succes"
+          detail={`Total : ${formatMontant(d.totalEncaisse)}`}
+          accessoire={d.evolutionMois !== null && (
+            <span className={`flex items-center gap-1 text-xs font-medium ${d.evolutionMois >= 0 ? 'text-succes' : 'text-danger'}`}>
+              {d.evolutionMois >= 0
+                ? <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                : <ArrowDownRight className="h-3.5 w-3.5" aria-hidden />}
+              {/* La flèche seule ne suffit pas : la direction doit être dite,
+                  pas seulement dessinée. */}
+              <span className="sr-only">{d.evolutionMois >= 0 ? 'En hausse de' : 'En baisse de'}</span>
+              {Math.abs(d.evolutionMois)}%
+            </span>
+          )}
+        />
 
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-red-500 p-2.5 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-white" />
-            </div>
-            {d.totalAttente > 0 && (
-              <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">{formatMontant(d.totalAttente)} en attente</span>
-            )}
-          </div>
-          <p className="text-xl font-bold text-red-600">{formatMontant(d.totalImpayes)}</p>
-          <p className="text-sm text-gray-500 mt-0.5">Impayés</p>
-          <p className="text-xs text-gray-400 mt-1">{d.alertesImpayes.length} paiement(s) en retard</p>
-        </div>
+        <Tuile
+          libelle="Impayés"
+          valeur={formatMontant(d.totalImpayes)}
+          icone={AlertTriangle}
+          ton="danger"
+          accent="danger"
+          detail={`${d.alertesImpayes.length} paiement(s) en retard`}
+          accessoire={d.totalAttente > 0 && (
+            <Pastille ton="alerte">{formatMontant(d.totalAttente)} en attente</Pastille>
+          )}
+        />
       </div>
 
       {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Barres */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-5">
+        <Carte className="p-5 lg:col-span-2">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-              <h2 className="font-semibold text-gray-900">Revenus {new Date().getFullYear()}</h2>
+              <TrendingUp className="h-4 w-4 text-texte-faible" aria-hidden />
+              <h2 className="text-sm font-semibold text-texte">Revenus {new Date().getFullYear()}</h2>
             </div>
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block" />Appartement</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-pink-400 inline-block" />Airbnb</span>
+            <div className="flex items-center gap-3 text-xs text-texte-doux">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: COULEURS_BARRE.appartement }} />
+                Appartement
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: COULEURS_BARRE.airbnb }} />
+                Airbnb
+              </span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={d.barData} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="mois" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => v > 0 ? `${(v / 1000000).toFixed(1)}M` : '0'} />
-              <Tooltip formatter={(v: any) => formatMontant(Number(v))} />
-              <Bar dataKey="appartement" fill={COLORS_BAR.appartement} radius={[3, 3, 0, 0]} name="Appartement" stackId="a" />
-              <Bar dataKey="airbnb" fill={COLORS_BAR.airbnb} radius={[3, 3, 0, 0]} name="Airbnb" stackId="a" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--bordure)" vertical={false} />
+              <XAxis
+                dataKey="mois"
+                tick={{ fontSize: 11, fill: 'var(--texte-faible)' }}
+                axisLine={{ stroke: 'var(--bordure)' }}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: 'var(--texte-faible)' }}
+                tickFormatter={v => v > 0 ? `${(v / 1000000).toFixed(1)}M` : '0'}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                formatter={(v: any) => formatMontant(Number(v))}
+                cursor={{ fill: 'var(--surface-appuyee)' }}
+                contentStyle={{
+                  borderRadius: 'var(--rayon)',
+                  border: '1px solid var(--bordure)',
+                  boxShadow: 'var(--ombre-flottante)',
+                  fontSize: '0.8125rem',
+                }}
+              />
+              <Bar dataKey="appartement" fill={COULEURS_BARRE.appartement} radius={[3, 3, 0, 0]} name="Appartement" stackId="a" />
+              <Bar dataKey="airbnb" fill={COULEURS_BARRE.airbnb} radius={[3, 3, 0, 0]} name="Airbnb" stackId="a" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </Carte>
 
         {/* Pie */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center gap-2 mb-5">
-            <Building2 className="h-5 w-5 text-blue-600" />
-            <h2 className="font-semibold text-gray-900">État des biens</h2>
+        <Carte className="p-5">
+          <div className="mb-5 flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-texte-faible" aria-hidden />
+            <h2 className="text-sm font-semibold text-texte">État des biens</h2>
           </div>
           {d.pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie data={d.pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value">
-                    {d.pieData.map((_: any, i: number) => <Cell key={i} fill={COLORS_PIE[i % COLORS_PIE.length]} />)}
+                    {d.pieData.map((item: any) => (
+                      <Cell key={item.name} fill={COULEURS_ETAT[item.name] ?? 'var(--texte-faible)'} />
+                    ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 'var(--rayon)',
+                      border: '1px solid var(--bordure)',
+                      boxShadow: 'var(--ombre-flottante)',
+                      fontSize: '0.8125rem',
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
-                {d.pieData.map((item: any, i: number) => (
-                  <div key={item.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full inline-block" style={{ background: COLORS_PIE[i] }} />
-                      <span className="text-gray-600">{item.name}</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">{item.value}</span>
-                  </div>
+              {/* La légende double le camembert en texte : elle reste lisible
+                  quand les couleurs ne se distinguent pas, et se survole mal
+                  au doigt sur un petit écran. */}
+              <ul className="mt-2 space-y-2">
+                {d.pieData.map((item: any) => (
+                  <li key={item.name} className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        style={{ background: COULEURS_ETAT[item.name] ?? 'var(--texte-faible)' }}
+                      />
+                      <span className="text-texte-doux">{item.name}</span>
+                    </span>
+                    <span className="chiffres font-semibold text-texte">{item.value}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </>
           ) : (
-            <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Aucun bien enregistré</div>
+            <RienAAfficher icone={Building2} titre="Aucun bien enregistré" />
           )}
-        </div>
+        </Carte>
       </div>
 
       {/* Alertes + Biens vacants */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-        {/* Alertes impayés */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
-            <BellRing className="h-4 w-4 text-red-500" />
-            <h2 className="font-semibold text-gray-900">Alertes impayés</h2>
-            {d.alertesImpayes.length > 0 && (
-              <span className="ml-auto text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">{d.alertesImpayes.length}</span>
-            )}
-          </div>
+        <Carte className="overflow-hidden">
+          <TitrePanneau icone={BellRing} compteur={d.alertesImpayes.length} ton="danger">
+            Alertes impayés
+          </TitrePanneau>
           {d.alertesImpayes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-              <CheckCircle className="h-8 w-8 mb-2 text-green-400" />
-              <p className="text-sm">Aucun impayé en cours</p>
-            </div>
+            <RienAAfficher icone={CheckCircle} titre="Aucun impayé en cours" />
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-bordure">
               {d.alertesImpayes.map((p: any) => (
-                <li key={p.id} className="flex items-center justify-between px-5 py-3">
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{p.locataire?.prenom} {p.locataire?.nom}</p>
-                    <p className="text-xs text-gray-400">{p.bien?.nom} · {p.mois_concerne}</p>
+                <li key={p.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-texte">{p.locataire?.prenom} {p.locataire?.nom}</p>
+                    <p className="truncate text-xs text-texte-faible">{p.bien?.nom} · {p.mois_concerne}</p>
                   </div>
-                  <span className="font-semibold text-red-600 text-sm">{formatMontant(p.montant)}</span>
+                  <span className="chiffres shrink-0 text-sm font-semibold text-danger">{formatMontant(p.montant)}</span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </Carte>
 
-        {/* Biens vacants */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
-            <Building2 className="h-4 w-4 text-yellow-500" />
-            <h2 className="font-semibold text-gray-900">Biens vacants</h2>
-            {d.biensVacantsList.length > 0 && (
-              <span className="ml-auto text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">{d.biensVacants}</span>
-            )}
-          </div>
+        <Carte className="overflow-hidden">
+          <TitrePanneau icone={Building2} compteur={d.biensVacantsList.length} ton="alerte">
+            Biens vacants
+          </TitrePanneau>
           {d.biensVacantsList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-              <CheckCircle className="h-8 w-8 mb-2 text-green-400" />
-              <p className="text-sm">Tous les biens sont occupés</p>
-            </div>
+            <RienAAfficher icone={CheckCircle} titre="Tous les biens sont occupés" />
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-bordure">
               {d.biensVacantsList.map((b: any) => (
-                <li key={b.id} className="flex items-center justify-between px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${b.mode_location === 'airbnb' ? 'bg-pink-100' : 'bg-blue-100'}`}>
+                <li key={b.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span
+                      className={`shrink-0 rounded-[var(--rayon)] border p-1.5 ${b.mode_location === 'airbnb' ? 'border-info/20 bg-info-tenue' : 'border-bordure bg-surface-appuyee'}`}
+                      aria-hidden
+                    >
                       {b.mode_location === 'airbnb'
-                        ? <Moon className="h-3.5 w-3.5 text-pink-500" />
-                        : <Home className="h-3.5 w-3.5 text-blue-500" />}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">{b.nom}</p>
-                      <p className="text-xs text-gray-400">{b.adresse}, {b.ville}</p>
+                        ? <Moon className="h-3.5 w-3.5 text-info" />
+                        : <Home className="h-3.5 w-3.5 text-texte-doux" />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-texte">{b.nom}</p>
+                      <p className="truncate text-xs text-texte-faible">{b.adresse}, {b.ville}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">
+                  <span className="chiffres shrink-0 text-sm font-semibold text-texte-doux">
                     {b.mode_location === 'airbnb' ? formatMontant(b.prix_nuit || 0) + '/nuit' : formatMontant(b.loyer_base || 0) + '/mois'}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+        </Carte>
       </div>
 
       {/* Paiements récents */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-blue-600" />
-            <h2 className="font-semibold text-gray-900">Paiements récents</h2>
-          </div>
-          <a href="/paiements" className="text-xs text-blue-600 hover:underline font-medium">Voir tout →</a>
-        </div>
+      <Carte className="overflow-hidden">
+        <TitrePanneau icone={CreditCard} lien={{ href: '/paiements', libelle: 'Voir tout →' }}>
+          Paiements récents
+        </TitrePanneau>
         {d.recentsPaiements.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Aucun paiement enregistré</div>
+          <RienAAfficher icone={CreditCard} titre="Aucun paiement enregistré" />
         ) : (
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-gray-100">
-              {d.recentsPaiements.map((p: any) => (
-                <tr key={p.id} className="hover:bg-gray-50 transition">
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-gray-900">{p.locataire?.prenom} {p.locataire?.nom}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 hidden md:block">{p.bien?.nom}</p>
-                  </td>
-                  <td className="px-5 py-3 text-gray-500 hidden lg:table-cell text-xs">{p.mois_concerne}</td>
-                  <td className="px-5 py-3 font-semibold text-gray-900">{formatMontant(p.montant)}</td>
-                  <td className="px-5 py-3">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${statutBadge[p.statut] || statutBadge['en_attente']}`}>
-                      {statutLabel[p.statut] || 'En attente'}
-                    </span>
-                  </td>
+          // overflow-x-auto : un tableau plus large que l'écran doit défiler
+          // dans son cadre, jamais pousser la page entière de côté.
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              {/* En-têtes réels : sans eux, la colonne de montants n'était
+                  identifiable qu'à l'œil, et pas du tout au lecteur d'écran. */}
+              <thead className="sr-only">
+                <tr>
+                  <th scope="col">Locataire</th>
+                  <th scope="col">Mois concerné</th>
+                  <th scope="col">Montant</th>
+                  <th scope="col">Statut</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-bordure">
+                {d.recentsPaiements.map((p: any) => (
+                  <tr key={p.id} className="transition-colors hover:bg-surface-appuyee">
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-texte">{p.locataire?.prenom} {p.locataire?.nom}</p>
+                      <p className="mt-0.5 hidden text-xs text-texte-faible md:block">{p.bien?.nom}</p>
+                    </td>
+                    <td className="chiffres hidden px-5 py-3 text-xs text-texte-doux lg:table-cell">{p.mois_concerne}</td>
+                    <td className="chiffres whitespace-nowrap px-5 py-3 font-semibold text-texte">{formatMontant(p.montant)}</td>
+                    <td className="px-5 py-3">
+                      <Pastille ton={TON_STATUT[p.statut] ?? 'alerte'}>
+                        {statutLabel[p.statut] || 'En attente'}
+                      </Pastille>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </Carte>
 
     </div>
   )
