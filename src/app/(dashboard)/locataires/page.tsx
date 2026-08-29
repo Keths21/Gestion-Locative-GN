@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { Locataire, Bien } from '@/types'
 import { formatDate, formatMontant, isLocataireActif } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { Carte, EnTetePage, Bouton, Tuile } from '@/components/ui'
 
 const EMPTY_FORM = {
   nom: '', prenom: '', email: '', telephone: '',
@@ -13,7 +14,9 @@ const EMPTY_FORM = {
 
 function Avatar({ prenom, nom }: { prenom: string; nom: string }) {
   const initiales = `${prenom?.[0] || ''}${nom?.[0] || ''}`.toUpperCase()
-  const couleurs = ['bg-primaire', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500']
+  // Teintes de la palette uniquement, et distinctes entre elles : la couleur
+  // ne sert ici qu'à distinguer deux avatars voisins, elle ne signifie rien.
+  const couleurs = ['bg-primaire', 'bg-info', 'bg-succes', 'bg-alerte', 'bg-primaire-appui', 'bg-danger']
   const idx = (prenom.charCodeAt(0) || 0) % couleurs.length
   return (
     <div className={`w-10 h-10 rounded-full ${couleurs[idx]} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
@@ -119,48 +122,36 @@ export default function LocatairesPage() {
 
   const getBienMode = (loc: Locataire) => (loc as any).bien?.mode_location
 
-  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm'
+  const inputCls = 'w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm'
 
   return (
     <div className="space-y-6">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Locataires</h1>
-          <p className="text-gray-500 mt-1">{locataires.length} locataire(s) enregistré(s)</p>
-        </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-lg hover:bg-primaire-appui transition text-sm font-medium">
-          <Plus className="h-4 w-4" /> Ajouter un locataire
-        </button>
-      </div>
+      <EnTetePage titre="Locataires" sous={`${locataires.length} locataire(s) enregistré(s)`}>
+        <Bouton onClick={openAdd} icone={Plus}>Ajouter un locataire</Bouton>
+      </EnTetePage>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Total', value: locataires.length, icon: Users, color: 'blue' },
-          { label: 'Actifs', value: actifs, icon: Home, color: 'green' },
-          { label: 'Sortis', value: sortis, icon: LogOut, color: 'gray' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-            <div className={`p-2 rounded-lg bg-${color}-100`}>
-              <Icon className={`h-5 w-5 text-${color}-600`} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{value}</p>
-              <p className="text-xs text-gray-500">{label}</p>
-            </div>
-          </div>
+        {/* Les tons sont écrits en toutes lettres, jamais assemblés. Tailwind
+            n'analyse que des classes littérales : les `bg-${color}-100` d'avant
+            n'ont jamais produit la moindre couleur. */}
+        {([
+          { label: 'Total', value: locataires.length, icon: Users, ton: 'primaire' },
+          { label: 'Actifs', value: actifs, icon: Home, ton: 'succes' },
+          { label: 'Sortis', value: sortis, icon: LogOut, ton: 'neutre' },
+        ] as const).map(({ label, value, icon: Icon, ton }) => (
+          <Tuile key={label} libelle={label} valeur={value} icone={Icon} ton={ton} />
         ))}
       </div>
 
       {/* Recherche */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-texte-faible" />
         <input
           type="text" placeholder="Rechercher par nom, téléphone, email..."
           value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm bg-white"
+          className="w-full pl-10 pr-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm bg-surface"
         />
       </div>
 
@@ -168,9 +159,9 @@ export default function LocatairesPage() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">{search ? 'Aucun résultat trouvé.' : 'Aucun locataire enregistré.'}</p>
+        <div className="text-center py-16 bg-surface rounded-[var(--rayon)] border border-bordure">
+          <Users className="h-12 w-12 text-texte-faible mx-auto mb-4" />
+          <p className="text-texte-doux">{search ? 'Aucun résultat trouvé.' : 'Aucun locataire enregistré.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -178,19 +169,19 @@ export default function LocatairesPage() {
             const actif = isLocataireActif(loc)
             const mode = getBienMode(loc)
             return (
-              <div key={loc.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
+              <Carte key={loc.id} className="p-5 hover:shadow-flottante transition">
                 {/* Top */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Avatar prenom={loc.prenom} nom={loc.nom} />
                     <div>
-                      <p className="font-semibold text-gray-900">{loc.prenom} {loc.nom}</p>
+                      <p className="font-semibold text-texte">{loc.prenom} {loc.nom}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${actif ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${actif ? 'bg-succes-tenue text-succes' : 'bg-surface-appuyee text-texte-doux'}`}>
                           {actif ? 'Actif' : 'Sorti'}
                         </span>
                         {mode && (
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${mode === 'airbnb' ? 'bg-pink-100 text-pink-600' : 'bg-primaire-tenue text-primaire'}`}>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${mode === 'airbnb' ? 'bg-info-tenue text-info' : 'bg-primaire-tenue text-primaire'}`}>
                             {mode === 'airbnb' ? <Moon className="h-2.5 w-2.5" /> : <Home className="h-2.5 w-2.5" />}
                             {mode === 'airbnb' ? 'Airbnb' : 'Mensuel'}
                           </span>
@@ -201,35 +192,35 @@ export default function LocatairesPage() {
                 </div>
 
                 {/* Infos */}
-                <div className="space-y-1.5 text-sm text-gray-600 mb-3">
+                <div className="space-y-1.5 text-sm text-texte-doux mb-3">
                   {loc.telephone && (
-                    <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-gray-400 shrink-0" />{loc.telephone}</div>
+                    <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-texte-faible shrink-0" />{loc.telephone}</div>
                   )}
                   {loc.email && (
-                    <div className="flex items-center gap-2 truncate"><Mail className="h-3.5 w-3.5 text-gray-400 shrink-0" /><span className="truncate">{loc.email}</span></div>
+                    <div className="flex items-center gap-2 truncate"><Mail className="h-3.5 w-3.5 text-texte-faible shrink-0" /><span className="truncate">{loc.email}</span></div>
                   )}
                   {(loc as any).bien?.nom && (
-                    <div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-gray-400 shrink-0" />{(loc as any).bien.nom}</div>
+                    <div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-texte-faible shrink-0" />{(loc as any).bien.nom}</div>
                   )}
-                  <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                  <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-texte-faible shrink-0" />
                     Entrée : {formatDate(loc.date_entree)}
                     {loc.date_sortie && <> · Sortie : {formatDate(loc.date_sortie)}</>}
                   </div>
                   {loc.depot_garantie > 0 && (
-                    <div className="text-xs text-gray-400">Garantie : {formatMontant(loc.depot_garantie)}</div>
+                    <div className="text-xs text-texte-faible">Garantie : {formatMontant(loc.depot_garantie)}</div>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-3 border-t border-gray-100">
+                <div className="flex gap-2 pt-3 border-t border-bordure">
                   <button onClick={() => openEdit(loc)} className="flex items-center gap-1 text-xs text-primaire hover:text-primaire-appui font-medium">
                     <Pencil className="h-3.5 w-3.5" /> Modifier
                   </button>
-                  <button onClick={() => handleDelete(loc.id, loc.bien_id)} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium ml-auto">
+                  <button onClick={() => handleDelete(loc.id, loc.bien_id)} className="flex items-center gap-1 text-xs text-danger hover:text-danger font-medium ml-auto">
                     <Trash2 className="h-3.5 w-3.5" /> Supprimer
                   </button>
                 </div>
-              </div>
+              </Carte>
             )
           })}
         </div>
@@ -238,25 +229,25 @@ export default function LocatairesPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-8">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900 text-lg">{editItem ? 'Modifier le locataire' : 'Nouveau locataire'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition">
-                <X className="h-5 w-5 text-gray-500" />
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-bordure">
+              <h2 className="font-bold text-texte text-lg">{editItem ? 'Modifier le locataire' : 'Nouveau locataire'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-surface-appuyee rounded-[var(--rayon)] transition">
+                <X className="h-5 w-5 text-texte-doux" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {/* Identité */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Identité</p>
+                <p className="text-xs font-semibold text-texte-faible uppercase tracking-wide mb-3">Identité</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Prénom *</label>
                     <input value={form.prenom} onChange={e => set('prenom', e.target.value)} placeholder="Mamadou" required className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Nom *</label>
                     <input value={form.nom} onChange={e => set('nom', e.target.value)} placeholder="Diallo" required className={inputCls} />
                   </div>
                 </div>
@@ -264,14 +255,14 @@ export default function LocatairesPage() {
 
               {/* Contact */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Contact</p>
+                <p className="text-xs font-semibold text-texte-faible uppercase tracking-wide mb-3">Contact</p>
                 <div className="grid grid-cols-1 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Téléphone</label>
                     <input value={form.telephone} onChange={e => set('telephone', e.target.value)} placeholder="+224 620 00 00 00" type="tel" className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Email</label>
                     <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@exemple.com" type="email" className={inputCls} />
                   </div>
                 </div>
@@ -279,10 +270,10 @@ export default function LocatairesPage() {
 
               {/* Bien & Dates */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Logement & Séjour</p>
+                <p className="text-xs font-semibold text-texte-faible uppercase tracking-wide mb-3">Logement & Séjour</p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bien associé</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Bien associé</label>
                     <select value={form.bien_id} onChange={e => set('bien_id', e.target.value)} className={inputCls}>
                       <option value="">-- Sélectionner un bien --</option>
                       {biensDisponibles.map(b => (
@@ -294,11 +285,11 @@ export default function LocatairesPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date d'entrée *</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Date d'entrée *</label>
                       <input value={form.date_entree} onChange={e => set('date_entree', e.target.value)} type="date" required className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de sortie</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Date de sortie</label>
                       <input value={form.date_sortie} onChange={e => set('date_sortie', e.target.value)} type="date" className={inputCls} />
                     </div>
                   </div>
@@ -307,18 +298,18 @@ export default function LocatairesPage() {
 
               {/* Finances */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Finances</p>
+                <p className="text-xs font-semibold text-texte-faible uppercase tracking-wide mb-3">Finances</p>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dépôt de garantie (GNF)</label>
+                  <label className="block text-sm font-medium text-texte mb-1">Dépôt de garantie (GNF)</label>
                   <input value={form.depot_garantie} onChange={e => set('depot_garantie', e.target.value)} type="number" placeholder="3 000 000" className={inputCls} />
                 </div>
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-lg hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-[var(--rayon)] hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
                   {submitting ? 'Enregistrement...' : editItem ? 'Enregistrer les modifications' : 'Ajouter le locataire'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-bordure-forte rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium">
                   Annuler
                 </button>
               </div>

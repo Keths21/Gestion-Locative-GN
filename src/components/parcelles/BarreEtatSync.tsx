@@ -20,7 +20,7 @@ export default function BarreEtatSync({ compact }: { compact?: boolean }) {
     return (
       <Link
         href="/login"
-        className="flex items-center gap-1.5 rounded-lg bg-red-50 px-2 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+        className="flex items-center gap-1.5 rounded-lg bg-danger-tenue px-2 py-1.5 text-xs font-medium text-danger hover:bg-danger-tenue"
         title="Vos relevés sont conservés sur l'appareil et partiront après reconnexion"
       >
         <LogIn size={15} />
@@ -31,16 +31,16 @@ export default function BarreEtatSync({ compact }: { compact?: boolean }) {
   }
 
   const etat = !enLigne
-    ? { texte: 'Hors ligne', classe: 'text-amber-600 hover:bg-amber-50', Icone: CloudOff }
+    ? { texte: 'Hors ligne', classe: 'text-alerte hover:bg-alerte-tenue', Icone: CloudOff }
     : syncEnCours
       ? { texte: 'Synchronisation…', classe: 'text-primaire hover:bg-primaire-tenue', Icone: RefreshCw }
       : enAttente > 0
         ? {
             texte: `${enAttente} en attente`,
-            classe: 'text-amber-600 hover:bg-amber-50',
+            classe: 'text-alerte hover:bg-alerte-tenue',
             Icone: CircleAlert,
           }
-        : { texte: 'À jour', classe: 'text-green-600 hover:bg-green-50', Icone: Cloud }
+        : { texte: 'À jour', classe: 'text-succes hover:bg-succes-tenue', Icone: Cloud }
 
   const { Icone } = etat
 

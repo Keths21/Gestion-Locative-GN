@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { formatMontant } from '@/lib/utils'
 import { envoyerRelanceMultiCanal, estRelancable } from '@/lib/relances'
 import toast from 'react-hot-toast'
+import { Carte, EnTetePage } from '@/components/ui'
 
 type LocataireImpayes = {
   locataire: any
@@ -116,48 +117,44 @@ export default function RelancesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Relances</h1>
-          <p className="text-gray-500 mt-1">{impayes.length} locataire(s) avec impayés</p>
-        </div>
+      <EnTetePage titre="Relances" sous={`${impayes.length} locataire(s) avec impayés`}>
         <div className="flex items-center gap-2">
-          <button onClick={fetchData} className="flex items-center gap-2 text-sm text-gray-600 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+          <button onClick={fetchData} className="flex items-center gap-2 text-sm text-texte-doux border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition">
             <RefreshCw className="h-4 w-4" /> Actualiser
           </button>
           <button onClick={relancerTous} disabled={bulkSending || eligibles.length === 0}
             title={eligibles.length === 0 ? 'Aucun locataire à relancer (déjà relancés récemment ou sans contact)' : 'Envoyer une relance SMS + email à tous les impayés éligibles'}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            className="flex items-center gap-2 bg-danger text-white px-4 py-2.5 rounded-[var(--rayon)] hover:brightness-110 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
             {bulkSending
               ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi en cours...</>
               : <><Zap className="h-4 w-4" /> Relancer tous les impayés ({eligibles.length})</>}
           </button>
         </div>
-      </div>
+      </EnTetePage>
 
       {/* Résumé */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-          <p className="text-sm text-red-600 font-medium">Total impayés</p>
-          <p className="text-2xl font-bold text-red-700 mt-1">{formatMontant(totalImpayes)}</p>
+        <div className="bg-danger-tenue border border-danger/20 rounded-[var(--rayon)] p-4">
+          <p className="text-sm text-danger font-medium">Total impayés</p>
+          <p className="text-2xl font-bold text-danger mt-1">{formatMontant(totalImpayes)}</p>
         </div>
-        <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
-          <p className="text-sm text-orange-600 font-medium">Locataires concernés</p>
-          <p className="text-2xl font-bold text-orange-700 mt-1">{impayes.length}</p>
+        <div className="bg-alerte-tenue border border-alerte/20 rounded-[var(--rayon)] p-4">
+          <p className="text-sm text-alerte font-medium">Locataires concernés</p>
+          <p className="text-2xl font-bold text-alerte mt-1">{impayes.length}</p>
         </div>
-        <div className="bg-primaire-tenue border border-primaire/20 rounded-xl p-4">
+        <div className="bg-primaire-tenue border border-primaire/20 rounded-[var(--rayon)] p-4">
           <p className="text-sm text-primaire font-medium">Paiements en retard</p>
           <p className="text-2xl font-bold text-primaire mt-1">{impayes.reduce((s, i) => s + i.paiements.length, 0)}</p>
         </div>
       </div>
 
       {/* Avertissement config email */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex gap-3">
-        <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+      <div className="bg-alerte-tenue border border-alerte/20 rounded-[var(--rayon)] p-4 flex gap-3">
+        <AlertTriangle className="h-5 w-5 text-alerte flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-medium text-yellow-800">Configuration email requise</p>
-          <p className="text-xs text-yellow-700 mt-1">
-            Pour envoyer des emails, ajoute ta clé <code className="bg-yellow-100 px-1 rounded">RESEND_API_KEY</code> dans <code className="bg-yellow-100 px-1 rounded">.env.local</code>.
+          <p className="text-sm font-medium text-alerte">Configuration email requise</p>
+          <p className="text-xs text-alerte mt-1">
+            Pour envoyer des emails, ajoute ta clé <code className="bg-alerte-tenue px-1 rounded">RESEND_API_KEY</code> dans <code className="bg-alerte-tenue px-1 rounded">.env.local</code>.
             Crée ton compte gratuit sur <a href="https://resend.com" target="_blank" className="underline font-medium">resend.com</a> → API Keys → Create API Key.
           </p>
         </div>
@@ -169,35 +166,35 @@ export default function RelancesPage() {
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire"></div>
         </div>
       ) : impayes.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-          <p className="text-gray-700 font-semibold">Aucun impayé 🎉</p>
-          <p className="text-gray-400 text-sm mt-1">Tous les loyers sont à jour !</p>
+        <div className="text-center py-16 bg-surface rounded-[var(--rayon)] border border-bordure">
+          <CheckCircle className="h-12 w-12 text-succes mx-auto mb-4" />
+          <p className="text-texte font-semibold">Aucun impayé 🎉</p>
+          <p className="text-texte-faible text-sm mt-1">Tous les loyers sont à jour !</p>
         </div>
       ) : (
         <div className="space-y-4">
           {impayes.map(item => (
-            <div key={item.locataire.id} className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <Carte key={item.locataire.id} className="border-danger/20 overflow-hidden">
+              <div className="flex items-center justify-between p-5 border-b border-bordure">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <span className="text-red-600 font-bold text-sm">
+                  <div className="w-10 h-10 bg-danger-tenue rounded-full flex items-center justify-center">
+                    <span className="text-danger font-bold text-sm">
                       {item.locataire.prenom?.[0]}{item.locataire.nom?.[0]}
                     </span>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{item.locataire.prenom} {item.locataire.nom}</p>
+                    <p className="font-semibold text-texte">{item.locataire.prenom} {item.locataire.nom}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-xs text-texte-faible flex items-center gap-1">
                         <Mail className="h-3 w-3" />
-                        {item.locataire.email || <span className="text-gray-300">—</span>}
+                        {item.locataire.email || <span className="text-texte-faible">—</span>}
                       </span>
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-xs text-texte-faible flex items-center gap-1">
                         <Phone className="h-3 w-3" />
-                        {item.locataire.telephone || <span className="text-gray-300">—</span>}
+                        {item.locataire.telephone || <span className="text-texte-faible">—</span>}
                       </span>
                       {item.locataire.derniere_relance && (
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-texte-faible flex items-center gap-1">
                           <Bell className="h-3 w-3" />
                           Relancé {joursDepuis(item.locataire.derniere_relance)}
                         </span>
@@ -206,16 +203,16 @@ export default function RelancesPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-red-600 text-lg">{formatMontant(item.total)}</p>
-                  <p className="text-xs text-gray-400">{item.paiements.length} mois impayé(s)</p>
+                  <p className="font-bold text-danger text-lg">{formatMontant(item.total)}</p>
+                  <p className="text-xs text-texte-faible">{item.paiements.length} mois impayé(s)</p>
                 </div>
               </div>
 
               {/* Liste des mois impayés */}
-              <div className="px-5 py-3 bg-red-50">
+              <div className="px-5 py-3 bg-danger-tenue">
                 <div className="flex flex-wrap gap-2">
                   {item.paiements.map(p => (
-                    <span key={p.id} className="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-full font-medium">
+                    <span key={p.id} className="text-xs bg-danger-tenue text-danger px-2.5 py-1 rounded-full font-medium">
                       {p.mois_concerne} — {formatMontant(p.montant)}
                     </span>
                   ))}
@@ -228,7 +225,7 @@ export default function RelancesPage() {
                   onClick={() => envoyerRelance(item)}
                   disabled={sending === item.locataire.id || (!item.locataire.email && !item.locataire.telephone)}
                   title={!item.locataire.email && !item.locataire.telephone ? 'Aucun email ni téléphone' : 'Envoyer par SMS et/ou email'}
-                  className="flex items-center gap-2 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 bg-danger text-white text-sm px-4 py-2 rounded-[var(--rayon)] hover:brightness-110 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sending === item.locataire.id
                     ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi...</>
@@ -237,11 +234,11 @@ export default function RelancesPage() {
                 </button>
                 <button
                   onClick={async () => { await marquerRelance(item.locataire.id); toast.success('Marqué comme contacté'); fetchData() }}
-                  className="flex items-center gap-2 text-sm border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-gray-600">
+                  className="flex items-center gap-2 text-sm border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-texte-doux">
                   <Bell className="h-4 w-4" /> Marquer comme contacté
                 </button>
               </div>
-            </div>
+            </Carte>
           ))}
         </div>
       )}

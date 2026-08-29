@@ -24,7 +24,7 @@ import { formatMontant } from '@/lib/utils'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function FriseAvancement({
   chantierId,
@@ -98,20 +98,20 @@ export default function FriseAvancement({
     }
   }
 
-  if (chargement) return <p className="py-8 text-center text-sm text-gray-500">Chargement…</p>
-  if (!s) return <p className="py-8 text-center text-sm text-red-600">{erreur}</p>
+  if (chargement) return <p className="py-8 text-center text-sm text-texte-doux">Chargement…</p>
+  if (!s) return <p className="py-8 text-center text-sm text-danger">{erreur}</p>
 
   if (s.phases_total === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 py-12 text-center">
-        <p className="mb-3 text-sm text-gray-500">Aucune phase définie.</p>
+      <div className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-12 text-center">
+        <p className="mb-3 text-sm text-texte-doux">Aucune phase définie.</p>
         {!lectureSeule && (
           <button
             onClick={async () => {
               await creerPhasesStandard(supabase, chantierId)
               await charger()
             }}
-            className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
+            className="rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
           >
             Créer les phases usuelles
           </button>
@@ -122,19 +122,19 @@ export default function FriseAvancement({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <div className="rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-4">
         <div className="mb-2 flex items-baseline justify-between gap-3">
-          <span className="text-2xl font-semibold tabular-nums text-gray-900">
+          <span className="text-2xl font-semibold tabular-nums text-texte">
             {s.avancement_global} %
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-texte-doux">
             {s.jalons_valides} / {s.jalons_total} jalon(s) validé(s)
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+        <div className="h-2 overflow-hidden rounded-full bg-surface-appuyee">
           <div className="h-full rounded-full bg-primaire" style={{ width: `${s.avancement_global}%` }} />
         </div>
-        <p className="mt-2 flex items-start gap-1.5 text-xs text-gray-500">
+        <p className="mt-2 flex items-start gap-1.5 text-xs text-texte-doux">
           <Info size={12} className="mt-0.5 shrink-0" />
           {s.ponderation === 'budget'
             ? 'Pondéré par le budget de chaque phase — une phase peu coûteuse pèse peu.'
@@ -145,12 +145,12 @@ export default function FriseAvancement({
       {(s.jalons_en_retard > 0 || s.montant_a_venir > 0) && (
         <div className="grid grid-cols-2 gap-3">
           {s.jalons_en_retard > 0 && (
-            <div className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+            <div className="rounded-[var(--rayon)] bg-alerte-tenue px-3 py-2.5 text-sm text-alerte">
               <span className="font-semibold">{s.jalons_en_retard}</span> jalon(s) en retard
             </div>
           )}
           {s.montant_a_venir > 0 && (
-            <div className="rounded-lg bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
+            <div className="rounded-[var(--rayon)] bg-surface-appuyee px-3 py-2.5 text-sm text-texte">
               <span className="font-semibold">{formatMontant(s.montant_a_venir)}</span> à libérer
             </div>
           )}
@@ -158,21 +158,21 @@ export default function FriseAvancement({
       )}
 
       {message && (
-        <div className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{message}</div>
+        <div className="rounded-[var(--rayon)] bg-succes-tenue px-3 py-2 text-sm text-succes">{message}</div>
       )}
-      {erreur && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</div>}
+      {erreur && <div className="rounded-[var(--rayon)] bg-danger-tenue px-3 py-2 text-sm text-danger">{erreur}</div>}
 
       <ol className="space-y-3">
         {s.phases.map((p) => (
-          <li key={p.id} className="rounded-xl border border-gray-200 bg-white p-4">
+          <li key={p.id} className="rounded-[var(--rayon)] border border-bordure bg-surface p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-appuyee text-xs font-semibold text-texte-doux">
                   {p.ordre}
                 </span>
-                <span className="font-medium text-gray-900">{p.nom}</span>
+                <span className="font-medium text-texte">{p.nom}</span>
                 {p.poids_pct !== null && (
-                  <span className="text-xs text-gray-400">{p.poids_pct} % du budget</span>
+                  <span className="text-xs text-texte-faible">{p.poids_pct} % du budget</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -184,26 +184,26 @@ export default function FriseAvancement({
                       placeholder="Montant"
                       inputMode="decimal"
                       aria-label={`Montant prévu — ${p.nom}`}
-                      className="w-28 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
+                      className="w-28 rounded border border-bordure px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                     />
                     <input
                       defaultValue={p.avancement_pct}
                       onBlur={(e) => void majPhase(p.id, 'avancement_pct', e.target.value)}
                       inputMode="numeric"
                       aria-label={`Avancement — ${p.nom}`}
-                      className="w-14 rounded border border-gray-200 px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
+                      className="w-14 rounded border border-bordure px-2 py-1 text-right text-xs tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                     />
                   </>
                 )}
-                <span className="w-10 text-right text-sm font-medium tabular-nums text-gray-700">
+                <span className="w-10 text-right text-sm font-medium tabular-nums text-texte">
                   {p.avancement_pct} %
                 </span>
               </div>
             </div>
 
-            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-gray-100">
+            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-surface-appuyee">
               <div
-                className={`h-full rounded-full ${p.avancement_pct === 100 ? 'bg-green-500' : 'bg-primaire'}`}
+                className={`h-full rounded-full ${p.avancement_pct === 100 ? 'bg-succes' : 'bg-primaire'}`}
                 style={{ width: `${p.avancement_pct}%` }}
               />
             </div>
@@ -213,18 +213,18 @@ export default function FriseAvancement({
                 {p.jalons.map((jl) => (
                   <li key={jl.id} className="flex items-center gap-2 text-sm">
                     {jl.date_validation ? (
-                      <CircleCheck size={15} className="shrink-0 text-green-600" />
+                      <CircleCheck size={15} className="shrink-0 text-succes" />
                     ) : (
                       <CalendarClock
                         size={15}
-                        className={`shrink-0 ${jl.en_retard ? 'text-amber-600' : 'text-gray-300'}`}
+                        className={`shrink-0 ${jl.en_retard ? 'text-alerte' : 'text-texte-faible'}`}
                       />
                     )}
-                    <span className={`min-w-0 flex-1 truncate ${jl.date_validation ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                    <span className={`min-w-0 flex-1 truncate ${jl.date_validation ? 'text-texte-doux line-through' : 'text-texte'}`}>
                       {jl.nom}
                     </span>
                     {jl.montant_a_liberer ? (
-                      <span className="shrink-0 text-xs tabular-nums text-gray-500">
+                      <span className="shrink-0 text-xs tabular-nums text-texte-doux">
                         {formatMontant(jl.montant_a_liberer)}
                       </span>
                     ) : null}
@@ -242,7 +242,7 @@ export default function FriseAvancement({
                           await supprimerJalon(supabase, jl.id)
                           await charger()
                         }}
-                        className="shrink-0 rounded p-1 text-gray-300 hover:bg-red-50 hover:text-red-600"
+                        className="shrink-0 rounded p-1 text-texte-faible hover:bg-danger-tenue hover:text-danger"
                         aria-label={`Supprimer ${jl.nom}`}
                       >
                         <Trash2 size={12} />
@@ -255,7 +255,7 @@ export default function FriseAvancement({
 
             {!lectureSeule && (
               saisieJalon === p.id ? (
-                <div className="mt-3 grid gap-2 rounded-lg bg-gray-50 p-2 sm:grid-cols-3">
+                <div className="mt-3 grid gap-2 rounded-[var(--rayon)] bg-surface-appuyee p-2 sm:grid-cols-3">
                   <input className={classeChamp} placeholder="Nom du jalon" value={j.nom}
                          onChange={(e) => setJ({ ...j, nom: e.target.value })} />
                   <input type="date" className={classeChamp} value={j.date_prevue}
@@ -264,11 +264,11 @@ export default function FriseAvancement({
                          value={j.montant} onChange={(e) => setJ({ ...j, montant: e.target.value })} />
                   <div className="flex gap-2 sm:col-span-3">
                     <button onClick={() => void creerJalon(p.id)}
-                            className="rounded-lg bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui">
+                            className="rounded-[var(--rayon)] bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui">
                       Ajouter
                     </button>
                     <button onClick={() => setSaisieJalon(null)}
-                            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700">
+                            className="rounded-[var(--rayon)] border border-bordure-forte bg-surface px-3 py-1.5 text-xs text-texte">
                       Annuler
                     </button>
                   </div>

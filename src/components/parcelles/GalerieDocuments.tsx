@@ -89,7 +89,7 @@ export default function GalerieDocuments({
 
   if (!enLigne) {
     return (
-      <p className="rounded-lg border border-dashed border-gray-300 px-3 py-4 text-center text-xs text-gray-500">
+      <p className="rounded-lg border border-dashed border-bordure-forte px-3 py-4 text-center text-xs text-texte-doux">
         Les photos et documents ne sont pas disponibles hors connexion.
       </p>
     )
@@ -109,7 +109,7 @@ export default function GalerieDocuments({
 
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-bordure-forte px-4 py-2.5 text-sm font-medium text-texte hover:bg-surface-appuyee disabled:opacity-50"
         onClick={() => input.current?.click()}
         disabled={envoi}
       >
@@ -117,15 +117,15 @@ export default function GalerieDocuments({
         {envoi ? 'Envoi…' : 'Ajouter une photo ou un document'}
       </button>
 
-      {erreur && <p className="mt-2 text-xs text-red-600">{erreur}</p>}
-      {chargement && <p className="mt-3 text-xs text-gray-500">Chargement…</p>}
+      {erreur && <p className="mt-2 text-xs text-danger">{erreur}</p>}
+      {chargement && <p className="mt-3 text-xs text-texte-doux">Chargement…</p>}
 
       {docs.length > 0 && (
         <ul className="mt-3 grid grid-cols-3 gap-2">
           {docs.map((d) => (
             <li
               key={d.id}
-              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
+              className="group relative overflow-hidden rounded-lg border border-bordure bg-surface-appuyee"
             >
               <a
                 href={d.url ?? undefined}
@@ -144,8 +144,8 @@ export default function GalerieDocuments({
                   />
                 ) : (
                   <div className="flex aspect-square flex-col items-center justify-center gap-1 p-2 text-center">
-                    <FileText size={20} className="text-gray-400" />
-                    <span className="line-clamp-2 text-[10px] text-gray-500">{d.nom}</span>
+                    <FileText size={20} className="text-texte-faible" />
+                    <span className="line-clamp-2 text-[10px] text-texte-doux">{d.nom}</span>
                   </div>
                 )}
               </a>
@@ -162,7 +162,7 @@ export default function GalerieDocuments({
               <button
                 type="button"
                 onClick={() => void retirer(d)}
-                className="absolute right-1 top-1 rounded-md bg-white/90 p-1 text-gray-600 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100"
+                className="absolute right-1 top-1 rounded-md bg-surface/90 p-1 text-texte-doux opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100"
                 aria-label={`Supprimer ${d.nom}`}
               >
                 <Trash2 size={13} />

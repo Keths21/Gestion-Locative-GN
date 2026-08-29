@@ -20,7 +20,7 @@ import { LIBELLES_CORPS_ETAT, type CorpsEtat } from '@/lib/constants'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function Intervenants({
   chantierId,
@@ -100,15 +100,15 @@ export default function Intervenants({
     (i) => i.intervenant && ['expiree', 'absente'].includes(etatDecennale(i.intervenant))
   )
 
-  if (chargement) return <p className="py-8 text-center text-sm text-gray-500">Chargement…</p>
+  if (chargement) return <p className="py-8 text-center text-sm text-texte-doux">Chargement…</p>
 
   return (
     <div className="space-y-4">
       {alertes.length > 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">
+        <div className="rounded-[var(--rayon)] border border-danger/20 bg-danger-tenue px-3 py-2.5 text-sm text-danger">
           <ShieldAlert size={15} className="mr-1.5 inline" />
           {alertes.length} intervenant(s) sans garantie décennale valide.
-          <span className="block text-xs text-red-700">
+          <span className="block text-xs text-danger">
             En cas de sinistre, la couverture s’apprécie à la date des travaux — pas à celle de
             la signature du marché.
           </span>
@@ -117,24 +117,24 @@ export default function Intervenants({
 
       {!lectureSeule && !formOuvert && (
         <button onClick={() => setFormOuvert(true)}
-                className="flex items-center gap-2 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
+                className="flex items-center gap-2 rounded-[var(--rayon)] bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
           <Plus size={15} /> Affecter un intervenant
         </button>
       )}
 
       {formOuvert && !lectureSeule && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+        <div className="rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-3">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex gap-1">
               {([[true, 'Nouveau'], [false, 'Depuis l’annuaire']] as const).map(([v, l]) => (
                 <button key={String(v)} onClick={() => setModeNouveau(v)}
                         disabled={!v && annuaire.length === 0}
                         className={`rounded-md px-2.5 py-1.5 text-xs font-medium disabled:opacity-40 ${
-                          modeNouveau === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                          modeNouveau === v ? 'bg-surface text-texte shadow-carte' : 'text-texte-doux'
                         }`}>{l}</button>
               ))}
             </div>
-            <button onClick={() => setFormOuvert(false)} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => setFormOuvert(false)} className="text-texte-faible hover:text-texte">
               <X size={16} />
             </button>
           </div>
@@ -157,7 +157,7 @@ export default function Intervenants({
                 <div>
                   <input type="date" className={classeChamp} value={f.decennale_valide_jusqu_au}
                          onChange={(e) => setF({ ...f, decennale_valide_jusqu_au: e.target.value })} />
-                  <p className="mt-1 text-[11px] text-gray-500">Validité de la décennale</p>
+                  <p className="mt-1 text-[11px] text-texte-doux">Validité de la décennale</p>
                 </div>
               </>
             ) : (
@@ -181,17 +181,17 @@ export default function Intervenants({
 
             <div className="sm:col-span-2">
               <button onClick={affecter}
-                      className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
+                      className="rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
                 Affecter
               </button>
             </div>
           </div>
-          {erreur && <p className="mt-2 text-xs text-red-600">{erreur}</p>}
+          {erreur && <p className="mt-2 text-xs text-danger">{erreur}</p>}
         </div>
       )}
 
       {interventions.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500">
+        <p className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-10 text-center text-sm text-texte-doux">
           Aucun intervenant affecté.
         </p>
       ) : (
@@ -200,20 +200,20 @@ export default function Intervenants({
             const p = iv.intervenant
             const etat = p ? etatDecennale(p) : 'absente'
             const Icone = etat === 'valide' ? ShieldCheck : etat === 'expire_bientot' ? ShieldQuestion : ShieldAlert
-            const couleur = etat === 'valide' ? 'text-green-600'
-                          : etat === 'expire_bientot' ? 'text-amber-600' : 'text-red-600'
+            const couleur = etat === 'valide' ? 'text-succes'
+                          : etat === 'expire_bientot' ? 'text-alerte' : 'text-danger'
             return (
-              <li key={iv.id} className="rounded-xl border border-gray-200 bg-white p-3">
+              <li key={iv.id} className="rounded-[var(--rayon)] border border-bordure bg-surface p-3">
                 <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
-                    <HardHat size={16} className="text-gray-500" />
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-appuyee">
+                    <HardHat size={16} className="text-texte-doux" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-texte">
                       {p?.nom}
-                      {p?.entreprise && <span className="text-gray-500"> — {p.entreprise}</span>}
+                      {p?.entreprise && <span className="text-texte-doux"> — {p.entreprise}</span>}
                     </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-texte-doux">
                       <span>{p ? LIBELLES_METIER[p.metier] : ''}</span>
                       <span>Lot {LIBELLES_CORPS_ETAT[iv.lot as CorpsEtat]}</span>
                       {iv.montant_marche ? <span>{formatMontant(iv.montant_marche)}</span> : null}
@@ -227,7 +227,7 @@ export default function Intervenants({
                       <Icone size={13} />
                       {LIBELLES_DECENNALE[etat]}
                       {p?.decennale_valide_jusqu_au && etat !== 'absente' && (
-                        <span className="font-normal text-gray-500">
+                        <span className="font-normal text-texte-doux">
                           (jusqu’au {new Date(p.decennale_valide_jusqu_au).toLocaleDateString('fr-FR')})
                         </span>
                       )}
@@ -235,7 +235,7 @@ export default function Intervenants({
                   </div>
                   {!lectureSeule && (
                     <button onClick={async () => { await retirerIntervention(supabase, iv.id); await charger() }}
-                            className="shrink-0 rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600"
+                            className="shrink-0 rounded p-1.5 text-texte-faible hover:bg-danger-tenue hover:text-danger"
                             aria-label="Retirer du chantier">
                       <Trash2 size={14} />
                     </button>

@@ -19,7 +19,7 @@ import { formatMontant } from '@/lib/utils'
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function Echeancier({
   chantierId,
@@ -102,8 +102,8 @@ export default function Echeancier({
     }
   }
 
-  if (chargement) return <p className="py-8 text-center text-sm text-gray-500">Chargement…</p>
-  if (!s) return <p className="py-8 text-center text-sm text-red-600">{erreur}</p>
+  if (chargement) return <p className="py-8 text-center text-sm text-texte-doux">Chargement…</p>
+  if (!s) return <p className="py-8 text-center text-sm text-danger">{erreur}</p>
 
   const jalonsDisponibles = avancement?.phases.flatMap((p) => p.jalons) ?? []
 
@@ -111,22 +111,22 @@ export default function Echeancier({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {([
-          ['Total prévu', s.total_prevu, 'text-gray-900'],
-          ['Déjà versé', s.total_paye, 'text-green-700'],
-          ['Exigible', s.exigible_maintenant, 'text-amber-700'],
+          ['Total prévu', s.total_prevu, 'text-texte'],
+          ['Déjà versé', s.total_paye, 'text-succes'],
+          ['Exigible', s.exigible_maintenant, 'text-alerte'],
           ['Reste à payer', s.reste_a_payer, 'text-primaire'],
         ] as const).map(([libelle, valeur, couleur]) => (
-          <div key={libelle} className="rounded-lg border border-gray-200 bg-white px-3 py-3">
+          <div key={libelle} className="rounded-[var(--rayon)] border border-bordure bg-surface px-3 py-3">
             <div className={`text-base font-semibold tabular-nums ${couleur}`}>
               {formatMontant(valeur)}
             </div>
-            <div className="mt-0.5 text-[11px] uppercase tracking-wide text-gray-500">{libelle}</div>
+            <div className="mt-0.5 text-[11px] uppercase tracking-wide text-texte-doux">{libelle}</div>
           </div>
         ))}
       </div>
 
       {s.en_retard_nombre > 0 && (
-        <div className="rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-800">
+        <div className="rounded-[var(--rayon)] bg-danger-tenue px-3 py-2.5 text-sm text-danger">
           <CalendarClock size={15} className="mr-1.5 inline" />
           {s.en_retard_nombre} échéance(s) dépassée(s) et non soldée(s).
         </div>
@@ -135,24 +135,24 @@ export default function Echeancier({
       <div className="flex flex-wrap gap-2">
         {!lectureSeule && (
           <button onClick={() => setSaisie(!saisie)}
-                  className="flex items-center gap-1.5 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
+                  className="flex items-center gap-1.5 rounded-[var(--rayon)] bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
             <Plus size={15} /> Ajouter une échéance
           </button>
         )}
         {!lectureSeule && (s.a_venir_7j > 0 || s.en_retard_nombre > 0) && (
           <button onClick={alerter} disabled={alerteEnCours}
-                  className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                  className="flex items-center gap-1.5 rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm text-texte hover:bg-surface-appuyee disabled:opacity-50">
             {alerteEnCours ? <Loader2 size={15} className="animate-spin" /> : <BellRing size={15} />}
             Envoyer un rappel
           </button>
         )}
       </div>
 
-      {message && <div className="rounded-lg bg-primaire-tenue px-3 py-2 text-sm text-primaire">{message}</div>}
-      {erreur && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</div>}
+      {message && <div className="rounded-[var(--rayon)] bg-primaire-tenue px-3 py-2 text-sm text-primaire">{message}</div>}
+      {erreur && <div className="rounded-[var(--rayon)] bg-danger-tenue px-3 py-2 text-sm text-danger">{erreur}</div>}
 
       {saisie && !lectureSeule && (
-        <div className="grid gap-2 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:grid-cols-2">
+        <div className="grid gap-2 rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-3 sm:grid-cols-2">
           <input className={classeChamp} placeholder="Libellé (ex. Appel de fonds tranche 3)"
                  value={f.libelle} onChange={(e) => setF({ ...f, libelle: e.target.value })} />
           <input className={classeChamp} placeholder="Montant" inputMode="decimal"
@@ -166,13 +166,13 @@ export default function Echeancier({
               <option key={j.id} value={j.id}>Conditionnée par : {j.nom}</option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 sm:col-span-2">
+          <p className="text-xs text-texte-doux sm:col-span-2">
             Une échéance conditionnée par un jalon reste verrouillée jusqu’à la réception de
             l’ouvrage : elle ne devient exigible qu’à la validation.
           </p>
           <div className="sm:col-span-2">
             <button onClick={ajouter}
-                    className="rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
+                    className="rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui">
               Enregistrer
             </button>
           </div>
@@ -180,39 +180,39 @@ export default function Echeancier({
       )}
 
       {s.echeances.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500">
+        <p className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-10 text-center text-sm text-texte-doux">
           Aucune échéance planifiée.
         </p>
       ) : (
-        <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+        <ul className="divide-y divide-bordure rounded-[var(--rayon)] border border-bordure bg-surface">
           {s.echeances.map((e) => {
             const solde = e.montant_paye >= e.montant
             return (
               <li key={e.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-gray-900">{e.libelle}</span>
+                    <span className="font-medium text-texte">{e.libelle}</span>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      e.statut === 'payee' ? 'bg-green-100 text-green-700'
-                      : e.statut === 'exigible' ? 'bg-amber-100 text-amber-800'
-                      : e.statut === 'annulee' ? 'bg-gray-100 text-gray-500'
-                      : 'bg-gray-100 text-gray-600'}`}>
+                      e.statut === 'payee' ? 'bg-succes-tenue text-succes'
+                      : e.statut === 'exigible' ? 'bg-alerte-tenue text-alerte'
+                      : e.statut === 'annulee' ? 'bg-surface-appuyee text-texte-doux'
+                      : 'bg-surface-appuyee text-texte-doux'}`}>
                       {LIBELLES_STATUT_ECHEANCE[e.statut]}
                     </span>
                     {e.bloquee_par_jalon && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-texte-doux">
                         <Lock size={11} /> {e.jalon_nom}
                       </span>
                     )}
                   </div>
-                  <div className={`text-xs ${e.en_retard ? 'font-medium text-red-600' : 'text-gray-500'}`}>
+                  <div className={`text-xs ${e.en_retard ? 'font-medium text-danger' : 'text-texte-doux'}`}>
                     {new Date(e.date_echeance).toLocaleDateString('fr-FR')}
                     {e.en_retard && ' — dépassée'}
                     {e.montant_paye > 0 && !solde && ` · ${formatMontant(e.montant_paye)} déjà versés`}
                   </div>
                 </div>
 
-                <div className="shrink-0 text-right tabular-nums text-sm font-medium text-gray-900">
+                <div className="shrink-0 text-right tabular-nums text-sm font-medium text-texte">
                   {formatMontant(e.montant)}
                 </div>
 
@@ -225,13 +225,13 @@ export default function Echeancier({
                           title={e.bloquee_par_jalon
                             ? 'Le jalon correspondant n’est pas encore validé'
                             : 'Marquer comme payée'}
-                          className="shrink-0 rounded-md bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400">
+                          className="shrink-0 rounded-md bg-succes px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:bg-surface-appuyee disabled:text-texte-faible">
                     <Check size={12} className="inline" /> Payée
                   </button>
                 )}
                 {!lectureSeule && (
                   <button onClick={async () => { await supprimerEcheance(supabase, e.id); await charger() }}
-                          className="shrink-0 rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600"
+                          className="shrink-0 rounded p-1.5 text-texte-faible hover:bg-danger-tenue hover:text-danger"
                           aria-label={`Supprimer ${e.libelle}`}>
                     <Trash2 size={14} />
                   </button>

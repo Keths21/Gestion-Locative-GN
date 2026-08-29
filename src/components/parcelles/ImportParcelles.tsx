@@ -102,17 +102,17 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl">
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-5 py-4">
+      <div className="flex max-h-[92vh] w-full max-w-3xl flex-col rounded-t-2xl bg-surface shadow-flottante sm:rounded-2xl">
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-bordure px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Importer des parcelles</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <h2 className="text-base font-semibold text-texte">Importer des parcelles</h2>
+            <p className="mt-0.5 text-xs text-texte-doux">
               Fichier de géomètre ou relevé d&apos;appareil — GeoJSON, KML ou GPX
             </p>
           </div>
           <button
             onClick={onFerme}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-[var(--rayon)] p-1.5 text-texte-faible hover:bg-surface-appuyee hover:text-texte"
             aria-label="Fermer"
           >
             <X size={18} />
@@ -145,15 +145,15 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
                 if (f) void lire(f)
               }}
               onClick={() => input.current?.click()}
-              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-                survol ? 'border-primaire bg-primaire-tenue' : 'border-gray-300 hover:bg-gray-50'
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--rayon)] border-2 border-dashed px-6 py-14 text-center transition-colors ${
+                survol ? 'border-primaire bg-primaire-tenue' : 'border-bordure-forte hover:bg-surface-appuyee'
               }`}
             >
-              <Upload size={28} className="text-gray-400" />
-              <p className="text-sm font-medium text-gray-700">
+              <Upload size={28} className="text-texte-faible" />
+              <p className="text-sm font-medium text-texte">
                 Déposez le fichier ici, ou cliquez pour le choisir
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-texte-doux">
                 Un tracé GPX relevé à pied est reconnu comme tel et enregistré en « relevé GPS »
               </p>
             </div>
@@ -162,7 +162,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
           {rapport && (
             <>
               <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-appuyee px-3 py-1 text-xs font-medium text-texte">
                   <FileUp size={13} /> {nomFichier}
                 </span>
                 <span className="rounded-full bg-primaire-tenue px-3 py-1 text-xs font-medium text-primaire">
@@ -183,23 +183,23 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
 
               {total > 0 && (
                 <div className="mb-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-gray-50 px-2 py-3">
-                    <div className="text-xl font-semibold text-gray-900">{total}</div>
-                    <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                  <div className="rounded-[var(--rayon)] bg-surface-appuyee px-2 py-3">
+                    <div className="text-xl font-semibold text-texte">{total}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-texte-doux">
                       à importer
                     </div>
                   </div>
-                  <div className="rounded-lg bg-gray-50 px-2 py-3">
-                    <div className="text-xl font-semibold text-gray-900">{avecTrace}</div>
-                    <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                  <div className="rounded-[var(--rayon)] bg-surface-appuyee px-2 py-3">
+                    <div className="text-xl font-semibold text-texte">{avecTrace}</div>
+                    <div className="text-[11px] uppercase tracking-wide text-texte-doux">
                       avec tracé
                     </div>
                   </div>
-                  <div className="rounded-lg bg-gray-50 px-2 py-3">
-                    <div className="text-xl font-semibold text-gray-900">
+                  <div className="rounded-[var(--rayon)] bg-surface-appuyee px-2 py-3">
+                    <div className="text-xl font-semibold text-texte">
                       {formaterSuperficie(superficieTotale)}
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide text-gray-500">
+                    <div className="text-[11px] uppercase tracking-wide text-texte-doux">
                       superficie
                     </div>
                   </div>
@@ -207,7 +207,7 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
               )}
 
               {alertes > 0 && (
-                <div className="mb-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="mb-3 flex items-start gap-2 rounded-[var(--rayon)] bg-alerte-tenue px-3 py-2 text-xs text-alerte">
                   <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                   <span>
                     {alertes} parcelle(s) présentent une anomalie signalée ci-dessous. Elles seront
@@ -217,9 +217,9 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
               )}
 
               {total > 0 && (
-                <div className="mb-4 overflow-x-auto rounded-lg border border-gray-200">
+                <div className="mb-4 overflow-x-auto rounded-[var(--rayon)] border border-bordure">
                   <table className="w-full min-w-[36rem] text-sm">
-                    <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                    <thead className="border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux">
                       <tr>
                         <th className="px-3 py-2 font-medium">Parcelle</th>
                         <th className="px-3 py-2 font-medium">Forme</th>
@@ -229,31 +229,31 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
                     </thead>
                     <tbody>
                       {rapport.parcelles.map((p, i) => (
-                        <tr key={i} className="border-b border-gray-100 last:border-0">
+                        <tr key={i} className="border-b border-bordure last:border-0">
                           <td className="px-3 py-2">
-                            <div className="font-medium text-gray-900">{p.nom}</div>
+                            <div className="font-medium text-texte">{p.nom}</div>
                             {p.avertissements.map((a, k) => (
-                              <div key={k} className="text-xs text-amber-700">
+                              <div key={k} className="text-xs text-alerte">
                                 {a}
                               </div>
                             ))}
                           </td>
-                          <td className="px-3 py-2 text-gray-600">
+                          <td className="px-3 py-2 text-texte-doux">
                             <span className="inline-flex items-center gap-1 text-xs">
                               {p.geom ? <Shapes size={13} /> : <MapPin size={13} />}
                               {p.geom ? 'contour' : 'repère'}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+                          <td className="px-3 py-2 text-right tabular-nums text-texte">
                             {p.geom ? formaterSuperficie(p.superficie_estimee_m2) : '—'}
                           </td>
                           <td className="px-3 py-2">
                             {p.champsDetectes.length ? (
-                              <span className="text-xs text-gray-600">
+                              <span className="text-xs text-texte-doux">
                                 {p.champsDetectes.join(', ')}
                               </span>
                             ) : (
-                              <span className="text-xs text-gray-400">nom et tracé seulement</span>
+                              <span className="text-xs text-texte-faible">nom et tracé seulement</span>
                             )}
                           </td>
                         </tr>
@@ -264,18 +264,18 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
               )}
 
               {rapport.ignores.length > 0 && (
-                <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <div className="mb-4 rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-3">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-texte-doux">
                     {rapport.ignores.length} entrée(s) écartée(s)
                   </p>
-                  <ul className="space-y-1 text-xs text-gray-600">
+                  <ul className="space-y-1 text-xs text-texte-doux">
                     {rapport.ignores.slice(0, 8).map((e, i) => (
                       <li key={i}>
-                        <span className="font-medium text-gray-800">{e.source}</span> — {e.motif}
+                        <span className="font-medium text-texte">{e.source}</span> — {e.motif}
                       </li>
                     ))}
                     {rapport.ignores.length > 8 && (
-                      <li className="text-gray-400">
+                      <li className="text-texte-faible">
                         et {rapport.ignores.length - 8} autre(s)…
                       </li>
                     )}
@@ -284,17 +284,17 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
               )}
 
               {total === 0 && (
-                <p className="rounded-lg bg-red-50 px-3 py-3 text-sm text-red-700">
+                <p className="rounded-[var(--rayon)] bg-danger-tenue px-3 py-3 text-sm text-danger">
                   Aucune parcelle exploitable dans ce fichier.
                 </p>
               )}
 
               {echecs.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-red-700">
+                <div className="rounded-[var(--rayon)] border border-danger/20 bg-danger-tenue p-3">
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-danger">
                     {echecs.length} refusée(s) par la base
                   </p>
-                  <ul className="space-y-1 text-xs text-red-700">
+                  <ul className="space-y-1 text-xs text-danger">
                     {echecs.map((e, i) => (
                       <li key={i}>
                         <span className="font-medium">{e.nom}</span> — {e.motif}
@@ -307,22 +307,22 @@ export default function ImportParcelles({ onFerme, onTermine }: Props) {
           )}
         </div>
 
-        <footer className="marge-bas-sure flex shrink-0 items-center gap-3 border-t border-gray-200 px-5 py-4">
+        <footer className="marge-bas-sure flex shrink-0 items-center gap-3 border-t border-bordure px-5 py-4">
           {ecriture && (
-            <span className="text-xs tabular-nums text-gray-500">
+            <span className="text-xs tabular-nums text-texte-doux">
               {progression} / {total}
             </span>
           )}
           <button
             onClick={onFerme}
-            className="ml-auto rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+            className="ml-auto rounded-[var(--rayon)] border border-bordure-forte px-4 py-2.5 text-sm text-texte hover:bg-surface-appuyee"
           >
             Annuler
           </button>
           <button
             onClick={importer}
             disabled={!total || ecriture}
-            className="flex items-center justify-center gap-2 rounded-lg bg-primaire px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center justify-center gap-2 rounded-[var(--rayon)] bg-primaire px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaire-appui disabled:cursor-not-allowed disabled:opacity-40"
           >
             {ecriture ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {ecriture ? 'Import en cours…' : `Importer ${total || ''} parcelle(s)`}

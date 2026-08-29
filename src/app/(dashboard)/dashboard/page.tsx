@@ -5,7 +5,7 @@ import { Building2, Users, CreditCard, AlertTriangle, TrendingUp, CheckCircle, C
 import type { LucideIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { formatMontant, formatDate, isLocataireActif } from '@/lib/utils'
-import { Carte, EnTetePage, Pastille, Tuile, RienAAfficher, type Ton } from '@/components/ui'
+import { Carte, EnTetePage, Pastille, RienAAfficher, Tuile, type Ton } from '@/components/ui'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend

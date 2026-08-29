@@ -29,7 +29,7 @@
   --bordure-forte: #cbd5e1;
 
   /* Trois niveaux de texte, pas davantage. Le gris-sur-gris de l'ancienne
-     interface (text-gray-400 sur fond blanc) tombait sous le seuil lisible. */
+     interface (text-texte-faible sur fond blanc) tombait sous le seuil lisible. */
   --texte: #0f172a;        /* 17:1 sur blanc */
   --texte-doux: #475569;   /* 7.5:1 */
   --texte-faible: #64748b; /* 5.0:1 — plancher, jamais en dessous */

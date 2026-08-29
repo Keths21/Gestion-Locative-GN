@@ -32,7 +32,7 @@ import {
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 export default function TableauBudget({
   chantierId,
@@ -120,8 +120,8 @@ export default function TableauBudget({
     await charger()
   }
 
-  if (chargement) return <p className="py-8 text-center text-sm text-gray-500">Chargement du budget…</p>
-  if (!synthese) return <p className="py-8 text-center text-sm text-red-600">{erreur}</p>
+  if (chargement) return <p className="py-8 text-center text-sm text-texte-doux">Chargement du budget…</p>
+  if (!synthese) return <p className="py-8 text-center text-sm text-danger">{erreur}</p>
 
   const reserveEpuisee = synthese.reserve_restante < 0
 
@@ -129,34 +129,34 @@ export default function TableauBudget({
     <div className="space-y-5">
       {/* Le chiffre qui compte en premier */}
       <div
-        className={`rounded-xl border p-4 ${
-          reserveEpuisee ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'
+        className={`rounded-[var(--rayon)] border p-4 ${
+          reserveEpuisee ? 'border-danger/20 bg-danger-tenue' : 'border-bordure bg-surface-appuyee'
         }`}
       >
         <div className="flex items-start gap-3">
           {reserveEpuisee ? (
-            <ShieldAlert size={20} className="mt-0.5 shrink-0 text-red-600" />
+            <ShieldAlert size={20} className="mt-0.5 shrink-0 text-danger" />
           ) : (
-            <Wallet size={20} className="mt-0.5 shrink-0 text-gray-500" />
+            <Wallet size={20} className="mt-0.5 shrink-0 text-texte-doux" />
           )}
           <div className="min-w-0 flex-1">
             {reserveEpuisee ? (
               <>
-                <p className="text-sm font-semibold text-red-800">
+                <p className="text-sm font-semibold text-danger">
                   Réserve d&apos;imprévus épuisée — dépassement de{' '}
                   {formatMontant(synthese.depassement)}
                 </p>
-                <p className="mt-0.5 text-xs text-red-700">
+                <p className="mt-0.5 text-xs text-danger">
                   Les avenants dépassent la réserve prévue. Toute dépense supplémentaire appelle
                   une rallonge.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-texte">
                   Réserve d&apos;imprévus restante : {formatMontant(synthese.reserve_restante)}
                 </p>
-                <p className="mt-0.5 text-xs text-gray-600">
+                <p className="mt-0.5 text-xs text-texte-doux">
                   sur {formatMontant(synthese.reserve_imprevus)} prévus ·{' '}
                   {formatMontant(synthese.avenants_total)} déjà consommés par avenants
                 </p>
@@ -168,16 +168,16 @@ export default function TableauBudget({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          ['Budget prévu', synthese.prevu_total, 'text-gray-900'],
-          ['Engagé (devis)', synthese.engage_total, 'text-amber-700'],
+          ['Budget prévu', synthese.prevu_total, 'text-texte'],
+          ['Engagé (devis)', synthese.engage_total, 'text-alerte'],
           ['Réalisé (factures)', synthese.realise_total, 'text-primaire'],
-          ['Payé', synthese.paye_total, 'text-green-700'],
+          ['Payé', synthese.paye_total, 'text-succes'],
         ].map(([libelle, valeur, couleur]) => (
-          <div key={libelle as string} className="rounded-lg border border-gray-200 bg-white px-3 py-3">
+          <div key={libelle as string} className="rounded-[var(--rayon)] border border-bordure bg-surface px-3 py-3">
             <div className={`text-base font-semibold tabular-nums ${couleur as string}`}>
               {formatMontant(valeur as number)}
             </div>
-            <div className="mt-0.5 text-[11px] uppercase tracking-wide text-gray-500">
+            <div className="mt-0.5 text-[11px] uppercase tracking-wide text-texte-doux">
               {libelle as string}
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function TableauBudget({
       </div>
 
       {synthese.depenses_sans_poste > 0 && (
-        <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <div className="flex items-center gap-2 rounded-[var(--rayon)] bg-alerte-tenue px-3 py-2 text-xs text-alerte">
           <AlertTriangle size={14} className="shrink-0" />
           {synthese.depenses_sans_poste} dépense(s) non affectée(s) à un poste — comptées dans les
           totaux, mais invisibles ligne à ligne.
@@ -193,9 +193,9 @@ export default function TableauBudget({
       )}
 
       {/* Postes */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-[var(--rayon)] border border-bordure bg-surface">
         <table className="w-full min-w-[44rem] text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+          <thead className="border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux">
             <tr>
               <th className="px-4 py-3 font-medium">Poste</th>
               <th className="px-4 py-3 text-right font-medium">Prévu</th>
@@ -208,13 +208,13 @@ export default function TableauBudget({
             {synthese.postes.map((p) => {
               const depasse = p.ecart < 0
               return (
-                <tr key={p.id} className="border-b border-gray-100 last:border-0">
+                <tr key={p.id} className="border-b border-bordure last:border-0">
                   <td className="px-4 py-2.5">
-                    <div className="font-medium text-gray-900">{p.libelle}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="font-medium text-texte">{p.libelle}</div>
+                    <div className="text-xs text-texte-doux">
                       {LIBELLES_CORPS_ETAT[p.corps_etat]}
                       {p.avenants > 0 && (
-                        <span className="text-amber-700">
+                        <span className="text-alerte">
                           {' '}· dont {formatMontant(p.avenants)} d&apos;avenants
                         </span>
                       )}
@@ -227,13 +227,13 @@ export default function TableauBudget({
                       <input
                         defaultValue={p.base}
                         onBlur={(e) => void majPrevu(p.id, e.target.value)}
-                        className="w-32 rounded border border-gray-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-primaire"
+                        className="w-32 rounded border border-bordure px-2 py-1 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-primaire"
                         inputMode="decimal"
                         aria-label={`Budget prévu — ${p.libelle}`}
                       />
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-amber-700">
+                  <td className="px-4 py-2.5 text-right tabular-nums text-alerte">
                     {p.engage ? formatMontant(p.engage) : '—'}
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-primaire">
@@ -241,7 +241,7 @@ export default function TableauBudget({
                   </td>
                   <td
                     className={`px-4 py-2.5 text-right tabular-nums font-medium ${
-                      depasse ? 'text-red-600' : 'text-gray-600'
+                      depasse ? 'text-danger' : 'text-texte-doux'
                     }`}
                   >
                     {formatMontant(p.ecart)}
@@ -256,11 +256,11 @@ export default function TableauBudget({
       {/* Dépenses */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Devis, factures et avenants</h3>
+          <h3 className="text-sm font-semibold text-texte">Devis, factures et avenants</h3>
           {!lectureSeule && (
             <button
               onClick={() => setSaisie(!saisie)}
-              className="flex items-center gap-1.5 rounded-lg bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui"
+              className="flex items-center gap-1.5 rounded-[var(--rayon)] bg-primaire px-3 py-1.5 text-xs font-semibold text-white hover:bg-primaire-appui"
             >
               <Plus size={14} /> Ajouter
             </button>
@@ -268,7 +268,7 @@ export default function TableauBudget({
         </div>
 
         {saisie && !lectureSeule && (
-          <div className="mb-3 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:grid-cols-2">
+          <div className="mb-3 grid gap-2 rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-3 sm:grid-cols-2">
             <input
               className={classeChamp}
               placeholder="Libellé (ex. Facture maçon tranche 2)"
@@ -319,12 +319,12 @@ export default function TableauBudget({
             <div className="sm:col-span-2">
               <button
                 onClick={ajouter}
-                className="flex items-center gap-2 rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
+                className="flex items-center gap-2 rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
               >
                 <Check size={15} /> Enregistrer
               </button>
               {f.type === 'avenant' && (
-                <p className="mt-2 text-xs text-amber-700">
+                <p className="mt-2 text-xs text-alerte">
                   Un avenant n&apos;est pas une dépense : il augmente le budget du poste et
                   consomme la réserve d&apos;imprévus.
                 </p>
@@ -333,41 +333,41 @@ export default function TableauBudget({
           </div>
         )}
 
-        {erreur && <p className="mb-2 text-xs text-red-600">{erreur}</p>}
+        {erreur && <p className="mb-2 text-xs text-danger">{erreur}</p>}
 
         {depenses.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-gray-300 py-8 text-center text-sm text-gray-500">
+          <p className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-8 text-center text-sm text-texte-doux">
             Aucun devis ni facture enregistré.
           </p>
         ) : (
-          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+          <ul className="divide-y divide-bordure rounded-[var(--rayon)] border border-bordure bg-surface">
             {depenses.map((d) => (
               <li key={d.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                     d.type === 'avenant'
-                      ? 'bg-amber-100 text-amber-800'
+                      ? 'bg-alerte-tenue text-alerte'
                       : d.type === 'devis'
-                        ? 'bg-gray-100 text-gray-700'
+                        ? 'bg-surface-appuyee text-texte'
                         : 'bg-primaire-tenue text-primaire'
                   }`}
                 >
                   {LIBELLES_TYPE_DEPENSE[d.type]}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm text-gray-900">{d.libelle}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="truncate text-sm text-texte">{d.libelle}</div>
+                  <div className="text-xs text-texte-doux">
                     {new Date(d.date_depense).toLocaleDateString('fr-FR')} ·{' '}
                     {LIBELLES_STATUT_DEPENSE[d.statut]}
                   </div>
                 </div>
-                <div className="shrink-0 tabular-nums text-sm font-medium text-gray-900">
+                <div className="shrink-0 tabular-nums text-sm font-medium text-texte">
                   {formatMontant(d.montant)}
                 </div>
                 {!lectureSeule && (
                   <button
                     onClick={() => void retirer(d.id)}
-                    className="shrink-0 rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    className="shrink-0 rounded p-1.5 text-texte-faible hover:bg-danger-tenue hover:text-danger"
                     aria-label={`Supprimer ${d.libelle}`}
                   >
                     <Trash2 size={14} />

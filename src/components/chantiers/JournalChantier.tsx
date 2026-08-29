@@ -22,12 +22,12 @@ import {
  */
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-[var(--rayon)] border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 const couleursGravite: Record<GraviteSignalement, string> = {
-  info: 'bg-gray-100 text-gray-700',
-  attention: 'bg-amber-100 text-amber-800',
-  bloquant: 'bg-red-100 text-red-800',
+  info: 'bg-surface-appuyee text-texte',
+  attention: 'bg-alerte-tenue text-alerte',
+  bloquant: 'bg-danger-tenue text-danger',
 }
 
 export default function JournalChantier({
@@ -123,7 +123,7 @@ export default function JournalChantier({
   return (
     <div className="space-y-4">
       {signalementsOuverts.length > 0 && (
-        <div className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        <div className="rounded-[var(--rayon)] bg-alerte-tenue px-3 py-2.5 text-sm text-alerte">
           <TriangleAlert size={15} className="mr-1.5 inline" />
           {signalementsOuverts.length} signalement(s) ouvert(s)
           {signalementsOuverts.some((e) => e.gravite === 'bloquant') && (
@@ -133,13 +133,13 @@ export default function JournalChantier({
       )}
 
       {!lectureSeule && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+        <div className="rounded-[var(--rayon)] border border-bordure bg-surface-appuyee p-3">
           <div className="mb-2 flex gap-1">
             {([['photo', 'Photo', Camera], ['note', 'Note', MessageSquare],
                ['signalement', 'Signalement', TriangleAlert]] as const).map(([k, l, Icone]) => (
               <button key={k} onClick={() => setF({ ...f, type: k })}
                       className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${
-                        f.type === k ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                        f.type === k ? 'bg-surface text-texte shadow-carte' : 'text-texte-doux hover:text-texte'
                       }`}>
                 <Icone size={13} /> {l}
               </button>
@@ -166,27 +166,27 @@ export default function JournalChantier({
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button onClick={() => input.current?.click()} disabled={envoi}
-                    className="flex items-center gap-2 rounded-lg bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui disabled:opacity-50">
+                    className="flex items-center gap-2 rounded-[var(--rayon)] bg-primaire px-3 py-2 text-sm font-semibold text-white hover:bg-primaire-appui disabled:opacity-50">
               {envoi ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
               Prendre une photo
             </button>
             <button onClick={() => void enregistrer(null)} disabled={envoi || !f.texte.trim()}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+                    className="rounded-[var(--rayon)] border border-bordure-forte bg-surface px-3 py-2 text-sm text-texte hover:bg-surface-appuyee disabled:opacity-40">
               Enregistrer sans photo
             </button>
-            <span className={`ml-auto inline-flex items-center gap-1 text-xs ${position ? 'text-green-600' : 'text-gray-400'}`}>
+            <span className={`ml-auto inline-flex items-center gap-1 text-xs ${position ? 'text-succes' : 'text-texte-faible'}`}>
               <MapPin size={12} /> {position ? 'position acquise' : 'position indisponible'}
             </span>
           </div>
-          {erreur && <p className="mt-2 text-xs text-red-600">{erreur}</p>}
+          {erreur && <p className="mt-2 text-xs text-danger">{erreur}</p>}
         </div>
       )}
 
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-bordure">
         {([['fil', 'Fil chronologique'], ['emplacement', 'Par emplacement']] as const).map(([k, l]) => (
           <button key={k} onClick={() => setVue(k)}
                   className={`border-b-2 px-3 py-2 text-sm font-medium ${
-                    vue === k ? 'border-primaire text-primaire' : 'border-transparent text-gray-500'
+                    vue === k ? 'border-primaire text-primaire' : 'border-transparent text-texte-doux'
                   }`}>
             {l}
           </button>
@@ -194,23 +194,23 @@ export default function JournalChantier({
       </div>
 
       {chargement ? (
-        <p className="py-8 text-center text-sm text-gray-500">Chargement…</p>
+        <p className="py-8 text-center text-sm text-texte-doux">Chargement…</p>
       ) : vue === 'fil' ? (
         entrees.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500">
+          <p className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-10 text-center text-sm text-texte-doux">
             Journal vide. La première photo peut être prise depuis le chantier, même sans réseau.
           </p>
         ) : (
           <ul className="space-y-2">
             {entrees.map((e) => (
-              <li key={e.id} className="flex gap-3 rounded-xl border border-gray-200 bg-white p-3">
+              <li key={e.id} className="flex gap-3 rounded-[var(--rayon)] border border-bordure bg-surface p-3">
                 {e.url && e.mime?.startsWith('image/') ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={e.url} alt={e.texte ?? 'Photo de chantier'}
-                       className="h-20 w-20 shrink-0 rounded-lg object-cover" loading="lazy" />
+                       className="h-20 w-20 shrink-0 rounded-[var(--rayon)] object-cover" loading="lazy" />
                 ) : e.document ? (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                    <FileText size={20} className="text-gray-400" />
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[var(--rayon)] bg-surface-appuyee">
+                    <FileText size={20} className="text-texte-faible" />
                   </div>
                 ) : null}
 
@@ -222,16 +222,16 @@ export default function JournalChantier({
                       </span>
                     )}
                     {e.statut === 'resolu' && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-green-700">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-succes">
                         <CircleCheck size={11} /> résolu
                       </span>
                     )}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-texte-faible">
                       {new Date(e.cree_le).toLocaleString('fr-FR')}
                     </span>
-                    {e.point_geom && <MapPin size={11} className="text-gray-300" />}
+                    {e.point_geom && <MapPin size={11} className="text-texte-faible" />}
                   </div>
-                  {e.texte && <p className="whitespace-pre-wrap text-sm text-gray-800">{e.texte}</p>}
+                  {e.texte && <p className="whitespace-pre-wrap text-sm text-texte">{e.texte}</p>}
                 </div>
 
                 {!lectureSeule && (
@@ -241,13 +241,13 @@ export default function JournalChantier({
                                 await resoudreSignalement(supabase, e.id, e.statut === 'ouvert')
                                 await charger()
                               }}
-                              className="rounded p-1.5 text-gray-400 hover:bg-green-50 hover:text-green-600"
+                              className="rounded p-1.5 text-texte-faible hover:bg-succes-tenue hover:text-succes"
                               aria-label={e.statut === 'ouvert' ? 'Marquer résolu' : 'Rouvrir'}>
                         <CircleCheck size={14} />
                       </button>
                     )}
                     <button onClick={async () => { await supprimerEntree(supabase, e); await charger() }}
-                            className="rounded p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600"
+                            className="rounded p-1.5 text-texte-faible hover:bg-danger-tenue hover:text-danger"
                             aria-label="Supprimer">
                       <Trash2 size={14} />
                     </button>
@@ -258,7 +258,7 @@ export default function JournalChantier({
           </ul>
         )
       ) : groupes.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-gray-300 py-10 text-center text-sm text-gray-500">
+        <p className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-10 text-center text-sm text-texte-doux">
           Aucune entrée géolocalisée. Les prises faites avec la position active se regroupent ici
           par emplacement.
         </p>
@@ -267,8 +267,8 @@ export default function JournalChantier({
           {[...new Set(groupes.map((g) => g.groupe))].map((num) => {
             const suite = groupes.filter((g) => g.groupe === num)
             return (
-              <div key={num} className="rounded-xl border border-gray-200 bg-white p-3">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <div key={num} className="rounded-[var(--rayon)] border border-bordure bg-surface p-3">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-texte-doux">
                   <Images size={13} /> Emplacement {num + 1} · {suite.length} prise(s)
                 </p>
                 <ol className="flex gap-3 overflow-x-auto pb-1">
@@ -278,16 +278,16 @@ export default function JournalChantier({
                       <li key={g.id} className="w-40 shrink-0">
                         {e?.url && e.mime?.startsWith('image/') ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={e.url} alt={g.texte ?? ''} className="h-28 w-40 rounded-lg object-cover" loading="lazy" />
+                          <img src={e.url} alt={g.texte ?? ''} className="h-28 w-40 rounded-[var(--rayon)] object-cover" loading="lazy" />
                         ) : (
-                          <div className="flex h-28 w-40 items-center justify-center rounded-lg bg-gray-100">
-                            <MessageSquare size={18} className="text-gray-400" />
+                          <div className="flex h-28 w-40 items-center justify-center rounded-[var(--rayon)] bg-surface-appuyee">
+                            <MessageSquare size={18} className="text-texte-faible" />
                           </div>
                         )}
-                        <p className="mt-1 text-[11px] text-gray-400">
+                        <p className="mt-1 text-[11px] text-texte-faible">
                           {new Date(g.cree_le).toLocaleDateString('fr-FR')}
                         </p>
-                        {g.texte && <p className="line-clamp-2 text-xs text-gray-700">{g.texte}</p>}
+                        {g.texte && <p className="line-clamp-2 text-xs text-texte">{g.texte}</p>}
                       </li>
                     )
                   })}

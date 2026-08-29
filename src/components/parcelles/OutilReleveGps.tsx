@@ -88,20 +88,20 @@ export default function OutilReleveGps({
         : 'faible'
 
   const couleurQualite =
-    qualite === 'bonne' ? 'text-green-600' : qualite === 'moyenne' ? 'text-amber-600' : 'text-red-600'
+    qualite === 'bonne' ? 'text-succes' : qualite === 'moyenne' ? 'text-alerte' : 'text-danger'
 
   return (
-    <div className="marge-bas-sure pointer-events-auto absolute inset-x-2 bottom-2 z-[1000] rounded-2xl border border-gray-200 bg-white/97 p-3 shadow-2xl backdrop-blur sm:inset-x-auto sm:left-4 sm:w-96">
+    <div className="marge-bas-sure pointer-events-auto absolute inset-x-2 bottom-2 z-[1000] rounded-2xl border border-bordure bg-surface/97 p-3 shadow-2xl backdrop-blur sm:inset-x-auto sm:left-4 sm:w-96">
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Relevé GPS sur le terrain</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="text-sm font-semibold text-texte">Relevé GPS sur le terrain</h3>
+          <p className="text-xs text-texte-doux">
             Marchez le long des limites et posez un point à chaque borne.
           </p>
         </div>
         <button
           onClick={onFermer}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"
+          className="rounded-lg p-1.5 text-texte-faible hover:bg-surface-appuyee"
           aria-label="Fermer"
         >
           <X size={16} />
@@ -109,52 +109,52 @@ export default function OutilReleveGps({
       </div>
 
       <div className="mb-3 grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-gray-100 px-2 py-2">
-          <div className="text-lg font-semibold text-gray-900">{points.length}</div>
-          <div className="text-[10px] uppercase tracking-wide text-gray-500">Sommets</div>
+        <div className="rounded-lg bg-surface-appuyee px-2 py-2">
+          <div className="text-lg font-semibold text-texte">{points.length}</div>
+          <div className="text-[10px] uppercase tracking-wide text-texte-doux">Sommets</div>
         </div>
-        <div className="rounded-lg bg-gray-100 px-2 py-2">
-          <div className="text-lg font-semibold text-gray-900">
+        <div className="rounded-lg bg-surface-appuyee px-2 py-2">
+          <div className="text-lg font-semibold text-texte">
             {position ? `±${Math.round(position.precision)} m` : '—'}
           </div>
           <div className={`text-[10px] uppercase tracking-wide ${couleurQualite}`}>
             Précision {qualite}
           </div>
         </div>
-        <div className="rounded-lg bg-gray-100 px-2 py-2">
-          <div className="text-lg font-semibold text-gray-900">
+        <div className="rounded-lg bg-surface-appuyee px-2 py-2">
+          <div className="text-lg font-semibold text-texte">
             {polygone
               ? formaterSuperficieDetail(superficieGeodesique(polygone)).split(' · ')[0]
               : '—'}
           </div>
-          <div className="text-[10px] uppercase tracking-wide text-gray-500">Superficie</div>
+          <div className="text-[10px] uppercase tracking-wide text-texte-doux">Superficie</div>
         </div>
       </div>
 
       {polygone && (
-        <div className="mb-3 flex justify-between rounded-lg bg-gray-50 px-3 py-2 text-xs">
-          <span className="text-gray-500">Périmètre parcouru</span>
-          <span className="text-gray-800">{formaterDistance(perimetreGeodesique(polygone))}</span>
+        <div className="mb-3 flex justify-between rounded-lg bg-surface-appuyee px-3 py-2 text-xs">
+          <span className="text-texte-doux">Périmètre parcouru</span>
+          <span className="text-texte">{formaterDistance(perimetreGeodesique(polygone))}</span>
         </div>
       )}
 
       {!simple && (
-        <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+        <div className="mb-3 rounded-lg bg-danger-tenue px-3 py-2 text-xs text-danger">
           Le contour se croise. Supprimez le dernier point ou reprenez le relevé.
         </div>
       )}
 
-      <div className="mb-3 flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2">
+      <div className="mb-3 flex items-center gap-2 rounded-lg bg-surface-appuyee px-3 py-2">
         <button
           onClick={() => setAuto(!auto)}
           className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold ${
-            auto ? 'bg-green-600 text-white' : 'bg-white text-gray-700 shadow-sm'
+            auto ? 'bg-succes text-white' : 'bg-surface text-texte shadow-carte'
           }`}
         >
           {auto ? <Pause size={13} /> : <Play size={13} />}
           {auto ? 'Auto activé' : 'Mode auto'}
         </button>
-        <label className="flex flex-1 items-center gap-2 text-xs text-gray-500">
+        <label className="flex flex-1 items-center gap-2 text-xs text-texte-doux">
           tous les
           <input
             type="range"
@@ -165,7 +165,7 @@ export default function OutilReleveGps({
             onChange={(e) => setSeuil(Number(e.target.value))}
             className="flex-1 accent-primaire"
           />
-          <span className="w-9 text-right text-gray-800">{seuil} m</span>
+          <span className="w-9 text-right text-texte">{seuil} m</span>
         </label>
       </div>
 
@@ -179,7 +179,7 @@ export default function OutilReleveGps({
           <Crosshair size={16} /> Poser un point
         </button>
         <button
-          className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2.5 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+          className="flex items-center justify-center rounded-lg border border-bordure-forte px-3 py-2.5 text-texte hover:bg-surface-appuyee disabled:opacity-40"
           onClick={annulerDernier}
           disabled={!points.length}
           aria-label="Annuler le dernier point"
@@ -187,7 +187,7 @@ export default function OutilReleveGps({
           <Undo2 size={16} />
         </button>
         <button
-          className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2.5 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+          className="flex items-center justify-center rounded-lg border border-bordure-forte px-3 py-2.5 text-texte hover:bg-surface-appuyee disabled:opacity-40"
           onClick={() => {
             precisions.current = []
             setPoints([])

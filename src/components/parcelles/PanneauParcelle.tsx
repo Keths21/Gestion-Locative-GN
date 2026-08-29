@@ -46,7 +46,7 @@ export default function PanneauParcelle({
 
   return (
     <section
-      className={`pointer-events-auto absolute z-[1000] flex flex-col overflow-hidden border-gray-200 bg-white/97 backdrop-blur
+      className={`pointer-events-auto absolute z-[1000] flex flex-col overflow-hidden border-bordure bg-surface/97 backdrop-blur
         inset-x-0 bottom-0 rounded-t-2xl border-t shadow-[0_-8px_30px_rgba(0,0,0,0.15)]
         md:inset-y-2 md:left-2 md:right-auto md:w-[400px] md:rounded-2xl md:border md:shadow-2xl
         ${plein ? 'max-h-[88%]' : 'max-h-[58%]'} md:max-h-none`}
@@ -57,19 +57,19 @@ export default function PanneauParcelle({
         onPointerUp={surFin}
         onPointerCancel={() => (depart.current = null)}
       >
-        <div className="mx-auto h-1 w-10 rounded-full bg-gray-300" />
+        <div className="mx-auto h-1 w-10 rounded-full bg-bordure-forte" />
       </div>
 
       <header className="flex shrink-0 items-start justify-between gap-2 px-4 py-3">
         <div className="min-w-0">
-          <h2 className="truncate text-base font-semibold text-gray-900">{titre}</h2>
-          {sousTitre && <p className="mt-0.5 truncate text-xs text-gray-500">{sousTitre}</p>}
+          <h2 className="truncate text-base font-semibold text-texte">{titre}</h2>
+          {sousTitre && <p className="mt-0.5 truncate text-xs text-texte-doux">{sousTitre}</p>}
         </div>
         <div className="flex items-center gap-1">
           {actions}
           <button
             onClick={() => (plein ? setPlein(false) : onFermer())}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-lg p-2 text-texte-faible hover:bg-surface-appuyee hover:text-texte"
             aria-label="Fermer"
           >
             {plein ? <ChevronDown size={18} /> : <X size={18} />}

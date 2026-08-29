@@ -7,11 +7,12 @@ import { formatMontant, formatDate, getMoisActuel } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { genererQuittance } from '@/lib/pdf'
 import { genererEcheancesMensuelles } from '@/lib/echeances'
+import { Carte, EnTetePage } from '@/components/ui'
 
 const statutConfig: Record<string, { label: string; color: string; next: string }> = {
-  'payé':       { label: 'Payé',       color: 'bg-green-100 text-green-700',   next: 'impayé' },
-  'en_attente': { label: 'En attente', color: 'bg-yellow-100 text-yellow-700', next: 'payé' },
-  'impayé':     { label: 'Impayé',     color: 'bg-red-100 text-red-700',       next: 'en_attente' },
+  'payé':       { label: 'Payé',       color: 'bg-succes-tenue text-succes',   next: 'impayé' },
+  'en_attente': { label: 'En attente', color: 'bg-alerte-tenue text-alerte', next: 'payé' },
+  'impayé':     { label: 'Impayé',     color: 'bg-danger-tenue text-danger',       next: 'en_attente' },
 }
 
 const EMPTY_FORM = {
@@ -198,61 +199,56 @@ export default function PaiementsPage() {
   const totalAttente = paiements.filter(p => p.statut === 'en_attente').reduce((s, p) => s + p.montant, 0)
   const totalMois = paiements.filter(p => p.statut === 'payé' && p.mois_concerne?.startsWith(moisCourant)).reduce((s, p) => s + p.montant, 0)
 
-  const inputCls = 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm'
+  const inputCls = 'w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm'
 
   return (
     <div className="space-y-6">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paiements</h1>
-          <p className="text-gray-500 mt-1">{paiements.length} paiement(s) enregistré(s)</p>
-        </div>
+      <EnTetePage titre="Paiements" sous={`${paiements.length} paiement(s) enregistré(s)`}>
         <div className="flex items-center gap-2">
           <button onClick={() => runGeneration(false)} disabled={generating}
             title="Créer les échéances de loyer du mois pour les locataires mensuels"
-            className="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition text-sm font-medium disabled:opacity-50">
+            className="flex items-center gap-2 border border-bordure text-texte px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium disabled:opacity-50">
             <CalendarPlus className={`h-4 w-4 ${generating ? 'animate-pulse' : ''}`} />
             {generating ? 'Génération...' : 'Générer les loyers'}
           </button>
           <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
-            className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-lg hover:bg-primaire-appui transition text-sm font-medium">
+            className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-[var(--rayon)] hover:bg-primaire-appui transition text-sm font-medium">
             <Plus className="h-4 w-4" /> Enregistrer un paiement
           </button>
         </div>
-      </div>
+      </EnTetePage>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-4 w-4 text-green-500" />
-            <p className="text-xs text-gray-500 font-medium">Total encaissé</p>
+            <TrendingUp className="h-4 w-4 text-succes" />
+            <p className="text-xs text-texte-doux font-medium">Total encaissé</p>
           </div>
-          <p className="text-lg font-bold text-green-600">{formatMontant(totalEncaisse)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-lg font-bold text-succes">{formatMontant(totalEncaisse)}</p>
+        </Carte>
+        <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingDown className="h-4 w-4 text-red-500" />
-            <p className="text-xs text-gray-500 font-medium">Impayés</p>
+            <TrendingDown className="h-4 w-4 text-danger" />
+            <p className="text-xs text-texte-doux font-medium">Impayés</p>
           </div>
-          <p className="text-lg font-bold text-red-600">{formatMontant(totalImpayes)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-lg font-bold text-danger">{formatMontant(totalImpayes)}</p>
+        </Carte>
+        <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Hourglass className="h-4 w-4 text-yellow-500" />
-            <p className="text-xs text-gray-500 font-medium">En attente</p>
+            <Hourglass className="h-4 w-4 text-alerte" />
+            <p className="text-xs text-texte-doux font-medium">En attente</p>
           </div>
-          <p className="text-lg font-bold text-yellow-600">{formatMontant(totalAttente)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-lg font-bold text-alerte">{formatMontant(totalAttente)}</p>
+        </Carte>
+        <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
             <CreditCard className="h-4 w-4 text-primaire" />
-            <p className="text-xs text-gray-500 font-medium">Ce mois-ci</p>
+            <p className="text-xs text-texte-doux font-medium">Ce mois-ci</p>
           </div>
           <p className="text-lg font-bold text-primaire">{formatMontant(totalMois)}</p>
-        </div>
+        </Carte>
       </div>
 
       {/* Filtres */}
@@ -264,9 +260,9 @@ export default function PaiementsPage() {
           { key: 'impayé', label: 'Impayés', count: paiements.filter(p => p.statut === 'impayé').length },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setFiltre(f.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2 rounded-[var(--rayon)] text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-surface border border-bordure text-texte-doux hover:bg-surface-appuyee'}`}>
             {f.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-full ${filtre === f.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>{f.count}</span>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${filtre === f.key ? 'bg-surface/20 text-white' : 'bg-surface-appuyee text-texte-doux'}`}>{f.count}</span>
           </button>
         ))}
       </div>
@@ -275,52 +271,52 @@ export default function PaiementsPage() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" /></div>
       ) : paiementsFiltres.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Aucun paiement trouvé.</p>
+        <div className="text-center py-16 bg-surface rounded-[var(--rayon)] border border-bordure">
+          <CreditCard className="h-12 w-12 text-texte-faible mx-auto mb-4" />
+          <p className="text-texte-doux">Aucun paiement trouvé.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <Carte className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-5 py-3 text-gray-600 font-medium">Locataire</th>
-                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
-                <th className="text-left px-5 py-3 text-gray-600 font-medium">Montant</th>
-                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden lg:table-cell">Période</th>
-                <th className="text-left px-5 py-3 text-gray-600 font-medium hidden lg:table-cell">Date</th>
-                <th className="text-left px-5 py-3 text-gray-600 font-medium">Statut</th>
-                <th className="px-5 py-3 text-right text-gray-600 font-medium">Actions</th>
+              <tr className="bg-surface-appuyee border-b border-bordure">
+                <th className="text-left px-5 py-3 text-texte-doux font-medium">Locataire</th>
+                <th className="text-left px-5 py-3 text-texte-doux font-medium hidden md:table-cell">Bien</th>
+                <th className="text-left px-5 py-3 text-texte-doux font-medium">Montant</th>
+                <th className="text-left px-5 py-3 text-texte-doux font-medium hidden lg:table-cell">Période</th>
+                <th className="text-left px-5 py-3 text-texte-doux font-medium hidden lg:table-cell">Date</th>
+                <th className="text-left px-5 py-3 text-texte-doux font-medium">Statut</th>
+                <th className="px-5 py-3 text-right text-texte-doux font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-bordure">
               {paiementsFiltres.map(p => {
                 const s = statutConfig[p.statut] || statutConfig['en_attente']
                 const isAirbnb = (p as any).bien?.mode_location === 'airbnb'
                 return (
-                  <tr key={p.id} className="hover:bg-gray-50 transition">
+                  <tr key={p.id} className="hover:bg-surface-appuyee transition">
                     <td className="px-5 py-3.5">
-                      <p className="font-medium text-gray-900">{(p as any).locataire?.prenom} {(p as any).locataire?.nom}</p>
-                      {(p as any).notes && <p className="text-xs text-gray-400 mt-0.5 italic">{(p as any).notes}</p>}
+                      <p className="font-medium text-texte">{(p as any).locataire?.prenom} {(p as any).locataire?.nom}</p>
+                      {(p as any).notes && <p className="text-xs text-texte-faible mt-0.5 italic">{(p as any).notes}</p>}
                     </td>
                     <td className="px-5 py-3.5 hidden md:table-cell">
-                      <div className="flex items-center gap-1.5 text-gray-600">
+                      <div className="flex items-center gap-1.5 text-texte-doux">
                         {isAirbnb
-                          ? <Moon className="h-3.5 w-3.5 text-pink-400 shrink-0" />
+                          ? <Moon className="h-3.5 w-3.5 text-info shrink-0" />
                           : <Home className="h-3.5 w-3.5 text-texte-faible shrink-0" />}
                         {(p as any).bien?.nom || '-'}
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 font-semibold text-gray-900">{formatMontant(p.montant)}</td>
-                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">
+                    <td className="px-5 py-3.5 font-semibold text-texte">{formatMontant(p.montant)}</td>
+                    <td className="px-5 py-3.5 text-texte-doux hidden lg:table-cell text-xs">
                       {p.mois_concerne?.includes('→')
                         ? p.mois_concerne
                         : p.mois_concerne}
                     </td>
-                    <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell text-xs">
+                    <td className="px-5 py-3.5 text-texte-doux hidden lg:table-cell text-xs">
                       {p.date_paiement
                         ? formatDate(p.date_paiement)
-                        : <span className="italic text-gray-300">Non réglé</span>}
+                        : <span className="italic text-texte-faible">Non réglé</span>}
                     </td>
                     <td className="px-5 py-3.5">
                       <button
@@ -337,12 +333,12 @@ export default function PaiementsPage() {
                       <div className="flex items-center gap-1 justify-end">
                         {p.statut === 'payé' && (
                           <button onClick={() => handleQuittance(p)} title="Générer quittance"
-                            className="p-1.5 hover:bg-primaire-tenue rounded-lg text-primaire transition">
+                            className="p-1.5 hover:bg-primaire-tenue rounded-[var(--rayon)] text-primaire transition">
                             <FileText className="h-4 w-4" />
                           </button>
                         )}
                         <button onClick={() => handleDelete(p.id)} title="Supprimer"
-                          className="p-1.5 hover:bg-red-50 rounded-lg text-red-400 transition">
+                          className="p-1.5 hover:bg-danger-tenue rounded-[var(--rayon)] text-danger transition">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -352,17 +348,17 @@ export default function PaiementsPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </Carte>
       )}
 
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-8">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900 text-lg">Nouveau paiement</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition">
-                <X className="h-5 w-5 text-gray-500" />
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-bordure">
+              <h2 className="font-bold text-texte text-lg">Nouveau paiement</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-surface-appuyee rounded-[var(--rayon)] transition">
+                <X className="h-5 w-5 text-texte-doux" />
               </button>
             </div>
 
@@ -370,7 +366,7 @@ export default function PaiementsPage() {
 
               {/* Locataire */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Locataire *</label>
+                <label className="block text-sm font-medium text-texte mb-1">Locataire *</label>
                 <select value={form.locataire_id} onChange={e => handleLocataireChange(e.target.value)} required className={inputCls}>
                   <option value="">-- Sélectionner un locataire --</option>
                   {locataires.map(l => {
@@ -386,7 +382,7 @@ export default function PaiementsPage() {
 
               {/* Badge mode */}
               {form.locataire_id && (
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${modeAirbnb ? 'bg-pink-50 text-pink-700' : 'bg-primaire-tenue text-primaire'}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-[var(--rayon)] text-sm font-medium ${modeAirbnb ? 'bg-info-tenue text-info' : 'bg-primaire-tenue text-primaire'}`}>
                   {modeAirbnb ? <Moon className="h-4 w-4" /> : <Home className="h-4 w-4" />}
                   {modeAirbnb ? 'Location Airbnb — paiement calculé par nuit' : 'Location mensuelle — loyer mensuel'}
                 </div>
@@ -397,26 +393,26 @@ export default function PaiementsPage() {
                   {/* Airbnb */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date d'arrivée *</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Date d'arrivée *</label>
                       <input type="date" value={form.date_debut} onChange={e => handleDateChange('date_debut', e.target.value)} required className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de départ *</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Date de départ *</label>
                       <input type="date" value={form.date_fin} onChange={e => handleDateChange('date_fin', e.target.value)} required className={inputCls} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Prix / nuit (GNF)</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Prix / nuit (GNF)</label>
                       <input type="number" value={form.prix_nuit} onChange={e => handlePrixNuitChange(e.target.value)} placeholder="150 000" className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de nuits</label>
-                      <input type="text" value={form.nb_nuits} readOnly placeholder="Auto" className={`${inputCls} bg-gray-50 text-gray-500`} />
+                      <label className="block text-sm font-medium text-texte mb-1">Nombre de nuits</label>
+                      <input type="text" value={form.nb_nuits} readOnly placeholder="Auto" className={`${inputCls} bg-surface-appuyee text-texte-doux`} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Montant total (GNF) *</label>
+                    <label className="block text-sm font-medium text-texte mb-1">Montant total (GNF) *</label>
                     <input type="number" value={form.montant} onChange={e => set('montant', e.target.value)} required placeholder="Calculé automatiquement" className={inputCls} />
                   </div>
                 </>
@@ -425,11 +421,11 @@ export default function PaiementsPage() {
                   {/* Appartement */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Montant (GNF) *</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Montant (GNF) *</label>
                       <input type="number" value={form.montant} onChange={e => set('montant', e.target.value)} required className={inputCls} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Mois concerné *</label>
+                      <label className="block text-sm font-medium text-texte mb-1">Mois concerné *</label>
                       <input type="month" value={form.mois_concerne} onChange={e => set('mois_concerne', e.target.value)} required className={inputCls} />
                     </div>
                   </div>
@@ -439,11 +435,11 @@ export default function PaiementsPage() {
               {/* Communs */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date de paiement *</label>
+                  <label className="block text-sm font-medium text-texte mb-1">Date de paiement *</label>
                   <input type="date" value={form.date_paiement} onChange={e => set('date_paiement', e.target.value)} required className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                  <label className="block text-sm font-medium text-texte mb-1">Statut</label>
                   <select value={form.statut} onChange={e => set('statut', e.target.value)} className={inputCls}>
                     <option value="payé">Payé</option>
                     <option value="en_attente">En attente</option>
@@ -452,15 +448,15 @@ export default function PaiementsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+                <label className="block text-sm font-medium text-texte mb-1">Notes (optionnel)</label>
                 <input type="text" value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Espèces, virement, chèque..." className={inputCls} />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-lg hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-[var(--rayon)] hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
                   {submitting ? 'Enregistrement...' : 'Enregistrer le paiement'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-bordure-forte rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium">
                   Annuler
                 </button>
               </div>

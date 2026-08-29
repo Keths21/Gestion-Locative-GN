@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { Locataire } from '@/types'
 import { genererBail, genererRelance } from '@/lib/pdf'
 import toast from 'react-hot-toast'
+import { Carte, EnTetePage } from '@/components/ui'
 
 function supprimerFondBlanc(base64: string, seuil = 230): Promise<string> {
   return new Promise((resolve) => {
@@ -115,34 +116,34 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Documents</h1>
-        <p className="text-gray-500 mt-1">Générez vos documents officiels en PDF</p>
-      </div>
+      <EnTetePage titre="Documents" sous="Générez vos documents officiels en PDF" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { title: 'Quittances de loyer', desc: 'Générées depuis la page Paiements (icône 📄)', icon: FileCheck, color: 'blue' },
-          { title: 'Contrats de bail', desc: 'Générer un bail pour chaque locataire', icon: FileText, color: 'green' },
-          { title: 'Lettres de relance', desc: 'PDF, SMS ou WhatsApp pour les impayés', icon: Download, color: 'red' },
-        ].map(card => {
+        {/* Tons écrits en toutes lettres : Tailwind n'analyse que des classes
+            littérales, et les `bg-${card.color}-100` d'avant ne produisaient
+            aucune couleur. */}
+        {([
+          { title: 'Quittances de loyer', desc: 'Générées depuis la page Paiements (icône 📄)', icon: FileCheck, classes: 'bg-primaire-tenue text-primaire' },
+          { title: 'Contrats de bail', desc: 'Générer un bail pour chaque locataire', icon: FileText, classes: 'bg-succes-tenue text-succes' },
+          { title: 'Lettres de relance', desc: 'PDF, SMS ou WhatsApp pour les impayés', icon: Download, classes: 'bg-danger-tenue text-danger' },
+        ] as const).map(card => {
           const Icon = card.icon
           return (
-            <div key={card.title} className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-              <div className={`w-10 h-10 rounded-lg bg-${card.color}-100 flex items-center justify-center mb-3`}>
-                <Icon className={`h-5 w-5 text-${card.color}-600`} />
+            <Carte key={card.title} className="p-5">
+              <div className={`w-10 h-10 rounded-[var(--rayon)] flex items-center justify-center mb-3 ${card.classes}`} aria-hidden>
+                <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-gray-900">{card.title}</h3>
-              <p className="text-sm text-gray-500 mt-1 mb-4">{card.desc}</p>
-            </div>
+              <h3 className="font-semibold text-texte">{card.title}</h3>
+              <p className="text-sm text-texte-doux mt-1 mb-4">{card.desc}</p>
+            </Carte>
           )
         })}
       </div>
 
       {/* Locataires + actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Générer un document par locataire</h2>
+      <Carte className="overflow-hidden">
+        <div className="p-5 border-b border-bordure">
+          <h2 className="font-semibold text-texte">Générer un document par locataire</h2>
         </div>
         {loading ? (
           <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primaire"></div></div>
@@ -150,42 +151,42 @@ export default function DocumentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-6 py-3 text-gray-600 font-medium">Locataire</th>
-                  <th className="text-left px-6 py-3 text-gray-600 font-medium hidden md:table-cell">Bien</th>
-                  <th className="text-left px-6 py-3 text-gray-600 font-medium hidden lg:table-cell">Téléphone</th>
-                  <th className="px-6 py-3 text-gray-600 font-medium text-right">Actions</th>
+                <tr className="bg-surface-appuyee border-b border-bordure">
+                  <th className="text-left px-6 py-3 text-texte-doux font-medium">Locataire</th>
+                  <th className="text-left px-6 py-3 text-texte-doux font-medium hidden md:table-cell">Bien</th>
+                  <th className="text-left px-6 py-3 text-texte-doux font-medium hidden lg:table-cell">Téléphone</th>
+                  <th className="px-6 py-3 text-texte-doux font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-bordure">
                 {locataires.map(loc => (
-                  <tr key={loc.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">{loc.prenom} {loc.nom}</td>
-                    <td className="px-6 py-4 text-gray-600 hidden md:table-cell">{(loc as any).bien?.nom || '-'}</td>
-                    <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
+                  <tr key={loc.id} className="hover:bg-surface-appuyee transition">
+                    <td className="px-6 py-4 font-medium text-texte">{loc.prenom} {loc.nom}</td>
+                    <td className="px-6 py-4 text-texte-doux hidden md:table-cell">{(loc as any).bien?.nom || '-'}</td>
+                    <td className="px-6 py-4 text-texte-doux hidden lg:table-cell">
                       {loc.telephone ? (
                         <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{loc.telephone}</span>
                       ) : (
-                        <span className="text-gray-300 text-xs">Non renseigné</span>
+                        <span className="text-texte-faible text-xs">Non renseigné</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 justify-end flex-wrap">
                         {/* Bail PDF */}
                         <button onClick={() => handleBail(loc)}
-                          className="flex items-center gap-1.5 text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 transition font-medium">
+                          className="flex items-center gap-1.5 text-xs bg-succes-tenue text-succes px-3 py-1.5 rounded-lg hover:bg-succes-tenue transition font-medium">
                           <FileText className="h-3.5 w-3.5" /> Bail
                         </button>
                         {/* Relance PDF */}
                         <button onClick={() => handleRelancePDF(loc)}
-                          className="flex items-center gap-1.5 text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-medium">
+                          className="flex items-center gap-1.5 text-xs bg-danger-tenue text-danger px-3 py-1.5 rounded-lg hover:bg-danger-tenue transition font-medium">
                           <Download className="h-3.5 w-3.5" /> PDF
                         </button>
                         {/* Relance SMS */}
                         <button
                           onClick={() => handleRelanceSMS(loc, 'sms')}
                           disabled={sending === `sms-relance-${loc.id}`}
-                          className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-600 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition font-medium disabled:opacity-50">
+                          className="flex items-center gap-1.5 text-xs bg-alerte-tenue text-alerte px-3 py-1.5 rounded-lg hover:bg-alerte-tenue transition font-medium disabled:opacity-50">
                           <MessageSquare className="h-3.5 w-3.5" />
                           {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
                         </button>
@@ -193,7 +194,7 @@ export default function DocumentsPage() {
                         <button
                           onClick={() => handleRelanceSMS(loc, 'whatsapp')}
                           disabled={sending === `whatsapp-relance-${loc.id}`}
-                          className="flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition font-medium disabled:opacity-50">
+                          className="flex items-center gap-1.5 text-xs bg-succes-tenue text-succes px-3 py-1.5 rounded-lg hover:bg-succes-tenue transition font-medium disabled:opacity-50">
                           <Mail className="h-3.5 w-3.5" />
                           {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
                         </button>
@@ -205,7 +206,7 @@ export default function DocumentsPage() {
             </table>
           </div>
         )}
-      </div>
+      </Carte>
     </div>
   )
 }

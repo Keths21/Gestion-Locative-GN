@@ -17,12 +17,12 @@ import {
 import type { StatutParcelle } from '@/types'
 
 const couleursStatut: Record<StatutParcelle, string> = {
-  possede: 'bg-green-100 text-green-700',
-  en_vente: 'bg-amber-100 text-amber-700',
-  vendu: 'bg-gray-100 text-gray-600',
+  possede: 'bg-succes-tenue text-succes',
+  en_vente: 'bg-alerte-tenue text-alerte',
+  vendu: 'bg-surface-appuyee text-texte-doux',
   loue: 'bg-primaire-tenue text-primaire',
-  reserve: 'bg-purple-100 text-purple-700',
-  prospect: 'bg-gray-100 text-gray-600',
+  reserve: 'bg-info-tenue text-info',
+  prospect: 'bg-surface-appuyee text-texte-doux',
 }
 
 function Liste() {
@@ -57,29 +57,29 @@ function Liste() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900">Parcelles</h1>
+            <h1 className="text-2xl font-bold text-texte">Parcelles</h1>
             <BarreEtatSync />
           </div>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-texte-doux">
             {filtrees.length} parcelle(s) · {formaterSuperficie(total)} au total
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setImportOuvert(true)}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
           >
             <Upload size={16} /> Importer
           </button>
           <a
             href="/api/export?format=geojson"
-            className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
           >
             <Download size={16} /> Exporter
           </a>
           <Link
             href="/carte"
-            className="flex items-center gap-2 rounded-lg bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
+            className="flex items-center gap-2 rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
           >
             <Map size={16} /> Ouvrir la carte
           </Link>
@@ -87,7 +87,7 @@ function Liste() {
       </div>
 
       {messageImport && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--rayon)] bg-succes-tenue px-4 py-3 text-sm text-succes">
           <Upload size={16} className="shrink-0" />
           {messageImport}
         </div>
@@ -102,12 +102,12 @@ function Liste() {
           />
           <aside
             key={selection.id}
-            className="fixed inset-y-0 right-0 z-[1600] flex w-full max-w-lg flex-col bg-white shadow-2xl"
+            className="fixed inset-y-0 right-0 z-[1600] flex w-full max-w-lg flex-col bg-surface shadow-2xl"
           >
-            <header className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-200 px-5 py-4">
+            <header className="flex shrink-0 items-start justify-between gap-3 border-b border-bordure px-5 py-4">
               <div className="min-w-0">
-                <h2 className="truncate text-base font-semibold text-gray-900">{selection.nom}</h2>
-                <p className="mt-0.5 text-xs text-gray-500">
+                <h2 className="truncate text-base font-semibold text-texte">{selection.nom}</h2>
+                <p className="mt-0.5 text-xs text-texte-doux">
                   {selection.superficie_m2
                     ? formaterSuperficie(selection.superficie_m2)
                     : 'Sans tracé'}
@@ -117,14 +117,14 @@ function Liste() {
               <div className="flex items-center gap-1">
                 <Link
                   href="/carte"
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded-[var(--rayon)] p-2 text-texte-faible hover:bg-surface-appuyee hover:text-texte"
                   title="Voir sur la carte"
                 >
                   <Map size={18} />
                 </Link>
                 <button
                   onClick={() => setSelectionId(null)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded-[var(--rayon)] p-2 text-texte-faible hover:bg-surface-appuyee hover:text-texte"
                   aria-label="Fermer"
                 >
                   <X size={18} />
@@ -161,7 +161,7 @@ function Liste() {
       )}
 
       {sansTrace > 0 && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--rayon)] bg-alerte-tenue px-4 py-3 text-sm text-alerte">
           <TriangleAlert size={16} className="shrink-0" />
           {sansTrace} parcelle(s) sans tracé — leur superficie ne peut pas être calculée.
         </div>
@@ -169,18 +169,18 @@ function Liste() {
 
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative min-w-56 flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-texte-faible" />
           <input
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             placeholder="Nom, référence, commune, propriétaire…"
-            className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primaire"
+            className="w-full rounded-[var(--rayon)] border border-bordure-forte py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-primaire"
           />
         </div>
         <select
           value={statut}
           onChange={(e) => setStatut(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
+          className="rounded-[var(--rayon)] border border-bordure-forte px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primaire"
         >
           <option value="">Tous les statuts</option>
           {Object.entries(LIBELLES_STATUT_PARCELLE).map(([k, l]) => (
@@ -192,18 +192,18 @@ function Liste() {
       </div>
 
       {chargement ? (
-        <p className="py-12 text-center text-sm text-gray-500">Chargement…</p>
+        <p className="py-12 text-center text-sm text-texte-doux">Chargement…</p>
       ) : filtrees.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-sm text-gray-500">Aucune parcelle.</p>
+        <div className="rounded-[var(--rayon)] border border-dashed border-bordure-forte py-16 text-center">
+          <p className="text-sm text-texte-doux">Aucune parcelle.</p>
           <Link href="/carte" className="mt-2 inline-block text-sm text-primaire hover:underline">
             Tracer la première sur la carte
           </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-[var(--rayon)] border border-bordure bg-surface">
           <table className="w-full min-w-[52rem] text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux">
               <tr>
                 <th className="px-4 py-3 font-medium">Parcelle</th>
                 <th className="px-4 py-3 font-medium">Type</th>
@@ -219,7 +219,7 @@ function Liste() {
                 <tr
                   key={p.id}
                   onClick={() => setSelectionId(p.id)}
-                  className="cursor-pointer border-b border-gray-100 last:border-0 hover:bg-primaire-tenue"
+                  className="cursor-pointer border-b border-bordure last:border-0 hover:bg-primaire-tenue"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ function Liste() {
                         style={{ backgroundColor: p.couleur }}
                       />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 font-medium text-gray-900">
+                        <div className="flex items-center gap-1.5 font-medium text-texte">
                           {p.nom}
                           {p.bien_id && (
                             <span title="Rattachée à un bien locatif">
@@ -236,20 +236,20 @@ function Liste() {
                             </span>
                           )}
                         </div>
-                        <div className="truncate text-xs text-gray-500">
+                        <div className="truncate text-xs text-texte-doux">
                           {[p.reference, p.quartier, p.commune].filter(Boolean).join(' · ') || '—'}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{LIBELLES_TYPE_PARCELLE[p.type]}</td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-texte">{LIBELLES_TYPE_PARCELLE[p.type]}</td>
+                  <td className="px-4 py-3 text-texte">
                     {LIBELLES_JURIDIQUE[p.statut_juridique]}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-gray-900">
+                  <td className="px-4 py-3 text-right tabular-nums text-texte">
                     {p.superficie_m2 ? formaterSuperficie(p.superficie_m2) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-texte">
                     {p.valeur_estimee ?? p.prix_achat
                       ? formatMontant(p.valeur_estimee ?? p.prix_achat!)
                       : '—'}
@@ -262,7 +262,7 @@ function Liste() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <ChevronRight size={16} className="text-gray-400" />
+                    <ChevronRight size={16} className="text-texte-faible" />
                   </td>
                 </tr>
               ))}

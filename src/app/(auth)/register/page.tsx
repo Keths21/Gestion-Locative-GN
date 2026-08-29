@@ -37,17 +37,17 @@ export default function RegisterPage() {
 
   if (success) return (
     <div className="min-h-screen bg-gradient-to-br from-fond to-surface-appuyee flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+      <div className="bg-surface rounded-2xl shadow-flottante p-8 w-full max-w-md text-center">
         <div className="flex justify-center mb-4">
-          <div className="bg-green-100 p-4 rounded-full">
-            <div className="text-green-600 text-3xl">✓</div>
+          <div className="bg-succes-tenue p-4 rounded-full">
+            <div className="text-succes text-3xl">✓</div>
           </div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Compte créé avec succès !</h2>
-        <p className="text-gray-500 text-sm mb-2">
+        <h2 className="text-xl font-bold text-texte mb-2">Compte créé avec succès !</h2>
+        <p className="text-texte-doux text-sm mb-2">
           Vérifiez votre email pour confirmer votre adresse.
         </p>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-texte-doux text-sm mb-6">
           Votre compte sera ensuite examiné par un administrateur avant que vous puissiez accéder à la plateforme.
         </p>
         <Link href="/login" className="text-primaire hover:underline font-medium text-sm">
@@ -59,51 +59,51 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-fond to-surface-appuyee flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+      <div className="bg-surface rounded-2xl shadow-flottante p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-primaire p-3 rounded-xl mb-4">
+          <div className="bg-primaire p-3 rounded-[var(--rayon)] mb-4">
             <Building2 className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
-          <p className="text-gray-500 mt-1 text-sm">CASA CHAMS</p>
+          <h1 className="text-2xl font-bold text-texte">Créer un compte</h1>
+          <p className="text-texte-doux mt-1 text-sm">CASA CHAMS</p>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
+            <div className="bg-danger-tenue border border-danger/20 text-danger px-4 py-3 rounded-[var(--rayon)] text-sm">{error}</div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+            <label className="block text-sm font-medium text-texte mb-1">Nom complet</label>
             <input
               type="text"
               value={nom}
               onChange={(e) => setNom(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
+              className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="Votre nom"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-texte mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
+              className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="votre@email.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+            <label className="block text-sm font-medium text-texte mb-1">Mot de passe</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none transition"
+              className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none transition"
               placeholder="Min. 8 caractères"
               minLength={8}
               required
@@ -113,14 +113,14 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primaire hover:bg-primaire-appui text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-primaire hover:bg-primaire-appui text-white font-semibold py-3 px-4 rounded-[var(--rayon)] transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
             {loading ? 'Création...' : 'Créer mon compte'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-texte-doux mt-6">
           Déjà un compte ?{' '}
           <Link href="/login" className="text-primaire hover:underline font-medium">Se connecter</Link>
         </p>

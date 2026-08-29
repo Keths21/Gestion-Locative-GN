@@ -37,12 +37,12 @@ export default function ItineraireParcelle({ parcelle }: { parcelle: Parcelle })
   }
 
   return (
-    <div className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-3">
+    <div className="mb-5 rounded-lg border border-bordure bg-surface-appuyee p-3">
       <div className="mb-2 flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <span className="text-xs font-semibold uppercase tracking-wide text-texte-doux">
           S&apos;y rendre
         </span>
-        <span className="font-mono text-xs text-gray-600">
+        <span className="font-mono text-xs text-texte-doux">
           {versDMS(lat, 'lat')} {versDMS(lon, 'lon')}
         </span>
       </div>
@@ -59,10 +59,10 @@ export default function ItineraireParcelle({ parcelle }: { parcelle: Parcelle })
         <button
           type="button"
           onClick={copier}
-          className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          className="flex items-center justify-center gap-2 rounded-lg border border-bordure-forte bg-surface px-3 py-2 text-sm text-texte hover:bg-surface-appuyee"
           title="Copier les coordonnées pour les envoyer par message"
         >
-          {copie ? <Check size={15} className="text-green-600" /> : <Copy size={15} />}
+          {copie ? <Check size={15} className="text-succes" /> : <Copy size={15} />}
           {copie ? 'Copié' : couple}
         </button>
       </div>

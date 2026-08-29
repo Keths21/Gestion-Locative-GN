@@ -31,8 +31,8 @@ export default function DetailParcelle({
     <>
       <ItineraireParcelle parcelle={parcelle} />
 
-      <div className="mb-5 border-b border-gray-200 pb-5">
-        <h3 className="mb-2 text-sm font-semibold text-gray-900">Photos et documents</h3>
+      <div className="mb-5 border-b border-bordure pb-5">
+        <h3 className="mb-2 text-sm font-semibold text-texte">Photos et documents</h3>
         <GalerieDocuments
           parcelleId={parcelle.id}
           organisationId={parcelle.organisation_id}

@@ -39,15 +39,15 @@ function Champ({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-texte">{label}</label>
       {children}
-      {aide && <p className="mt-1 text-xs text-gray-500">{aide}</p>}
+      {aide && <p className="mt-1 text-xs text-texte-doux">{aide}</p>}
     </div>
   )
 }
 
 const classeChamp =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
+  'w-full rounded-lg border border-bordure-forte px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primaire'
 
 function nombreOuNull(v: string): number | null {
   if (v.trim() === '') return null
@@ -154,33 +154,33 @@ export default function FormulaireParcelle({
   return (
     <div className="flex flex-col gap-5">
       {/* Mesures calculées en base — jamais saisies */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+      <div className="rounded-lg border border-bordure bg-surface-appuyee p-3 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-500">Superficie mesurée</span>
-          <span className="font-semibold text-gray-900">
+          <span className="text-texte-doux">Superficie mesurée</span>
+          <span className="font-semibold text-texte">
             {formaterSuperficieDetail(parcelle.superficie_m2)}
           </span>
         </div>
         <div className="mt-1 flex justify-between">
-          <span className="text-gray-500">Périmètre</span>
-          <span className="text-gray-700">{formaterDistance(parcelle.perimetre_m)}</span>
+          <span className="text-texte-doux">Périmètre</span>
+          <span className="text-texte">{formaterDistance(parcelle.perimetre_m)}</span>
         </div>
         {centre && (
           <div className="mt-1 flex justify-between text-xs">
-            <span className="text-gray-500">Repère</span>
-            <span className="font-mono text-gray-700">
+            <span className="text-texte-doux">Repère</span>
+            <span className="font-mono text-texte">
               {versDMS(centre[1], 'lat')} {versDMS(centre[0], 'lon')}
             </span>
           </div>
         )}
         <div className="mt-1 flex justify-between text-xs">
-          <span className="text-gray-500">Origine du tracé</span>
-          <span className="text-gray-700">{LIBELLES_SOURCE_TRACE[parcelle.source_trace]}</span>
+          <span className="text-texte-doux">Origine du tracé</span>
+          <span className="text-texte">{LIBELLES_SOURCE_TRACE[parcelle.source_trace]}</span>
         </div>
         {parcelle.precision_m != null && (
           <div className="mt-1 flex justify-between text-xs">
-            <span className="text-gray-500">Précision du relevé</span>
-            <span className="text-gray-700">±{Math.round(parcelle.precision_m)} m</span>
+            <span className="text-texte-doux">Précision du relevé</span>
+            <span className="text-texte">±{Math.round(parcelle.precision_m)} m</span>
           </div>
         )}
       </div>
@@ -246,7 +246,7 @@ export default function FormulaireParcelle({
         aide="Facultatif — relie cette parcelle à un logement du portefeuille locatif"
       >
         <div className="flex items-center gap-2">
-          <Link2 size={16} className="shrink-0 text-gray-400" />
+          <Link2 size={16} className="shrink-0 text-texte-faible" />
           <select
             className={classeChamp}
             value={f.bien_id}
@@ -278,8 +278,8 @@ export default function FormulaireParcelle({
         <div
           className={`rounded-lg px-3 py-2 text-xs ${
             Math.abs(ecartSuperficie) > 10
-              ? 'bg-red-50 text-red-700'
-              : 'bg-amber-50 text-amber-700'
+              ? 'bg-danger-tenue text-danger'
+              : 'bg-alerte-tenue text-alerte'
           }`}
         >
           Le tracé mesure {ecartSuperficie > 0 ? '+' : ''}
@@ -396,7 +396,7 @@ export default function FormulaireParcelle({
               type="button"
               onClick={() => maj('couleur', c)}
               className={`h-8 w-8 rounded-full border-2 transition-transform ${
-                f.couleur === c ? 'scale-110 border-gray-900' : 'border-transparent'
+                f.couleur === c ? 'scale-110 border-texte' : 'border-transparent'
               }`}
               style={{ backgroundColor: c }}
               aria-label={`Couleur ${c}`}
@@ -414,28 +414,28 @@ export default function FormulaireParcelle({
       </Champ>
 
       {erreur && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</div>
+        <div className="rounded-lg bg-danger-tenue px-3 py-2 text-sm text-danger">{erreur}</div>
       )}
 
       {confirmeSuppression && onSupprimer && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-sm font-medium text-red-800">
+        <div className="rounded-lg border border-danger/20 bg-danger-tenue p-3">
+          <p className="text-sm font-medium text-danger">
             Supprimer « {parcelle.nom} » ?
           </p>
-          <p className="mt-1 text-xs text-red-700">
+          <p className="mt-1 text-xs text-danger">
             Le tracé et les documents rattachés seront retirés. Un relevé de terrain ne se refait
             pas d&apos;un clic.
           </p>
           <div className="mt-3 flex gap-2">
             <button
               onClick={onSupprimer}
-              className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="rounded-lg bg-danger px-3 py-2 text-sm font-semibold text-white hover:brightness-110"
             >
               Oui, supprimer
             </button>
             <button
               onClick={() => setConfirmeSuppression(false)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-bordure-forte bg-surface px-3 py-2 text-sm text-texte hover:bg-surface-appuyee"
             >
               Annuler
             </button>
@@ -454,14 +454,14 @@ export default function FormulaireParcelle({
         </button>
         <button
           onClick={onFermer}
-          className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-bordure-forte px-4 py-2.5 text-sm text-texte hover:bg-surface-appuyee"
         >
           <X size={16} />
         </button>
         {onSupprimer && !confirmeSuppression && (
           <button
             onClick={() => setConfirmeSuppression(true)}
-            className="rounded-lg border border-red-200 px-4 py-2.5 text-red-600 hover:bg-red-50"
+            className="rounded-lg border border-danger/20 px-4 py-2.5 text-danger hover:bg-danger-tenue"
             aria-label="Supprimer la parcelle"
           >
             <Trash2 size={16} />

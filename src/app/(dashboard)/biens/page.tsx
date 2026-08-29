@@ -4,11 +4,12 @@ import { Plus, Building2, MapPin, DollarSign, Pencil, Trash2, Moon, Home, X, Che
 import { createClient } from '@/lib/supabase'
 import { Bien } from '@/types'
 import { formatMontant, isLocataireActif } from '@/lib/utils'
+import { Carte, EnTetePage, Bouton } from '@/components/ui'
 
 const statusColors: Record<string, string> = {
-  'loué': 'bg-green-100 text-green-700',
-  'vacant': 'bg-yellow-100 text-yellow-700',
-  'travaux': 'bg-gray-100 text-gray-700',
+  'loué': 'bg-succes-tenue text-succes',
+  'vacant': 'bg-alerte-tenue text-alerte',
+  'travaux': 'bg-surface-appuyee text-texte',
 }
 
 const TYPES_BIEN = ['studio', 'appartement', 'maison', 'villa', 'bureau', 'commerce', 'terrain']
@@ -32,7 +33,7 @@ type FormState = typeof EMPTY_FORM
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-texte mb-1">{label}</label>
       {children}
     </div>
   )
@@ -43,7 +44,7 @@ function Input({ value, onChange, type = 'text', placeholder = '' }: { value: st
     <input
       type={type} value={value} placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
-      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm"
+      className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm"
     />
   )
 }
@@ -53,11 +54,11 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
     <label className="flex items-center gap-2 cursor-pointer select-none">
       <div
         onClick={() => onChange(!checked)}
-        className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${checked ? 'bg-primaire' : 'bg-gray-300'}`}
+        className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${checked ? 'bg-primaire' : 'bg-bordure-forte'}`}
       >
-        <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+        <div className={`w-4 h-4 rounded-full bg-surface shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
       </div>
-      <span className="text-sm text-gray-700">{label}</span>
+      <span className="text-sm text-texte">{label}</span>
     </label>
   )
 }
@@ -65,8 +66,8 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition">
+    <div className="border border-bordure rounded-[var(--rayon)] overflow-hidden">
+      <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-3 bg-surface-appuyee text-sm font-semibold text-texte hover:bg-surface-appuyee transition">
         {title}
         {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
@@ -182,37 +183,30 @@ export default function BiensPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mes Biens</h1>
-          <p className="text-gray-500 mt-1">{biens.length} bien(s) enregistré(s)</p>
-        </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-lg hover:bg-primaire-appui transition text-sm font-medium">
-          <Plus className="h-4 w-4" /> Ajouter un bien
-        </button>
-      </div>
+      <EnTetePage titre="Mes Biens" sous={`${biens.length} bien(s) enregistré(s)`}>
+        <Bouton onClick={openAdd} icone={Plus}>Ajouter un bien</Bouton>
+      </EnTetePage>
 
       {/* Liste */}
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primaire" /></div>
       ) : biens.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Aucun bien enregistré. Ajoutez votre premier bien !</p>
+        <div className="text-center py-16 bg-surface rounded-[var(--rayon)] border border-bordure">
+          <Building2 className="h-12 w-12 text-texte-faible mx-auto mb-4" />
+          <p className="text-texte-doux">Aucun bien enregistré. Ajoutez votre premier bien !</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {biens.map(bien => (
-            <div key={bien.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
+            <Carte key={bien.id} className="p-5 hover:shadow-flottante transition">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-2">
-                  <div className={`p-1.5 rounded-lg ${bien.mode_location === 'airbnb' ? 'bg-pink-100' : 'bg-primaire-tenue'}`}>
-                    {bien.mode_location === 'airbnb' ? <Moon className="h-4 w-4 text-pink-600" /> : <Home className="h-4 w-4 text-primaire" />}
+                  <div className={`p-1.5 rounded-[var(--rayon)] ${bien.mode_location === 'airbnb' ? 'bg-info-tenue' : 'bg-primaire-tenue'}`}>
+                    {bien.mode_location === 'airbnb' ? <Moon className="h-4 w-4 text-info" /> : <Home className="h-4 w-4 text-primaire" />}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 leading-tight">{bien.nom}</h3>
-                    <span className="text-xs capitalize text-gray-400">{bien.type} · {bien.mode_location === 'airbnb' ? 'Airbnb' : 'Location longue durée'}</span>
+                    <h3 className="font-semibold text-texte leading-tight">{bien.nom}</h3>
+                    <span className="text-xs capitalize text-texte-faible">{bien.type} · {bien.mode_location === 'airbnb' ? 'Airbnb' : 'Location longue durée'}</span>
                   </div>
                 </div>
                 {(() => {
@@ -220,30 +214,30 @@ export default function BiensPage() {
                   return <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize shrink-0 ${statusColors[statut]}`}>{statut}</span>
                 })()}
               </div>
-              <div className="space-y-1.5 text-sm text-gray-600">
-                <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gray-400 shrink-0" />{bien.adresse}, {bien.ville}</div>
+              <div className="space-y-1.5 text-sm text-texte-doux">
+                <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-texte-faible shrink-0" />{bien.adresse}, {bien.ville}</div>
                 {bien.mode_location === 'airbnb' ? (
-                  <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-gray-400" />{formatMontant(bien.prix_nuit || 0)} / nuit</div>
+                  <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-texte-faible" />{formatMontant(bien.prix_nuit || 0)} / nuit</div>
                 ) : (
-                  <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-gray-400" />{formatMontant(bien.loyer_base || 0)} / mois</div>
+                  <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-texte-faible" />{formatMontant(bien.loyer_base || 0)} / mois</div>
                 )}
-                <div className="text-gray-400 text-xs flex flex-wrap gap-2 mt-1">
+                <div className="text-texte-faible text-xs flex flex-wrap gap-2 mt-1">
                   {bien.surface && <span>{bien.surface} m²</span>}
                   {bien.nombre_pieces && <span>{bien.nombre_pieces} pièces</span>}
                   {bien.meuble && <span className="bg-primaire-tenue text-primaire px-1.5 py-0.5 rounded">Meublé</span>}
-                  {bien.parking && <span className="bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded">Parking</span>}
-                  {bien.climatisation && <span className="bg-gray-50 text-gray-600 px-1.5 py-0.5 rounded">Clim</span>}
+                  {bien.parking && <span className="bg-surface-appuyee text-texte-doux px-1.5 py-0.5 rounded">Parking</span>}
+                  {bien.climatisation && <span className="bg-surface-appuyee text-texte-doux px-1.5 py-0.5 rounded">Clim</span>}
                 </div>
               </div>
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+              <div className="flex gap-2 mt-4 pt-4 border-t border-bordure">
                 <button onClick={() => openEdit(bien)} className="flex items-center gap-1 text-xs text-primaire hover:text-primaire-appui font-medium">
                   <Pencil className="h-3.5 w-3.5" /> Modifier
                 </button>
-                <button onClick={() => handleDelete(bien.id)} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium ml-auto">
+                <button onClick={() => handleDelete(bien.id)} className="flex items-center gap-1 text-xs text-danger hover:text-danger font-medium ml-auto">
                   <Trash2 className="h-3.5 w-3.5" /> Supprimer
                 </button>
               </div>
-            </div>
+            </Carte>
           ))}
         </div>
       )}
@@ -251,11 +245,11 @@ export default function BiensPage() {
       {/* Modal formulaire */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900 text-lg">{editingBien ? 'Modifier le bien' : 'Nouveau bien'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition">
-                <X className="h-5 w-5 text-gray-500" />
+          <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl my-8">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-bordure">
+              <h2 className="font-bold text-texte text-lg">{editingBien ? 'Modifier le bien' : 'Nouveau bien'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-surface-appuyee rounded-[var(--rayon)] transition">
+                <X className="h-5 w-5 text-texte-doux" />
               </button>
             </div>
 
@@ -265,11 +259,11 @@ export default function BiensPage() {
               <div className="grid grid-cols-2 gap-3">
                 {(['appartement', 'airbnb'] as const).map(mode => (
                   <button key={mode} type="button" onClick={() => set('mode_location', mode)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition ${form.mode_location === mode ? (mode === 'airbnb' ? 'border-pink-500 bg-pink-50' : 'border-primaire bg-primaire-tenue') : 'border-gray-200 hover:border-gray-300'}`}>
-                    {mode === 'airbnb' ? <Moon className={`h-6 w-6 ${form.mode_location === mode ? 'text-pink-500' : 'text-gray-400'}`} /> : <Home className={`h-6 w-6 ${form.mode_location === mode ? 'text-primaire' : 'text-gray-400'}`} />}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-[var(--rayon)] border-2 transition ${form.mode_location === mode ? (mode === 'airbnb' ? 'border-info bg-info-tenue' : 'border-primaire bg-primaire-tenue') : 'border-bordure hover:border-bordure-forte'}`}>
+                    {mode === 'airbnb' ? <Moon className={`h-6 w-6 ${form.mode_location === mode ? 'text-info' : 'text-texte-faible'}`} /> : <Home className={`h-6 w-6 ${form.mode_location === mode ? 'text-primaire' : 'text-texte-faible'}`} />}
                     <div>
                       <p className="font-semibold text-sm">{mode === 'airbnb' ? 'Airbnb / Court séjour' : 'Location longue durée'}</p>
-                      <p className="text-xs text-gray-500">{mode === 'airbnb' ? 'Paiement à la nuit' : 'Paiement au mois'}</p>
+                      <p className="text-xs text-texte-doux">{mode === 'airbnb' ? 'Paiement à la nuit' : 'Paiement au mois'}</p>
                     </div>
                   </button>
                 ))}
@@ -281,7 +275,7 @@ export default function BiensPage() {
                   <Input value={form.nom} onChange={v => set('nom', v)} placeholder="Ex: Appartement Kaloum T3" />
                 </Field>
                 <Field label="Type de bien">
-                  <select value={form.type} onChange={e => set('type', e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm">
+                  <select value={form.type} onChange={e => set('type', e.target.value)} className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm">
                     {TYPES_BIEN.map(t => <option key={t} value={t} className="capitalize">{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                   </select>
                 </Field>
@@ -301,7 +295,7 @@ export default function BiensPage() {
                   <Input value={form.etage} onChange={v => set('etage', v)} type="number" placeholder="2" />
                 </Field>
                 <Field label="Statut">
-                  <select value={form.statut} onChange={e => set('statut', e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm">
+                  <select value={form.statut} onChange={e => set('statut', e.target.value)} className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm">
                     {['loué', 'vacant', 'travaux'].map(s => <option key={s}>{s}</option>)}
                   </select>
                 </Field>
@@ -312,7 +306,7 @@ export default function BiensPage() {
                   <Field label="Description">
                     <textarea value={form.description} onChange={e => set('description', e.target.value)}
                       placeholder="Description du bien, caractéristiques particulières..."
-                      rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
+                      rows={3} className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
                   </Field>
                 </div>
               </Section>
@@ -341,7 +335,7 @@ export default function BiensPage() {
                       <Field label="Règles de la maison">
                         <textarea value={form.regles_maison} onChange={e => set('regles_maison', e.target.value)}
                           placeholder="Non-fumeur, pas d'animaux, fêtes interdites..."
-                          rows={3} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
+                          rows={3} className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
                       </Field>
                     </div>
                   </>
@@ -377,13 +371,13 @@ export default function BiensPage() {
 
               {/* Actions */}
               {submitError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{submitError}</div>
+                <div className="bg-danger-tenue border border-danger/20 text-danger px-4 py-3 rounded-[var(--rayon)] text-sm">{submitError}</div>
               )}
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-lg hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-primaire text-white py-3 rounded-[var(--rayon)] hover:bg-primaire-appui transition font-semibold disabled:opacity-50">
                   {submitting ? 'Enregistrement...' : editingBien ? 'Enregistrer les modifications' : 'Ajouter le bien'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 border border-bordure-forte rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium">
                   Annuler
                 </button>
               </div>

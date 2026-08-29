@@ -28,7 +28,7 @@ import type { Parcelle, PolygoneGeoJSON } from '@/types'
 const CarteParcelles = dynamic(() => import('@/components/parcelles/CarteParcelles'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm text-gray-500">
+    <div className="flex h-full w-full items-center justify-center bg-surface-appuyee text-sm text-texte-doux">
       Chargement de la carte…
     </div>
   ),
@@ -90,8 +90,8 @@ function Carte() {
       {(chargement || message || mode !== 'navigation') && (
         <div className="pointer-events-none absolute inset-x-0 top-2 z-[1000] flex justify-center px-2">
           <div
-            className={`rounded-full px-4 py-1.5 text-xs font-medium shadow-lg ${
-              message ? 'bg-red-600 text-white' : 'bg-gray-900/85 text-white'
+            className={`rounded-full px-4 py-1.5 text-xs font-medium shadow-flottante ${
+              message ? 'bg-danger text-white' : 'bg-texte/85 text-white'
             }`}
           >
             {message
@@ -106,7 +106,7 @@ function Carte() {
       )}
 
       {/* État de la synchronisation */}
-      <div className="absolute left-2 top-2 z-[1000] rounded-lg bg-white/95 shadow-lg backdrop-blur">
+      <div className="absolute left-2 top-2 z-[1000] rounded-[var(--rayon)] bg-surface/95 shadow-flottante backdrop-blur">
         <BarreEtatSync />
       </div>
 
@@ -114,21 +114,21 @@ function Carte() {
       <div className="absolute right-2 top-16 z-[1000] flex flex-col gap-2">
         <button
           onClick={() => setCouches(!couches)}
-          className="rounded-lg bg-white p-2.5 text-gray-700 shadow-lg hover:bg-gray-50"
+          className="rounded-[var(--rayon)] bg-surface p-2.5 text-texte shadow-flottante hover:bg-surface-appuyee"
           aria-label="Fonds de carte"
         >
           <Layers size={18} />
         </button>
         <button
           onClick={() => carte.current?.localiser()}
-          className="rounded-lg bg-white p-2.5 text-gray-700 shadow-lg hover:bg-gray-50"
+          className="rounded-[var(--rayon)] bg-surface p-2.5 text-texte shadow-flottante hover:bg-surface-appuyee"
           aria-label="Me localiser"
         >
           <Crosshair size={18} />
         </button>
         <button
           onClick={() => carte.current?.ajusterVue()}
-          className="rounded-lg bg-white p-2.5 text-gray-700 shadow-lg hover:bg-gray-50"
+          className="rounded-[var(--rayon)] bg-surface p-2.5 text-texte shadow-flottante hover:bg-surface-appuyee"
           aria-label="Voir tout le portefeuille"
         >
           <Maximize2 size={18} />
@@ -136,8 +136,8 @@ function Carte() {
       </div>
 
       {couches && (
-        <div className="absolute right-14 top-16 z-[1000] w-56 rounded-xl bg-white p-3 shadow-xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <div className="absolute right-14 top-16 z-[1000] w-56 rounded-[var(--rayon)] bg-surface p-3 shadow-flottante">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-texte-doux">
             Fond de carte
           </p>
           <div className="flex flex-col gap-1">
@@ -148,15 +148,15 @@ function Carte() {
                   key={k}
                   onClick={() => setFond(k)}
                   className={`rounded-md px-3 py-2 text-left text-sm ${
-                    fond === k ? 'bg-primaire-tenue font-semibold text-primaire' : 'hover:bg-gray-50'
+                    fond === k ? 'bg-primaire-tenue font-semibold text-primaire' : 'hover:bg-surface-appuyee'
                   }`}
                 >
                   {FONDS[k].nom}
                 </button>
               ))}
           </div>
-          <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="mt-3 space-y-2 border-t border-bordure pt-3">
+            <label className="flex items-center gap-2 text-sm text-texte">
               <input
                 type="checkbox"
                 checked={reperes}
@@ -165,7 +165,7 @@ function Carte() {
               />
               Noms et repères
             </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-texte">
               <input
                 type="checkbox"
                 checked={etiquettes}
@@ -229,7 +229,7 @@ function Carte() {
         )}
         <button
           onClick={() => setMenuAjout(!menuAjout)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-primaire text-white shadow-xl hover:bg-primaire-appui"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-primaire text-white shadow-flottante hover:bg-primaire-appui"
           aria-label={menuAjout ? 'Fermer le menu' : 'Ajouter une parcelle'}
         >
           {menuAjout ? <X size={22} /> : <Plus size={22} />}
@@ -256,7 +256,7 @@ function Carte() {
                     carte.current?.activerEdition(selection.id)
                   }
                 }}
-                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                className="rounded-[var(--rayon)] p-2 text-texte-doux hover:bg-surface-appuyee"
                 aria-label={mode === 'edition' ? 'Valider le tracé' : 'Modifier le tracé'}
               >
                 {mode === 'edition' ? <Tag size={18} /> : <PencilRuler size={18} />}
@@ -313,7 +313,7 @@ function BoutonAjout({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-gray-800 shadow-lg hover:bg-gray-50"
+      className="flex items-center gap-2 rounded-full bg-surface px-4 py-2.5 text-sm font-medium text-texte shadow-flottante hover:bg-surface-appuyee"
     >
       <span className="text-primaire">{icone}</span>
       {libelle}
