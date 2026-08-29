@@ -3,7 +3,16 @@ import { NextResponse } from 'next/server'
 import { quittanceBodySchema } from '@/lib/schemas'
 import { formatMontant } from '@/lib/utils'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Construit à l'appel, jamais au chargement du module : le constructeur lève
+// quand la clé manque, et Next importe cette route pendant la construction pour
+// en collecter les métadonnées. Au chargement, l'absence de clé ferait donc
+// échouer la construction de l'image — là où un secret d'exécution n'a rien à
+// faire. Même façon de procéder que lib/envoi.ts.
+function clientResend() {
+  const cle = process.env.RESEND_API_KEY
+  if (!cle) throw new Error('RESEND_API_KEY non configurée')
+  return new Resend(cle)
+}
 
 export async function POST(req: Request) {
   try {
@@ -56,7 +65,7 @@ export async function POST(req: Request) {
       </html>
     `
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await clientResend().emails.send({
       from: `${agenceNom} <noreply@casachams.com>`,
       to: locataire.email,
       subject: `Quittance de loyer - ${paiement.mois_concerne}`,

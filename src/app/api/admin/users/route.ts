@@ -3,7 +3,16 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Construit à l'appel, jamais au chargement du module : le constructeur lève
+// quand la clé manque, et Next importe cette route pendant la construction pour
+// en collecter les métadonnées. Au chargement, l'absence de clé ferait donc
+// échouer la construction de l'image — là où un secret d'exécution n'a rien à
+// faire. Même façon de procéder que lib/envoi.ts.
+function clientResend() {
+  const cle = process.env.RESEND_API_KEY
+  if (!cle) throw new Error('RESEND_API_KEY non configurée')
+  return new Resend(cle)
+}
 
 function createAdminClient() {
   return createSupabaseClient(
@@ -192,7 +201,7 @@ export async function PATCH(request: NextRequest) {
   if (profile?.email && (status === 'approved' || status === 'rejected')) {
     const name = profile.full_name || profile.email
     try {
-      await resend.emails.send({
+      await clientResend().emails.send({
         from: 'CASA CHAMS <noreply@casachams.com>',
         to: profile.email,
         subject: status === 'approved'

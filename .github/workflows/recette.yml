@@ -1,0 +1,97 @@
+# Construction de l'image et déploiement en recette (dev.casachams.com).
+#
+# La production n'est pas concernée : elle reste servie depuis les sources par
+# scripts/deploy.sh tant que ce circuit n'a pas fait ses preuves ici.
+#
+# Deux travaux séparés à dessein. Le premier publie une image ; le second la
+# déploie. Si le déploiement échoue, l'image reste publiée et réutilisable —
+# on n'a pas à reconstruire pour réessayer, et c'est cette même image, à
+# l'octet près, qui pourra plus tard être promue en production.
+
+name: Recette
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Deux poussées rapprochées ne doivent pas déployer dans le désordre : la plus
+# récente gagne, la précédente est abandonnée.
+concurrency:
+  group: recette
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/keths21/gestion-locative-gn
+
+jobs:
+  image:
+    name: Construire et publier l'image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      empreinte: ${{ steps.construction.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: construction
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Deux étiquettes : `dev` pour « la dernière recette », et le SHA du
+          # commit pour pouvoir désigner une version précise sans ambiguïté.
+          tags: |
+            ${{ env.IMAGE }}:dev
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          # Ces valeurs sont figées dans le bundle client par Next. Ce ne sont
+          # pas des secrets — la clé anon est faite pour aller au navigateur —
+          # mais elles passent par le coffre pour ne pas être écrites en clair
+          # dans un dépôt public.
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_APP_URL=https://dev.casachams.com
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploiement:
+    name: Déployer en recette
+    needs: image
+    runs-on: ubuntu-latest
+    environment:
+      name: recette
+      url: https://dev.casachams.com
+    steps:
+      - name: Préparer l'accès au VPS
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_CLE_DEPLOIEMENT }}" > ~/.ssh/cle
+          chmod 600 ~/.ssh/cle
+          # L'empreinte du serveur est connue d'avance : sans elle, la première
+          # connexion accepterait n'importe quel hôte qui répondrait à sa place.
+          printf '%s\n' "${{ secrets.VPS_EMPREINTE_HOTE }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Déployer l'image produite
+        # On transmet l'empreinte, pas l'étiquette : entre la construction et
+        # ce moment, `dev` a pu être redéfini par une autre exécution. Le
+        # serveur déploie ainsi exactement ce qui vient d'être construit.
+        #
+        # Côté serveur, cette clé est bridée par une commande forcée : elle ne
+        # peut lancer que le script de déploiement de la recette, et celui-ci
+        # n'accepte qu'une empreinte sha256.
+        run: |
+          ssh -i ~/.ssh/cle -o BatchMode=yes \
+            root@${{ secrets.VPS_HOTE }} \
+            '${{ needs.image.outputs.empreinte }}'

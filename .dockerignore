@@ -1,0 +1,35 @@
+# Ce qui ne doit jamais entrer dans le contexte de construction.
+#
+# Deux raisons distinctes : alléger l'envoi vers le démon Docker, et surtout
+# ne pas faire entrer de secrets dans une image. Un .env copié par mégarde
+# reste lisible dans les couches de l'image, même supprimé plus tard.
+
+node_modules
+.next
+out
+build
+coverage
+
+.env
+.env.*
+*.pem
+
+.git
+.github
+.gitignore
+
+# données réelles reprises de CartographieBiens, jamais versionnées ni embarquées
+carto-export.json
+carto-documents.tar.gz
+documents/
+
+# outillage de développement, sans objet dans l'image
+scripts/
+supabase/
+CLAUDE.md
+README.md
+.vscode
+.idea
+.DS_Store
+npm-debug.log*
+*.tsbuildinfo
