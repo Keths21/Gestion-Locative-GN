@@ -13,6 +13,17 @@ name: Recette
 on:
   push:
     branches: [main]
+    # Ces fichiers ne peuvent rien changer à l'image : reconstruire et
+    # redéployer la recette pour une correction de documentation n'apporte
+    # rien. La liste est volontairement courte — on n'y met que ce dont on est
+    # certain qu'aucune construction n'en dépend. Un fichier oublié ici, c'est
+    # une recette qui reste silencieusement en retard sur `main`.
+    paths-ignore:
+      - '**/*.md'
+      - '.env.example'
+      - 'LICENSE'
+  # Reste toujours déclenchable à la main : c'est la porte de sortie quand une
+  # poussée a été ignorée à tort, ou pour redéployer sans nouveau commit.
   workflow_dispatch:
 
 # Deux poussées rapprochées ne doivent pas déployer dans le désordre : la plus
