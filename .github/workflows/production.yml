@@ -1,0 +1,88 @@
+# Promotion en production.
+#
+# Ce workflow ne construit RIEN. Il installe en production une image déjà
+# publiée et déjà éprouvée en recette : la production exécute alors les octets
+# exacts qui ont été validés, et non une reconstruction qui pourrait en
+# différer — ne serait-ce que par une dépendance transitive publiée entre-temps.
+#
+# Déclenchement manuel uniquement. Un déploiement automatique de la production
+# sur chaque poussée irait contre la façon de travailler retenue ici : la
+# recette part toute seule, la production se décide.
+
+name: Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      empreinte:
+        description: "Empreinte à promouvoir (sha256:…). Vide = l'image actuellement en recette."
+        required: false
+        type: string
+      confirmation:
+        description: 'Taper "production" pour confirmer'
+        required: true
+        type: string
+
+# Jamais deux promotions en même temps, et surtout pas d'annulation en cours
+# de route : interrompre un déploiement à mi-chemin laisserait la production
+# dans un état que personne n'a choisi.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/keths21/gestion-locative-gn
+
+jobs:
+  promotion:
+    name: Promouvoir en production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://casachams.com
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Vérifier la confirmation
+        # Une saisie explicite avant de toucher à la production : le menu
+        # déroulant de GitHub est trop facile à déclencher par mégarde.
+        run: |
+          if [ "${{ inputs.confirmation }}" != "production" ]; then
+            echo "✗ confirmation absente ou incorrecte — rien n'a été fait." >&2
+            exit 1
+          fi
+
+      - name: Déterminer l'empreinte
+        id: cible
+        run: |
+          EMPREINTE="${{ inputs.empreinte }}"
+          if [ -z "$EMPREINTE" ]; then
+            # Résout l'étiquette `dev`, c'est-à-dire ce qui tourne en recette.
+            echo "Aucune empreinte fournie : résolution de l'étiquette dev."
+            EMPREINTE=$(docker buildx imagetools inspect "${{ env.IMAGE }}:dev" \
+              --format '{{ .Manifest.Digest }}')
+          fi
+          if ! printf '%s' "$EMPREINTE" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "✗ empreinte invalide : $EMPREINTE" >&2
+            exit 1
+          fi
+          echo "empreinte=$EMPREINTE" >> "$GITHUB_OUTPUT"
+          echo "À promouvoir : $EMPREINTE"
+
+      - name: Préparer l'accès au VPS
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_CLE_DEPLOIEMENT_PROD }}" > ~/.ssh/cle
+          chmod 600 ~/.ssh/cle
+          printf '%s\n' "${{ secrets.VPS_EMPREINTE_HOTE }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Promouvoir
+        # Clé DISTINCTE de celle de la recette, bridée par sa propre commande
+        # forcée côté serveur, et qui n'accepte qu'une empreinte explicite —
+        # sans valeur par défaut, contrairement à la recette.
+        run: |
+          ssh -i ~/.ssh/cle -o BatchMode=yes \
+            root@${{ secrets.VPS_HOTE }} \
+            '${{ steps.cible.outputs.empreinte }}'
