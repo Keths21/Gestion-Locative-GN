@@ -23,27 +23,20 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next remplace les NEXT_PUBLIC_* par leur valeur DANS le bundle client au
-# moment de la construction, pas au démarrage. Elles doivent donc être connues
-# ici, et l'image qui en résulte est liée à ces valeurs. Ce ne sont pas des
-# secrets : la clé anon est faite pour être envoyée au navigateur, c'est le RLS
-# qui protège les données.
+# Aucune variable d'environnement applicative ici, et c'est le point important :
+# cette image ne connaît AUCUN projet Supabase. L'adresse et la clé anon sont
+# lues au démarrage du conteneur (SUPABASE_URL, SUPABASE_ANON_KEY dans le .env
+# du serveur), transmises au navigateur par le layout racine.
 #
-# On s'en tient à ces deux-là, et pour une raison précise : chaque NEXT_PUBLIC_*
-# supplémentaire attache un peu plus l'image à un seul environnement. Tant que
-# seules ces deux valeurs sont figées — et que recette et production partagent le
-# même projet Supabase — une image validée en recette peut être promue telle
-# quelle en production. Avant d'en ajouter une, se demander si la variable est
-# vraiment lue par le navigateur : si elle ne sert que côté serveur, elle se
-# passe de préfixe et se lit au démarrage (voir APP_URL dans admin/users).
+# C'est ce qui rend l'image réellement promouvable : les octets validés en
+# recette sont ceux qui tournent en production, alors même que les deux visent
+# des bases différentes.
 #
-# Les variables d'exécution (Resend, Nimba, service_role, APP_URL…) ne sont PAS
-# ici : elles restent dans le .env du serveur.
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
-    NEXT_TELEMETRY_DISABLED=1
+# Avant d'ajouter un NEXT_PUBLIC_* ici, se demander si la variable est vraiment
+# lue par le navigateur, et si sa valeur peut légitimement être la même dans
+# tous les environnements. Sinon, elle se passe de préfixe et se lit au
+# démarrage — voir lib/config-supabase.ts pour le procédé.
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 

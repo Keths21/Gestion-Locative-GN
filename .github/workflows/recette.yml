@@ -65,17 +65,11 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:dev
             ${{ env.IMAGE }}:sha-${{ github.sha }}
-          # Ces valeurs sont figées dans le bundle client par Next. Ce ne sont
-          # pas des secrets — la clé anon est faite pour aller au navigateur —
-          # mais elles passent par le coffre pour ne pas être écrites en clair
-          # dans un dépôt public.
-          #
-          # Rien d'autre ici : l'adresse publique de l'environnement est lue au
-          # démarrage (APP_URL, dans le app.env du serveur), justement pour que
-          # cette image reste promouvable en production sans reconstruction.
-          build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # Aucun build-arg, volontairement. La construction ne connaît plus
+          # aucun projet Supabase : l'adresse et la clé anon sont lues au
+          # démarrage du conteneur, comme APP_URL. C'est ce qui permet à recette
+          # et production de viser deux bases distinctes tout en exécutant la
+          # même image, à l'octet près.
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

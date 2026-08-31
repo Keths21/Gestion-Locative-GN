@@ -135,19 +135,22 @@ identique.
 
 | variable | rôle |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | clé anon — publique par nature, c'est le RLS qui protège |
 | `NEXT_PUBLIC_ARCGIS_API_KEY` | clé Esri ; sans elle, l'application bascule sur OpenStreetMap |
 | `NEXT_PUBLIC_TUILES_PLAN` · `_SATELLITE` · `_REPERES` | fonds de carte, si l'on veut d'autres tuiles |
 
-> Avant d'ajouter un `NEXT_PUBLIC_*`, vérifier que le navigateur le lit vraiment. Une variable qui
-> ne sert que côté serveur se passe de préfixe : sinon elle rattache l'image à un seul
-> environnement.
+> Avant d'ajouter un `NEXT_PUBLIC_*`, vérifier que le navigateur le lit vraiment **et** que sa
+> valeur peut être la même partout : sinon elle rattache l'image à un seul environnement.
+>
+> `SUPABASE_URL` et `SUPABASE_ANON_KEY` sont lues par le navigateur mais n'ont pas ce préfixe,
+> précisément pour cette raison. Le layout racine les lui transmet au rendu — voir
+> `src/lib/config-supabase.ts`.
 
 ### Lues au démarrage
 
 | variable | rôle |
 |---|---|
+| `SUPABASE_URL` | URL du projet Supabase |
+| `SUPABASE_ANON_KEY` | clé anon — publique par nature, c'est le RLS qui protège |
 | `SUPABASE_SERVICE_ROLE_KEY` | administration des comptes — **secret, jamais côté navigateur** |
 | `APP_URL` | adresse publique de l'environnement, pour les liens des courriels (défaut : `https://casachams.com`) |
 | `RESEND_API_KEY` | envoi des courriels |

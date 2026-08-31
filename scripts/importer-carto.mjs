@@ -40,12 +40,12 @@ const RACINE_DOCS = opt('--documents')
 const ORG_FORCEE = opt('--org')
 const EXECUTER = args.includes('--executer')
 
-const URL_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL
+const URL_SUPABASE = process.env.SUPABASE_URL
 const CLE_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!URL_SUPABASE || !CLE_SERVICE) {
   console.error(
-    'NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.\n' +
+    'SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis.\n' +
       'Lancez avec : node --env-file=.env.local scripts/importer-carto.mjs'
   )
   process.exit(1)
