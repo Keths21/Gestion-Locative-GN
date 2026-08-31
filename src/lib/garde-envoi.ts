@@ -27,7 +27,7 @@ export type CanalEnvoi = 'email' | 'sms' | 'whatsapp'
 
 export type VerdictEnvoi =
   | { autorise: true }
-  | { autorise: false; motif: string }
+  | { autorise: false; motif: string; indice: string }
 
 const NOM_CANAL: Record<CanalEnvoi, string> = {
   email: 'Le courriel',
@@ -79,12 +79,15 @@ export function verifierEnvoi(canal: CanalEnvoi, destinataire: string): VerdictE
     return { autorise: true }
   }
 
+  // Le motif s'affiche dans une notification : une phrase, pas un mode d'emploi.
+  // La marche à suivre part dans `indice`, que l'interface n'affiche pas mais que
+  // l'on retrouve dans la réponse quand on la regarde.
   return {
     autorise: false,
-    motif:
-      `${NOM_CANAL[canal]} n'a pas été envoyé : cet environnement n'émet pas vers ` +
-      `de vrais destinataires. Ajoutez l'adresse à ENVOIS_LISTE_BLANCHE pour tester, ` +
-      `ou posez ENVOIS_REELS=true s'il s'agit bien de la production.`,
+    motif: `${NOM_CANAL[canal]} n'a pas été envoyé : cet environnement n'émet pas vers de vrais destinataires.`,
+    indice:
+      `Ajoutez le destinataire à ENVOIS_LISTE_BLANCHE pour tester, ou posez ` +
+      `ENVOIS_REELS=true s'il s'agit bien de la production.`,
   }
 }
 
@@ -95,6 +98,9 @@ export function verifierEnvoi(canal: CanalEnvoi, destinataire: string): VerdictE
  * sans lire le corps. Le drapeau `bloque` permet à l'interface de traiter ce
  * cas autrement qu'une panne — ce n'en est pas une.
  */
-export function reponseEnvoiBloque(motif: string) {
-  return NextResponse.json({ error: motif, bloque: true }, { status: 403 })
+export function reponseEnvoiBloque(verdict: Extract<VerdictEnvoi, { autorise: false }>) {
+  return NextResponse.json(
+    { error: verdict.motif, indice: verdict.indice, bloque: true },
+    { status: 403 }
+  )
 }

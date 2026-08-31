@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     }
 
     const verdict = verifierEnvoi('sms', locataire.telephone)
-    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict)
 
     const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
     const agence_nom = (agence?.nom_agence || 'CasaChams').substring(0, 12)

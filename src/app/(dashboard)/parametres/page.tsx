@@ -276,20 +276,6 @@ export default function ParametresPage() {
             </div>
           </Section>
 
-          {/* Emails */}
-          <div className="bg-primaire-tenue border border-primaire/20 rounded-[var(--rayon)] p-5">
-            <h3 className="font-semibold text-primaire mb-3 flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4" /> Emails — Resend
-            </h3>
-            <ol className="space-y-1.5 text-xs text-primaire">
-              <li className="flex gap-2"><span className="font-bold">1.</span> Crée un compte sur <strong>resend.com</strong></li>
-              <li className="flex gap-2"><span className="font-bold">2.</span> Dashboard → API Keys → Create</li>
-              <li className="flex gap-2"><span className="font-bold">3.</span> Copie la clé dans <code className="bg-primaire-tenue px-1 rounded">.env.local</code></li>
-              <li className="flex gap-2"><span className="font-bold">4.</span> <code className="bg-primaire-tenue px-1 rounded">RESEND_API_KEY=re_xxx</code></li>
-              <li className="flex gap-2"><span className="font-bold">5.</span> Redémarre <code className="bg-primaire-tenue px-1 rounded">npm run dev</code></li>
-            </ol>
-            <p className="text-xs text-primaire mt-3 font-medium">3 000 emails/mois gratuits</p>
-          </div>
         </div>
       </div>
     </div>

@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const verdict = verifierEnvoi('email', locataire.email)
-    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict)
 
     const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
     const agenceNom = agence?.nom_agence || 'Votre Agence Immobilière'

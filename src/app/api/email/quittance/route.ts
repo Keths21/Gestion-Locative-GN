@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     const verdict = verifierEnvoi('email', locataire.email)
-    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict)
 
     const agenceNom = agence?.nom_agence || 'Votre Agence Immobilière'
     const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })

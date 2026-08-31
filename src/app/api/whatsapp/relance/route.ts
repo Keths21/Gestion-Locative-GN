@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     const verdict = verifierEnvoi('whatsapp', locataire.telephone)
-    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict)
 
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const verdict = locataire.telephone
       ? verifierEnvoi('whatsapp', locataire.telephone)
       : { autorise: true as const }
-    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict)
 
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })

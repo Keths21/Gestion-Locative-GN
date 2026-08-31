@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Bell, Mail, Phone, AlertTriangle, CheckCircle, Send, RefreshCw, Zap } from 'lucide-react'
+import { Bell, Mail, Phone, CheckCircle, Send, RefreshCw, Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { formatMontant } from '@/lib/utils'
 import { envoyerRelanceMultiCanal, estRelancable } from '@/lib/relances'
@@ -145,18 +145,6 @@ export default function RelancesPage() {
         <div className="bg-primaire-tenue border border-primaire/20 rounded-[var(--rayon)] p-4">
           <p className="text-sm text-primaire font-medium">Paiements en retard</p>
           <p className="text-2xl font-bold text-primaire mt-1">{impayes.reduce((s, i) => s + i.paiements.length, 0)}</p>
-        </div>
-      </div>
-
-      {/* Avertissement config email */}
-      <div className="bg-alerte-tenue border border-alerte/20 rounded-[var(--rayon)] p-4 flex gap-3">
-        <AlertTriangle className="h-5 w-5 text-alerte flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-alerte">Configuration email requise</p>
-          <p className="text-xs text-alerte mt-1">
-            Pour envoyer des emails, ajoute ta clé <code className="bg-alerte-tenue px-1 rounded">RESEND_API_KEY</code> dans <code className="bg-alerte-tenue px-1 rounded">.env.local</code>.
-            Crée ton compte gratuit sur <a href="https://resend.com" target="_blank" className="underline font-medium">resend.com</a> → API Keys → Create API Key.
-          </p>
         </div>
       </div>
 
