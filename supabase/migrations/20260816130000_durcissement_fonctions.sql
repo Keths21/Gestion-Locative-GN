@@ -37,3 +37,24 @@
 -- ============================================================================
 
 ALTER FUNCTION public.handle_new_user() SET search_path = public;
+
+-- Les huit REVOKE ci-dessous étaient appliqués en base mais absents de ce
+-- fichier, qui ne portait que l'ALTER. Rapatriés depuis l'historique Supabase
+-- le 31/08/2026.
+--
+-- ATTENTION : ils sont annulés quelques minutes plus tard par
+-- 20260816225007_retablir_grants_fonctions.sql. Ce retrait rendait
+-- l'application inutilisable — les policies RLS appellent ces fonctions et
+-- s'évaluent avec les droits de l'appelant. Les deux fichiers se lisent
+-- ensemble, sans quoi l'état réel de la base reste incompréhensible.
+
+REVOKE EXECUTE ON FUNCTION public.est_membre(uuid)           FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.peut_ecrire(uuid)          FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.est_proprietaire(uuid)     FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.organisation_courante()    FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.est_membre_chemin(text)    FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.peut_ecrire_chemin(text)   FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.remplir_organisation()     FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.maj_metriques_parcelle()   FROM anon, authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM anon, authenticated;
