@@ -15,10 +15,25 @@ function clientResend() {
   return new Resend(cle)
 }
 
+// Même façon de procéder que clientResend() ci-dessus : on nomme la variable
+// manquante plutôt que de laisser passer un `undefined`.
+//
+// Sans cette vérification, supabase-js lève « supabaseKey is required » — un
+// message qui ne dit ni quelle clé, ni où la poser. C'est exactement ce qui
+// s'est produit en recette après la séparation des bases : la page
+// d'administration se vidait sans que rien n'explique pourquoi.
 function createAdminClient() {
+  const cle = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!cle) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY non configurée : administration des comptes ' +
+        "indisponible sur cet environnement. La clé se trouve dans le tableau de " +
+        'bord Supabase du projet visé, Settings → API → service_role.'
+    )
+  }
   return createSupabaseClient(
     configSupabaseServeur().url,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    cle,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }
@@ -171,7 +186,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
-  const admin = createAdminClient()
+  // Une configuration absente n'est pas une panne : elle se dit, plutôt que de
+  // renvoyer un 500 muet qui laisse la page vide sans raison apparente.
+  let admin
+  try {
+    admin = createAdminClient()
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Configuration manquante' },
+      { status: 503 }
+    )
+  }
+
   const { data, error } = await admin
     .from('profiles')
     .select('*')

@@ -27,6 +27,10 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [rejectModal, setRejectModal] = useState<{ userId: string; name: string } | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  // Une liste vide et un appel en échec se ressemblent à l'écran. On distingue
+  // les deux, faute de quoi une panne de configuration passe pour « aucun
+  // utilisateur » — ce qui s'est produit après la séparation des bases.
+  const [erreur, setErreur] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -34,10 +38,26 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true)
-    const res = await fetch('/api/admin/users')
-    const data = await res.json()
-    setUsers(data.users || [])
-    setLoading(false)
+    setErreur(null)
+    try {
+      const res = await fetch('/api/admin/users')
+      const data = await res.json()
+      if (!res.ok) {
+        const message = data?.error || `La liste n'a pas pu être chargée (${res.status}).`
+        setErreur(message)
+        toast.error(message)
+        setUsers([])
+      } else {
+        setUsers(data.users || [])
+      }
+    } catch {
+      const message = 'La liste des utilisateurs est injoignable.'
+      setErreur(message)
+      toast.error(message)
+      setUsers([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const updateStatus = async (userId: string, status: 'approved' | 'rejected' | 'pending', rejection_reason?: string) => {
@@ -109,6 +129,16 @@ export default function AdminUsersPage() {
           <div className="flex items-center justify-center py-16 text-texte-faible">
             <div className="animate-spin h-6 w-6 border-2 border-primaire border-t-transparent rounded-full mr-3" />
             Chargement...
+          </div>
+        ) : erreur ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <XCircle className="h-10 w-10 mb-3 text-danger opacity-70" />
+            <p className="text-sm font-medium text-danger">Liste indisponible</p>
+            <p className="text-sm text-texte-doux mt-1 max-w-lg">{erreur}</p>
+            <button onClick={fetchUsers}
+              className="mt-4 flex items-center gap-2 text-sm text-texte-doux border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition">
+              <RotateCcw className="h-4 w-4" /> Réessayer
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-texte-faible">
