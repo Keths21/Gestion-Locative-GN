@@ -13,7 +13,13 @@
  * la session, n'est jamais atteint puisqu'aucune requête ne part.
  */
 
-const VERSION = 'v1';
+// Incrémenter à chaque changement qui doit invalider le cache des appareils
+// déjà installés. `v2` : la configuration Supabase n'est plus figée dans le
+// bundle mais injectée dans le HTML au rendu (voir lib/config-supabase.ts).
+// Une coquille en cache porte donc l'adresse de la base visée au moment où elle
+// a été mise en cache — sans ce changement de nom, un appareil hors ligne
+// continuerait de viser l'ancien projet après la bascule de la recette.
+const VERSION = 'v2';
 const CACHE_APP = `casachams-app-${VERSION}`;
 const CACHE_API = `casachams-api-${VERSION}`;
 const CACHE_TUILES = 'casachams-tuiles-v1';
