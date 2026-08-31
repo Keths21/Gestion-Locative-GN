@@ -1,6 +1,7 @@
 'use client'
 import { Building2, XCircle, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { viderTout } from '@/lib/offline/idb'
 import { useRouter } from 'next/navigation'
 
 export default function AccountRejectedPage() {
@@ -8,6 +9,8 @@ export default function AccountRejectedPage() {
   const supabase = createClient()
 
   const handleLogout = async () => {
+    // Le magasin hors-ligne survit à la session : il se vide avec elle.
+    await viderTout().catch(() => {})
     await supabase.auth.signOut()
     router.push('/login')
   }

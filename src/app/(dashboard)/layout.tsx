@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
+import { garantirCompte, viderTout } from '@/lib/offline/idb'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
@@ -33,12 +34,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+
+      // Avant toute lecture locale : le magasin hors-ligne survit à la
+      // déconnexion, et servirait sinon les parcelles du compte précédent à
+      // celui qui prend sa place sur le même navigateur.
+      garantirCompte(user.id).catch(() => {})
+
       supabase.from('profiles').select('role').eq('id', user.id).single()
         .then(({ data }) => setIsAdmin(data?.role === 'admin'))
     })
   }, [])
 
   const handleLogout = async () => {
+    // On purge AVANT de fermer la session : après signOut, un rendu peut
+    // repartir et relire le magasin entre-temps.
+    await viderTout().catch(() => {})
     await supabase.auth.signOut()
     router.push('/login')
   }

@@ -159,7 +159,47 @@ export async function oublierZone(id: string): Promise<void> {
   await db.delete('zones', id)
 }
 
-/** Purge complète : à réserver au changement de compte. */
+/**
+ * Clé du compte propriétaire du magasin local.
+ *
+ * Le magasin IndexedDB appartient au NAVIGATEUR, pas à la session : il survit à
+ * la déconnexion. Sans cette garde, un second compte ouvert sur le même appareil
+ * lit les parcelles du premier — la RLS ne peut rien pour lui, elle protège la
+ * base, pas le disque du client.
+ */
+const CLE_COMPTE = 'compte'
+
+/**
+ * Purge le magasin local si le compte a changé depuis la dernière fois.
+ *
+ * À appeler dès qu'une session est connue, AVANT toute lecture locale. On ne se
+ * repose pas sur la seule déconnexion : une session peut expirer, ou un
+ * utilisateur se connecter directement sur un autre compte sans jamais passer
+ * par le bouton. Comparer le propriétaire enregistré couvre tous ces chemins.
+ *
+ * Renvoie true si une purge a eu lieu, pour que l'appelant puisse resynchroniser.
+ */
+export async function garantirCompte(userId: string): Promise<boolean> {
+  const precedent = await lireMeta<string>(CLE_COMPTE)
+  if (precedent === userId) return false
+
+  // Premier passage : rien à purger, on note simplement le propriétaire.
+  if (precedent !== null) await viderTout()
+
+  // viderTout() efface aussi `meta` : on réécrit après, jamais avant.
+  await ecrireMeta(CLE_COMPTE, userId)
+  return precedent !== null
+}
+
+/**
+ * Purge complète : à réserver au changement de compte.
+ *
+ * IndexedDB n'est pas le seul magasin à survivre à la session : le service
+ * worker garde aussi les réponses des routes /api/ (réseau d'abord, repli sur
+ * le cache). Hors ligne, ce repli servirait les données du compte précédent.
+ * Les deux se vident donc ensemble, sans quoi la fuite se déplace simplement
+ * d'un magasin à l'autre.
+ */
 export async function viderTout(): Promise<void> {
   const db = await bd()
   await Promise.all([
@@ -168,4 +208,19 @@ export async function viderTout(): Promise<void> {
     db.clear('meta'),
     db.clear('zones'),
   ])
+
+  // Le nom du cache porte la version du worker : on efface par préfixe plutôt
+  // que par nom exact, pour ne pas laisser derrière soi celui d'une version
+  // précédente encore installée sur l'appareil.
+  if (typeof caches !== 'undefined') {
+    try {
+      const noms = await caches.keys()
+      await Promise.all(
+        noms.filter((n) => n.startsWith('casachams-api')).map((n) => caches.delete(n))
+      )
+    } catch {
+      // Un navigateur qui refuse l'accès au cache ne doit pas empêcher la
+      // déconnexion : la purge IndexedDB, elle, a déjà eu lieu.
+    }
+  }
 }

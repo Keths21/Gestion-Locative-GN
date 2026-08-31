@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Settings, Save, Building2, Mail, Phone, MapPin, DollarSign, Loader2, User, Globe, FileText, Shield, Eye, CheckCircle, AlertCircle, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import { viderTout } from '@/lib/offline/idb'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Carte, EnTetePage, Pastille } from '@/components/ui'
@@ -179,6 +180,8 @@ export default function ParametresPage() {
   }
 
   const handleLogout = async () => {
+    // Le magasin hors-ligne survit à la session : il se vide avec elle.
+    await viderTout().catch(() => {})
     await supabase.auth.signOut()
     router.push('/login')
   }
