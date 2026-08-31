@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { relanceBodySchema } from '@/lib/schemas'
 import { formatMontant } from '@/lib/utils'
 import { DELAI_RELANCE_JOURS } from '@/lib/constants'
+import { verifierEnvoi, reponseEnvoiBloque } from '@/lib/garde-envoi'
 
 // Construit à l'appel, jamais au chargement du module : le constructeur lève
 // quand la clé manque, et Next importe cette route pendant la construction pour
@@ -29,6 +30,9 @@ export async function POST(req: Request) {
     if (!locataire.email) {
       return NextResponse.json({ error: 'Adresse email manquante' }, { status: 400 })
     }
+
+    const verdict = verifierEnvoi('email', locataire.email)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
 
     const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
     const agenceNom = agence?.nom_agence || 'Votre Agence Immobilière'

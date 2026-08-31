@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { relanceBodySchema } from '@/lib/schemas'
 import { formatMontantSMS } from '@/lib/utils'
 import { DELAI_RELANCE_JOURS } from '@/lib/constants'
+import { verifierEnvoi, reponseEnvoiBloque } from '@/lib/garde-envoi'
 
 async function sendViaNimbaSMS(message: string, telephone: string, senderName: string) {
   const authToken = process.env.NIMBASMS_AUTH_TOKEN
@@ -66,6 +67,9 @@ export async function POST(req: Request) {
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })
     }
+
+    const verdict = verifierEnvoi('sms', locataire.telephone)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
 
     const totalDu = paiements.reduce((s, p) => s + p.montant, 0)
     const agence_nom = (agence?.nom_agence || 'CasaChams').substring(0, 12)

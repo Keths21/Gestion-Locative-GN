@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { verifierEnvoi } from './garde-envoi'
 
 /**
  * Transport des notifications — e-mail et SMS.
@@ -70,6 +71,9 @@ export async function envoyerSms(
   message: string,
   expediteur = process.env.NIMBASMS_SENDER_NAME ?? 'CasaChams'
 ): Promise<ResultatEnvoi> {
+  const verdict = verifierEnvoi('sms', telephone)
+  if (!verdict.autorise) return { canal: 'sms', ok: false, erreur: verdict.motif }
+
   try {
     const r =
       (process.env.SMS_PROVIDER ?? 'nimbasms') === 'africastalking'
@@ -89,6 +93,9 @@ export async function envoyerEmail(params: {
   html: string
   expediteur?: string
 }): Promise<ResultatEnvoi> {
+  const verdict = verifierEnvoi('email', params.destinataire)
+  if (!verdict.autorise) return { canal: 'email', ok: false, erreur: verdict.motif }
+
   try {
     const cle = process.env.RESEND_API_KEY
     if (!cle) throw new Error('RESEND_API_KEY non configurée')

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { relanceBodySchema } from '@/lib/schemas'
 import { formatMontant } from '@/lib/utils'
 import { DELAI_RELANCE_JOURS } from '@/lib/constants'
+import { verifierEnvoi, reponseEnvoiBloque } from '@/lib/garde-envoi'
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +18,9 @@ export async function POST(req: Request) {
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })
     }
+
+    const verdict = verifierEnvoi('whatsapp', locataire.telephone)
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
 
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID
     const accessToken = process.env.WHATSAPP_ACCESS_TOKEN

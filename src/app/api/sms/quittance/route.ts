@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { quittanceBodySchema } from '@/lib/schemas'
+import { verifierEnvoi, reponseEnvoiBloque } from '@/lib/garde-envoi'
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,11 @@ export async function POST(req: Request) {
     }
 
     const { locataire, paiement, bien, agence } = parsed.data
+
+    const verdict = locataire.telephone
+      ? verifierEnvoi('sms', locataire.telephone)
+      : { autorise: true as const }
+    if (!verdict.autorise) return reponseEnvoiBloque(verdict.motif)
 
     if (!locataire.telephone) {
       return NextResponse.json({ error: 'Numéro de téléphone manquant' }, { status: 400 })
