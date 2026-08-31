@@ -2,6 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { configSupabaseServeur } from '@/lib/config-supabase'
 
 // Construit à l'appel, jamais au chargement du module : le constructeur lève
 // quand la clé manque, et Next importe cette route pendant la construction pour
@@ -16,16 +17,17 @@ function clientResend() {
 
 function createAdminClient() {
   return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    configSupabaseServeur().url,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }
 
 async function checkIsAdmin(request: NextRequest): Promise<boolean> {
+  const { url, cleAnon } = configSupabaseServeur()
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    cleAnon,
     {
       cookies: {
         getAll() { return request.cookies.getAll() },

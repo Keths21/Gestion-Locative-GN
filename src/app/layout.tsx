@@ -3,6 +3,17 @@ import { Fira_Sans, Fira_Code } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import EnregistrementSW from '@/components/parcelles/EnregistrementSW'
+import { configSupabaseServeur, scriptConfigSupabase } from '@/lib/config-supabase'
+
+// L'adresse du projet Supabase est lue au démarrage du serveur, pas figée à la
+// construction (voir lib/config-supabase.ts). Le navigateur ne peut donc plus
+// la trouver dans son bundle : ce layout la lui transmet.
+//
+// Ce qui interdit tout rendu statique. Une page prérendue verrait sa valeur
+// gravée dans le HTML au build — soit précisément ce qu'on cherche à éviter,
+// avec en prime une construction qui exigerait des variables d'exécution. Le
+// coût est nul ici : chaque page passe déjà par le middleware d'authentification.
+export const dynamic = 'force-dynamic'
 
 // Fira Sans pour le texte : plus humaniste qu'Inter, et ses formes restent
 // distinctes en petit corps — ce qui compte dans des tableaux denses.
@@ -45,6 +56,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${firaSans.variable} ${firaCode.variable}`}>
       <body className="font-[family-name:var(--font-sans)] antialiased">
+        {/*
+          Premier élément du corps, donc exécuté pendant l'analyse du HTML :
+          la configuration est en place bien avant que React n'hydrate et que
+          le premier createClient() du navigateur ne s'exécute.
+        */}
+        <script
+          id="config-supabase"
+          dangerouslySetInnerHTML={{ __html: scriptConfigSupabase(configSupabaseServeur()) }}
+        />
         <EnregistrementSW />
         {children}
         <Toaster position="top-right" toastOptions={{
