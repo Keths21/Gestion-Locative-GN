@@ -19,6 +19,13 @@
 --  leurs identifiants fixes commençant par « d0 ». Il ne touche à rien d'autre,
 --  et notamment pas aux données que vous auriez saisies à la main.
 --
+--  Les biens, parcelles et chantiers portent le préfixe « REC — » dans leur
+--  nom. Ce n'est pas de la décoration : les tracés sont posés à de vraies
+--  coordonnées de Conakry, sur le même fond de carte qu'en production, et sans
+--  ce marqueur on ne sait plus quel environnement on regarde. Un jeu d'essai
+--  qu'on prend pour la production a raté son but. Les adresses et les quartiers
+--  restent réalistes, eux : ce sont des données, pas des étiquettes d'identité.
+--
 --  Usage : coller dans l'éditeur SQL du projet de RECETTE.
 -- ============================================================================
 
@@ -79,22 +86,22 @@ BEGIN
      surface, loyer_base, charges, statut, nombre_pieces, etage, meuble,
      parking, gardien, climatisation, eau_incluse, depot_garantie_mois, description)
   VALUES
-    (b1, v_org, v_user, 'Résidence Kipé — Appt 4B', 'Carrefour Kipé, route Le Prince', 'Conakry',
+    (b1, v_org, v_user, 'REC — Résidence Kipé — Appt 4B', 'Carrefour Kipé, route Le Prince', 'Conakry',
      'appartement', 'appartement', 95, 3500000, 250000, 'loué', 3, 2, true, true, true, true, false, 2,
      'Trois pièces au deuxième étage, vue sur la route Le Prince.'),
-    (b2, v_org, v_user, 'Villa Nongo', 'Nongo, près de l''hôtel Noom', 'Conakry',
+    (b2, v_org, v_user, 'REC — Villa Nongo', 'Nongo, près de l''hôtel Noom', 'Conakry',
      'villa', 'appartement', 240, 7000000, 500000, 'loué', 6, 0, false, true, true, true, true, 3,
      'Villa avec cour close et logement de gardien.'),
-    (b3, v_org, v_user, 'Studio Taouyah', 'Taouyah, derrière le marché', 'Conakry',
+    (b3, v_org, v_user, 'REC — Studio Taouyah', 'Taouyah, derrière le marché', 'Conakry',
      'studio', 'appartement', 32, 1200000, 80000, 'vacant', 1, 1, true, false, false, true, false, 1,
      'Studio meublé, libre immédiatement.'),
-    (b4, v_org, v_user, 'Appartement Kaloum', 'Boulevard du Commerce, Kaloum', 'Conakry',
+    (b4, v_org, v_user, 'REC — Appartement Kaloum', 'Boulevard du Commerce, Kaloum', 'Conakry',
      'appartement', 'appartement', 130, 5000000, 400000, 'loué', 4, 5, false, true, true, true, false, 2,
      'Quatre pièces au cinquième, ascenseur en service.'),
-    (b5, v_org, v_user, 'Bungalow Ratoma', 'Ratoma, corniche nord', 'Conakry',
+    (b5, v_org, v_user, 'REC — Bungalow Ratoma', 'Ratoma, corniche nord', 'Conakry',
      'maison', 'airbnb', 70, NULL, NULL, 'vacant', 2, 0, true, true, true, true, true, NULL,
      'Location à la nuitée, deux chambres, vue mer.'),
-    (b6, v_org, v_user, 'Local commercial Madina', 'Marché Madina, allée centrale', 'Conakry',
+    (b6, v_org, v_user, 'REC — Local commercial Madina', 'Marché Madina, allée centrale', 'Conakry',
      'commerce', 'appartement', 45, 2800000, 150000, 'travaux', 1, 0, false, false, true, false, false, 3,
      'Réfection de la devanture en cours.');
 
@@ -212,7 +219,7 @@ BEGIN
      proprietaire, occupant, contact_telephone, couleur, tags, source_trace, precision_m, geom)
   VALUES
     ('d0000000-0000-4000-8003-000000000001', v_org, v_user, 'd0000000-0000-4000-8000-000000000001',
-     'Parcelle Kipé — Résidence', 'CNK-KIP-001', 'terrain_bati', 'possede', 'titre_foncier',
+     'REC — Parcelle Kipé — Résidence', 'CNK-KIP-001', 'terrain_bati', 'possede', 'titre_foncier',
      'Emprise de la résidence, bâtie sur les deux tiers de la surface.',
      'Guinée', 'Conakry', 'Conakry', 'Ratoma', 'Kipé', 'Carrefour Kipé, route Le Prince',
      3100, 850000000, 1200000000, 'GNF', '2021-04-12',
@@ -220,7 +227,7 @@ BEGIN
      '#0d6e6e', ARRAY['bâti','titre'], 'gps_marche', 3.5,
      ST_GeomFromText('POLYGON((-13.6355 9.5960, -13.6349 9.5960, -13.6349 9.5955, -13.6355 9.5955, -13.6355 9.5960))', 4326)),
     ('d0000000-0000-4000-8003-000000000002', v_org, v_user, NULL,
-     'Terrain Nongo — lot 14', 'CNK-NON-014', 'terrain_nu', 'en_vente', 'attestation_vente',
+     'REC — Terrain Nongo — lot 14', 'CNK-NON-014', 'terrain_nu', 'en_vente', 'attestation_vente',
      'Lot viabilisé, clôturé sur trois côtés. Mise en vente au deuxième trimestre.',
      'Guinée', 'Conakry', 'Conakry', 'Ratoma', 'Nongo', 'Nongo, arrière de l''hôtel Noom',
      5200, 400000000, 900000000, 'GNF', '2023-09-30',
@@ -228,7 +235,7 @@ BEGIN
      '#f59e0b', ARRAY['à vendre','viabilisé'], 'manuel', NULL,
      ST_GeomFromText('POLYGON((-13.6420 9.6065, -13.6412 9.6065, -13.6412 9.6058, -13.6420 9.6058, -13.6420 9.6065))', 4326)),
     ('d0000000-0000-4000-8003-000000000003', v_org, v_user, NULL,
-     'Emprise Kaloum — Boulevard', 'CNK-KAL-007', 'commercial', 'loue', 'bail',
+     'REC — Emprise Kaloum — Boulevard', 'CNK-KAL-007', 'commercial', 'loue', 'bail',
      'Emprise commerciale donnée à bail pour neuf ans.',
      'Guinée', 'Conakry', 'Conakry', 'Kaloum', 'Centre', 'Boulevard du Commerce',
      1800, NULL, 2100000000, 'GNF', '2019-01-15',
@@ -260,12 +267,12 @@ BEGIN
      budget_initial, reserve_imprevus, devise, date_debut_prevue, date_fin_prevue, date_debut_reelle)
   VALUES
     (c1, v_org, v_user, NULL, 'd0000000-0000-4000-8003-000000000002',
-     'Villa Nongo R+1', 'CH-2026-001', 'construction', 'en_cours',
+     'REC — Villa Nongo R+1', 'CH-2026-001', 'construction', 'en_cours',
      'Construction d''une villa R+1 sur le lot 14, quatre chambres et un studio indépendant.',
      'Guinée', 'Conakry', 'Conakry', 'Ratoma', 'Nongo', 'Nongo, lot 14',
      1800000000, 150000000, 'GNF', '2026-04-01', '2027-02-28', '2026-04-08'),
     (c2, v_org, v_user, 'd0000000-0000-4000-8000-000000000006', NULL,
-     'Rénovation local Madina', 'CH-2026-002', 'renovation', 'en_cours',
+     'REC — Rénovation local Madina', 'CH-2026-002', 'renovation', 'en_cours',
      'Réfection de la devanture, de l''électricité et du sol du local commercial.',
      'Guinée', 'Conakry', 'Conakry', 'Matam', 'Madina', 'Marché Madina, allée centrale',
      140000000, 20000000, 'GNF', '2026-07-15', '2026-09-30', '2026-07-18');
