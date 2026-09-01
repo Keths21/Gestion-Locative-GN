@@ -41,7 +41,7 @@ l'organisation.
 
 ### Comptes et accès
 L'inscription est libre, mais **un administrateur doit approuver** chaque compte avant tout accès.
-Les statuts `pending`, `rejected` et `approved` sont arbitrés par le middleware, qui protège aussi
+Les statuts `pending`, `rejected` et `approved` sont arbitrés par le proxy, qui protège aussi
 les routes `/admin`.
 
 ---
@@ -86,7 +86,7 @@ src/
 │   ├── pdf.ts · montant-en-lettres.ts
 │   └── offline/        idb.ts · sync.ts
 ├── types/
-└── middleware.ts       routage selon le statut d'approbation et le rôle
+└── proxy.ts            routage selon le statut d'approbation et le rôle
 ```
 
 ### Base de données

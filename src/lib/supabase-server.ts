@@ -28,7 +28,7 @@ export async function createServerSupabase() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Appelé depuis un Server Component : le middleware rafraîchit
+            // Appelé depuis un Server Component : le proxy rafraîchit
             // déjà la session, on peut ignorer.
           }
         },

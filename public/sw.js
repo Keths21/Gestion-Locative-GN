@@ -9,7 +9,7 @@
  *                               par l'application, pas par le worker
  *
  * Le repli des navigations sur le cache est ce qui rend l'application
- * utilisable sans réseau : le middleware, qui interroge Supabase pour valider
+ * utilisable sans réseau : le proxy, qui interroge Supabase pour valider
  * la session, n'est jamais atteint puisqu'aucune requête ne part.
  */
 

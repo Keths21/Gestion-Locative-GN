@@ -12,7 +12,7 @@ import { configSupabaseServeur, scriptConfigSupabase } from '@/lib/config-supaba
 // Ce qui interdit tout rendu statique. Une page prérendue verrait sa valeur
 // gravée dans le HTML au build — soit précisément ce qu'on cherche à éviter,
 // avec en prime une construction qui exigerait des variables d'exécution. Le
-// coût est nul ici : chaque page passe déjà par le middleware d'authentification.
+// coût est nul ici : chaque page passe déjà par le proxy d'authentification.
 export const dynamic = 'force-dynamic'
 
 // Fira Sans pour le texte : plus humaniste qu'Inter, et ses formes restent
