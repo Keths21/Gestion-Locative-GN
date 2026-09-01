@@ -3,6 +3,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { configSupabaseServeur } from '@/lib/config-supabase'
 
 export async function proxy(request: NextRequest) {
+  // Les rappels de prestataires passent AVANT toute authentification : ils sont
+  // émis par un serveur tiers, qui n'a ni session ni cookie. Sans cette sortie,
+  // le webhook SASPay recevait 401 à chaque livraison — cinq tentatives, puis
+  // abandon, et aucun paiement jamais crédité. Constaté en essai local.
+  //
+  // Ces routes ne sont pas pour autant ouvertes : leur défense est la signature
+  // HMAC vérifiée dans la route elle-même, ce qui est la seule protection
+  // possible pour un appelant sans identité.
+  if (request.nextUrl.pathname.startsWith('/api/saspay/')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const { url: urlSupabase, cleAnon } = configSupabaseServeur()
