@@ -153,6 +153,7 @@ identique.
 | `SUPABASE_ANON_KEY` | clé anon — publique par nature, c'est le RLS qui protège |
 | `SUPABASE_SERVICE_ROLE_KEY` | administration des comptes — **secret, jamais côté navigateur** |
 | `APP_URL` | adresse publique de l'environnement, pour les liens des courriels (défaut : `https://casachams.com`) |
+| `ENVIRONNEMENT` | `production` fait disparaître le bandeau d'avertissement. Toute autre valeur s'affiche à l'écran |
 | `ENVOIS_REELS` | `true` **uniquement en production**. Toute autre valeur bloque les envois vers des destinataires hors liste blanche |
 | `ENVOIS_LISTE_BLANCHE` | adresses et numéros autorisés quand le verrou est fermé, séparés par des virgules |
 | `RESEND_API_KEY` | envoi des courriels |

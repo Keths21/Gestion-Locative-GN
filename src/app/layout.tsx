@@ -4,6 +4,7 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import EnregistrementSW from '@/components/parcelles/EnregistrementSW'
 import { configSupabaseServeur, scriptConfigSupabase } from '@/lib/config-supabase'
+import { environnement } from '@/lib/environnement'
 
 // L'adresse du projet Supabase est lue au démarrage du serveur, pas figée à la
 // construction (voir lib/config-supabase.ts). Le navigateur ne peut donc plus
@@ -53,9 +54,41 @@ export const viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const env = environnement()
+
   return (
     <html lang="fr" className={`${firaSans.variable} ${firaCode.variable}`}>
       <body className="font-[family-name:var(--font-sans)] antialiased">
+        {/*
+          Bandeau d'environnement.
+
+          Rendu ici, dans le layout racine, pour couvrir aussi la connexion et
+          l'inscription : c'est souvent là qu'on se trompe de site.
+
+          z-index 2000 : au-dessus de tout, modales comprises (l'échelle de
+          l'application s'arrête à 1500). Un marqueur qu'une fenêtre peut cacher
+          ne marque rien.
+
+          pointer-events-none : il ne doit jamais intercepter un clic. Il informe,
+          il ne participe pas.
+
+          En bas à gauche : les notifications occupent le coin haut-droit, et
+          l'en-tête le haut. Le retrait de sécurité suit l'encoche des appareils
+          installés en PWA.
+        */}
+        {!env.production && (
+          <div
+            className="fixed left-3 bottom-3 z-[2000] pointer-events-none select-none
+                       rounded-[var(--rayon)] border border-alerte/40 bg-alerte-tenue
+                       px-3 py-1.5 text-alerte shadow-flottante"
+            style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em]">
+              {env.nom}
+            </span>
+            <span className="block text-[11px] opacity-80">données de test</span>
+          </div>
+        )}
         {/*
           Premier élément du corps, donc exécuté pendant l'analyse du HTML :
           la configuration est en place bien avant que React n'hydrate et que
