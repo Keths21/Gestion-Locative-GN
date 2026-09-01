@@ -46,6 +46,11 @@ export async function proxy(request: NextRequest) {
   const isPendingRoute = pathname.startsWith('/pending-approval')
   const isRejectedRoute = pathname.startsWith('/account-rejected')
   const isAdminRoute = pathname.startsWith('/admin')
+  // Restent joignables quand l'accès a expiré : la page qui explique et permet
+  // de payer, et la route qui ouvre le paiement. Bloquer celles-ci enfermerait
+  // le client dehors sans moyen de rentrer.
+  const isAbonnementRoute =
+    pathname.startsWith('/abonnement') || pathname.startsWith('/api/abonnement/')
   // Une route d'API doit répondre par un statut, jamais par une redirection :
   // un client fetch() suivrait le 307 et recevrait la page de connexion en
   // HTML au lieu du 401 qu'il attend. C'est ce dont dépend la file de
@@ -65,15 +70,20 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Vérifier le profil de l'utilisateur
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, status')
-    .eq('id', user.id)
-    .single()
+  // Un seul aller-retour pour le rôle, le statut du compte ET l'abonnement.
+  // Le proxy s'exécutant à chaque requête, une lecture de plus serait une
+  // lecture de plus sur chaque page de chaque utilisateur.
+  const { data: acces } = await supabase.rpc('etat_acces').single<{
+    role: string | null
+    statut_compte: string | null
+    organisation_id: string | null
+    acces_jusqu_au: string | null
+    abonnement_actif: boolean | null
+    a_deja_paye: boolean | null
+  }>()
 
-  const status = profile?.status ?? 'pending'
-  const role = profile?.role ?? 'user'
+  const status = acces?.statut_compte ?? 'pending'
+  const role = acces?.role ?? 'user'
 
   // Rediriger depuis les pages publiques selon le statut
   if (isPublicRoute) {
@@ -115,6 +125,33 @@ export async function proxy(request: NextRequest) {
   if (isAdminRoute && role !== 'admin') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // --- Abonnement -----------------------------------------------------------
+  //
+  // Le contrôle est ici, en un seul endroit, parce que c'est le seul passage
+  // obligé : le poser dans les pages laisserait les routes d'API ouvertes, et
+  // le poser dans la RLS obligerait à réécrire une trentaine de policies pour
+  // un besoin qui n'est pas de la propriété des données mais du droit d'usage.
+  //
+  // L'administrateur n'est jamais bloqué : c'est vous, et vous devez pouvoir
+  // entrer même quand tout le reste est fermé.
+  const abonnementExpire = acces?.abonnement_actif === false
+
+  if (abonnementExpire && role !== 'admin' && !isAbonnementRoute) {
+    if (isApiRoute) {
+      // 402 et non 403 : « il faut payer » n'est pas « vous n'avez pas le
+      // droit ». Le drapeau permet à l'interface — et à la file de
+      // synchronisation hors-ligne — de traiter ce cas autrement qu'une panne.
+      return NextResponse.json(
+        { erreur: 'Abonnement expiré', abonnement_expire: true },
+        { status: 402 }
+      )
+    }
+    const url = request.nextUrl.clone()
+    url.pathname = '/abonnement'
+    url.searchParams.set('expire', '1')
     return NextResponse.redirect(url)
   }
 
