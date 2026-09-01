@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText, Trash2, Moon, Home, TrendingUp, TrendingDown, Hourglass, CalendarPlus } from 'lucide-react'
+import { Plus, CreditCard, CheckCircle, AlertCircle, Clock, X, FileText, Trash2, Moon, Home, TrendingUp, TrendingDown, Hourglass, CalendarPlus, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Paiement, Locataire, Bien } from '@/types'
 import { formatMontant, formatDate, getMoisActuel } from '@/lib/utils'
@@ -35,6 +35,7 @@ export default function PaiementsPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [filtre, setFiltre] = useState<'tous' | 'payé' | 'impayé' | 'en_attente'>('tous')
+  const [filtreLocataire, setFiltreLocataire] = useState<string>('tous')
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [modeAirbnb, setModeAirbnb] = useState(false)
@@ -191,20 +192,38 @@ export default function PaiementsPage() {
     toast.success('Reçu généré')
   }
 
-  const paiementsFiltres = filtre === 'tous' ? paiements : paiements.filter(p => p.statut === filtre)
+  // Le locataire restreint la page entière — totaux, compteurs et liste. Des
+  // cartes qui resteraient globales pendant qu'on regarde un seul dossier
+  // répondraient à une autre question que celle qu'on est en train de poser.
+  const perimetre = filtreLocataire === 'tous'
+    ? paiements
+    : paiements.filter(p => p.locataire_id === filtreLocataire)
+
+  const paiementsFiltres = filtre === 'tous' ? perimetre : perimetre.filter(p => p.statut === filtre)
   const moisCourant = getMoisActuel()
 
-  const totalEncaisse = paiements.filter(p => p.statut === 'payé').reduce((s, p) => s + p.montant, 0)
-  const totalImpayes = paiements.filter(p => p.statut === 'impayé').reduce((s, p) => s + p.montant, 0)
-  const totalAttente = paiements.filter(p => p.statut === 'en_attente').reduce((s, p) => s + p.montant, 0)
-  const totalMois = paiements.filter(p => p.statut === 'payé' && p.mois_concerne?.startsWith(moisCourant)).reduce((s, p) => s + p.montant, 0)
+  const locataireChoisi = locataires.find(l => l.id === filtreLocataire)
+
+  const totalEncaisse = perimetre.filter(p => p.statut === 'payé').reduce((s, p) => s + p.montant, 0)
+  const totalImpayes = perimetre.filter(p => p.statut === 'impayé').reduce((s, p) => s + p.montant, 0)
+  const totalAttente = perimetre.filter(p => p.statut === 'en_attente').reduce((s, p) => s + p.montant, 0)
+  const totalMois = perimetre.filter(p => p.statut === 'payé' && p.mois_concerne?.startsWith(moisCourant)).reduce((s, p) => s + p.montant, 0)
+
+  // Trié par nom : une liste déroulante dans l'ordre d'insertion en base est
+  // inutilisable dès la dizaine de locataires.
+  const locatairesTries = [...locataires].sort((a, b) =>
+    `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`, 'fr'))
 
   const inputCls = 'w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm'
 
   return (
     <div className="space-y-6">
 
-      <EnTetePage titre="Paiements" sous={`${paiements.length} paiement(s) enregistré(s)`}>
+      <EnTetePage
+        titre="Paiements"
+        sous={locataireChoisi
+          ? `${perimetre.length} paiement(s) — ${locataireChoisi.prenom} ${locataireChoisi.nom}`
+          : `${paiements.length} paiement(s) enregistré(s)`}>
         <div className="flex items-center gap-2">
           <button onClick={() => runGeneration(false)} disabled={generating}
             title="Créer les échéances de loyer du mois pour les locataires mensuels"
@@ -252,12 +271,37 @@ export default function PaiementsPage() {
       </div>
 
       {/* Filtres */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-texte-doux" />
+          <select
+            value={filtreLocataire}
+            onChange={e => setFiltreLocataire(e.target.value)}
+            aria-label="Filtrer par locataire"
+            className="px-3 py-2 border border-bordure rounded-[var(--rayon)] bg-surface text-sm text-texte
+                       focus:ring-2 focus:ring-primaire outline-none max-w-[16rem]">
+            <option value="tous">Tous les locataires</option>
+            {locatairesTries.map(l => (
+              <option key={l.id} value={l.id}>{l.nom} {l.prenom}</option>
+            ))}
+          </select>
+        </div>
+
+        {filtreLocataire !== 'tous' && (
+          <button onClick={() => setFiltreLocataire('tous')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--rayon)] text-sm
+                       text-texte-doux border border-bordure hover:bg-surface-appuyee transition">
+            <X className="h-3.5 w-3.5" /> Retirer le filtre
+          </button>
+        )}
+
+        <span className="w-px self-stretch bg-bordure mx-1 hidden sm:block" />
+
         {([
-          { key: 'tous', label: 'Tous', count: paiements.length },
-          { key: 'payé', label: 'Payés', count: paiements.filter(p => p.statut === 'payé').length },
-          { key: 'en_attente', label: 'En attente', count: paiements.filter(p => p.statut === 'en_attente').length },
-          { key: 'impayé', label: 'Impayés', count: paiements.filter(p => p.statut === 'impayé').length },
+          { key: 'tous', label: 'Tous', count: perimetre.length },
+          { key: 'payé', label: 'Payés', count: perimetre.filter(p => p.statut === 'payé').length },
+          { key: 'en_attente', label: 'En attente', count: perimetre.filter(p => p.statut === 'en_attente').length },
+          { key: 'impayé', label: 'Impayés', count: perimetre.filter(p => p.statut === 'impayé').length },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setFiltre(f.key)}
             className={`px-4 py-2 rounded-[var(--rayon)] text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-surface border border-bordure text-texte-doux hover:bg-surface-appuyee'}`}>
@@ -273,7 +317,11 @@ export default function PaiementsPage() {
       ) : paiementsFiltres.length === 0 ? (
         <div className="text-center py-16 bg-surface rounded-[var(--rayon)] border border-bordure">
           <CreditCard className="h-12 w-12 text-texte-faible mx-auto mb-4" />
-          <p className="text-texte-doux">Aucun paiement trouvé.</p>
+          <p className="text-texte-doux">
+            {locataireChoisi
+              ? `Aucun paiement pour ${locataireChoisi.prenom} ${locataireChoisi.nom}${filtre === 'tous' ? '' : ' dans cette catégorie'}.`
+              : 'Aucun paiement trouvé.'}
+          </p>
         </div>
       ) : (
         <Carte className="overflow-hidden">
