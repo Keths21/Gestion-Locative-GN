@@ -146,7 +146,7 @@ export default function ParametresPage() {
       setUserEmail(user?.email || '')
       setUserId(user?.id || '')
 
-      const { data } = await supabase.from('parametres').select('*').eq('user_id', user?.id).single()
+      const { data } = await supabase.from('parametres').select('*').limit(1).maybeSingle()
       if (data) {
         setForm({
           nom_agence: data.nom_agence || '',

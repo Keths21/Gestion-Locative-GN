@@ -39,12 +39,15 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
       const today = new Date().toISOString().split('T')[0]
       const [{ data }, { data: params }] = await Promise.all([
         supabase.from('locataires').select('*, bien:biens(*)')
           .or(`date_sortie.is.null,date_sortie.gt.${today}`),
-        supabase.from('parametres').select('*').eq('user_id', user?.id).single(),
+        // Les paramètres appartiennent à l'ORGANISATION, pas à l'utilisateur : filtrer
+        // sur user_id privait tout collaborateur de l'en-tête de l'agence, ses
+        // quittances portant « Votre Agence Immobilière ». La RLS restreint déjà
+        // la lecture à sa propre organisation.
+        supabase.from('parametres').select('*').limit(1).maybeSingle(),
       ])
       setLocataires(data || [])
       if (params) setAgence(params)

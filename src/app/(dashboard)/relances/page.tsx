@@ -38,11 +38,11 @@ export default function RelancesPage() {
 
   const fetchData = async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
 
     const [{ data: paiements }, { data: params }] = await Promise.all([
       supabase.from('paiements').select('*, locataire:locataires(*), bien:biens(*)').eq('statut', 'impayé'),
-      supabase.from('parametres').select('*').eq('user_id', user?.id).single()
+      // Voir documents/page.tsx : les paramètres sont ceux de l'organisation.
+      supabase.from('parametres').select('*').limit(1).maybeSingle()
     ])
 
     // Grouper par locataire
