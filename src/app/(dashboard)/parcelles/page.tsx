@@ -26,7 +26,7 @@ const couleursStatut: Record<StatutParcelle, string> = {
 }
 
 function Liste() {
-  const { parcelles, chargement, recharger, modifier, supprimer, enLigne } = useMagasin()
+  const { parcelles, chargement, recharger, modifier, supprimer, enLigne, peutEcrire } = useMagasin()
   const [recherche, setRecherche] = useState('')
   const [statut, setStatut] = useState('')
   const [importOuvert, setImportOuvert] = useState(false)
@@ -65,12 +65,14 @@ function Liste() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setImportOuvert(true)}
-            className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
-          >
-            <Upload size={16} /> Importer
-          </button>
+          {peutEcrire !== false && (
+            <button
+              onClick={() => setImportOuvert(true)}
+              className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
+            >
+              <Upload size={16} /> Importer
+            </button>
+          )}
           <a
             href="/api/export?format=geojson"
             className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"

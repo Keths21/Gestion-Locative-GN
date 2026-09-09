@@ -37,7 +37,7 @@ const CarteParcelles = dynamic(() => import('@/components/parcelles/CarteParcell
 type Outil = null | 'coordonnees' | 'gps'
 
 function Carte() {
-  const { parcelles, chargement, creer, modifier, supprimer, message, enLigne } = useMagasin()
+  const { parcelles, chargement, creer, modifier, supprimer, message, enLigne, peutEcrire } = useMagasin()
   const carte = useRef<PoigneeCarte>(null)
 
   const [selectionId, setSelectionId] = useState<string | null>(null)
@@ -227,13 +227,18 @@ function Carte() {
             />
           </>
         )}
-        <button
-          onClick={() => setMenuAjout(!menuAjout)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-primaire text-white shadow-flottante hover:bg-primaire-appui"
-          aria-label={menuAjout ? 'Fermer le menu' : 'Ajouter une parcelle'}
-        >
-          {menuAjout ? <X size={22} /> : <Plus size={22} />}
-        </button>
+        {/* En lecture seule, le bouton disparaît : proposer de tracer à qui ne
+            peut pas enregistrer, c'est promettre un travail qui sera perdu.
+            `null` — droit encore inconnu — masque aussi, le temps d'un aller-retour. */}
+        {peutEcrire !== false && (
+          <button
+            onClick={() => setMenuAjout(!menuAjout)}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-primaire text-white shadow-flottante hover:bg-primaire-appui"
+            aria-label={menuAjout ? 'Fermer le menu' : 'Ajouter une parcelle'}
+          >
+            {menuAjout ? <X size={22} /> : <Plus size={22} />}
+          </button>
+        )}
       </div>
 
       {/* Panneau de la parcelle sélectionnée */}

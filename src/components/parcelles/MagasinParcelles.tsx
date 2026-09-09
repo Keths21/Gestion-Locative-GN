@@ -41,6 +41,12 @@ interface Magasin {
   derniereSyncLe: string | null
   message: string | null
   sessionExpiree: boolean
+  /**
+   * Droit d'écriture sur le foncier. `null` tant qu'il n'est pas connu — les
+   * outils restent alors masqués : mieux vaut les faire apparaître une seconde
+   * plus tard que laisser tracer quelqu'un dont le travail sera refusé.
+   */
+  peutEcrire: boolean | null
   creer: (entree: EntreeParcelleUI) => Promise<Parcelle>
   modifier: (id: string, champs: Partial<Parcelle>) => Promise<void>
   supprimer: (id: string) => Promise<void>
@@ -156,6 +162,7 @@ const CLE_ORG = 'organisation_id'
 
 export function FournisseurParcelles({ children }: { children: React.ReactNode }) {
   const [organisationId, setOrganisationId] = useState<string | null>(null)
+  const [peutEcrire, setPeutEcrire] = useState<boolean | null>(null)
   const [parcelles, setParcelles] = useState<Parcelle[]>([])
   const [chargement, setChargement] = useState(true)
   const [enLigne, setEnLigne] = useState(true)
@@ -224,13 +231,18 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
           data: { user },
         } = await supabase.auth.getUser()
         if (!user) return
-        const { data } = await supabase
-          .from('membres')
-          .select('organisation_id')
-          .eq('user_id', user.id)
-          .order('cree_le', { ascending: true })
-          .limit(1)
-          .maybeSingle()
+        // etat_acces() et non `membres` : un collaborateur invité ne figure pas
+        // dans `membres`, et l'organisation restait donc nulle pour lui — ses
+        // parcelles partaient avec un organisation_id vide, que la RLS
+        // refusait sans que rien ne l'explique à l'écran.
+        const { data } = await supabase.rpc('etat_acces').single<{
+          organisation_id: string | null
+          est_proprietaire: boolean | null
+          droit_foncier: string | null
+        }>()
+        if (vivant) {
+          setPeutEcrire(data?.est_proprietaire === true || data?.droit_foncier === 'ecriture')
+        }
         if (data?.organisation_id && vivant) {
           setOrganisationId(data.organisation_id)
           await ecrireMeta(CLE_ORG, data.organisation_id)
@@ -287,8 +299,24 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
     }
   }, [synchroniserMaintenant])
 
+  /**
+   * Garde d'écriture, posée au point de passage commun.
+   *
+   * Masquer les boutons ne suffirait pas : on trace depuis la carte, mais on
+   * crée aussi par import de fichier et par saisie de coordonnées. Sans ce
+   * refus central, un collaborateur en lecture seule voyait sa parcelle
+   * apparaître — écrite dans le magasin local — avant que la synchronisation ne
+   * la rejette en silence. Ses données étaient protégées, son travail perdu.
+   */
+  const exigerEcriture = useCallback(() => {
+    if (peutEcrire === false) {
+      throw new Error("Lecture seule : vous ne pouvez pas modifier les parcelles de cette agence.")
+    }
+  }, [peutEcrire])
+
   const creer = useCallback(
     async (entree: EntreeParcelleUI): Promise<Parcelle> => {
+      exigerEcriture()
       const maintenant = new Date().toISOString()
       // L'identifiant est généré ici : c'est ce qui permet de créer hors
       // connexion sans risque de collision, la RPC serveur étant idempotente.
@@ -308,11 +336,12 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
       if (navigator.onLine) void synchroniserMaintenant()
       return parcelle
     },
-    [organisationId, synchroniserMaintenant]
+    [organisationId, synchroniserMaintenant, exigerEcriture]
   )
 
   const modifier = useCallback(
     async (id: string, champs: Partial<Parcelle>) => {
+      exigerEcriture()
       const actuelle = parcelles.find((p) => p.id === id)
       if (!actuelle) return
       const maj = avecMetriques({
@@ -327,18 +356,19 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
       setEnAttente((n) => n + 1)
       if (navigator.onLine) void synchroniserMaintenant()
     },
-    [parcelles, synchroniserMaintenant]
+    [parcelles, synchroniserMaintenant, exigerEcriture]
   )
 
   const supprimer = useCallback(
     async (id: string) => {
+      exigerEcriture()
       await supprimerParcelleLocale(id)
       await empiler(nouvelleMutation(id, 'suppression', {}))
       setParcelles((l) => l.filter((p) => p.id !== id))
       setEnAttente((n) => n + 1)
       if (navigator.onLine) void synchroniserMaintenant()
     },
-    [synchroniserMaintenant]
+    [synchroniserMaintenant, exigerEcriture]
   )
 
   const valeur = useMemo<Magasin>(
@@ -351,6 +381,7 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
       derniereSyncLe,
       message,
       sessionExpiree,
+      peutEcrire,
       creer,
       modifier,
       supprimer,
@@ -366,6 +397,7 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
       derniereSyncLe,
       message,
       sessionExpiree,
+      peutEcrire,
       creer,
       modifier,
       supprimer,
