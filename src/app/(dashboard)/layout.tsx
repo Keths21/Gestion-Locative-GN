@@ -11,23 +11,36 @@ import { createClient } from '@/lib/supabase'
 import { garantirCompte, viderTout } from '@/lib/offline/idb'
 import { useRouter } from 'next/navigation'
 
+// `domaine` dit de quel droit dépend l'entrée ; `proprietaire` la réserve au
+// propriétaire de l'agence. Une entrée sans ni l'un ni l'autre est visible de
+// tous. Le masquage n'est qu'un confort : c'est proxy.ts qui interdit.
 const navItems = [
-  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/biens', label: 'Biens', icon: Building2 },
-  { href: '/locataires', label: 'Locataires', icon: Users },
-  { href: '/paiements', label: 'Paiements', icon: CreditCard },
-  { href: '/carte', label: 'Carte', icon: Map },
-  { href: '/parcelles', label: 'Parcelles', icon: LandPlot },
-  { href: '/chantiers', label: 'Chantiers', icon: HardHat },
-  { href: '/documents', label: 'Documents', icon: FileText },
-  { href: '/relances', label: 'Relances', icon: Bell },
-  { href: '/parametres', label: 'Paramètres', icon: Settings },
-]
+  { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, domaine: 'locatif' },
+  { href: '/biens', label: 'Biens', icon: Building2, domaine: 'locatif' },
+  { href: '/locataires', label: 'Locataires', icon: Users, domaine: 'locatif' },
+  { href: '/paiements', label: 'Paiements', icon: CreditCard, domaine: 'locatif' },
+  { href: '/carte', label: 'Carte', icon: Map, domaine: 'foncier' },
+  { href: '/parcelles', label: 'Parcelles', icon: LandPlot, domaine: 'foncier' },
+  { href: '/chantiers', label: 'Chantiers', icon: HardHat, domaine: 'chantiers' },
+  { href: '/documents', label: 'Documents', icon: FileText, domaine: 'locatif' },
+  { href: '/relances', label: 'Relances', icon: Bell, domaine: 'locatif' },
+  { href: '/parametres', label: 'Paramètres', icon: Settings, proprietaire: true },
+] as const
+
+type Droits = {
+  est_proprietaire: boolean
+  droit_locatif: string
+  droit_foncier: string
+  droit_chantiers: string
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  // null tant qu'on ne sait pas : on affiche alors tout le menu plutôt que de
+  // le faire clignoter en le reconstruisant sous les yeux de l'utilisateur.
+  const [droits, setDroits] = useState<Droits | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -42,6 +55,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       supabase.from('profiles').select('role').eq('id', user.id).single()
         .then(({ data }) => setIsAdmin(data?.role === 'admin'))
+
+      // Rattache les invitations laissées à cette adresse avant l'inscription :
+      // sans cet appel, inviter quelqu'un de déjà inscrit resterait sans effet.
+      supabase.rpc('lier_invitations_collaborateur').then(() => {
+        supabase.rpc('etat_acces').single<Droits>()
+          .then(({ data }) => data && setDroits(data))
+      })
     })
   }, [])
 
@@ -106,7 +126,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-            {navItems.map((item) => {
+            {navItems.filter((item) => {
+              // Tant que les droits ne sont pas connus, on montre tout : un menu
+              // qui se réduit après coup donne l'impression d'un accès retiré.
+              if (!droits) return true
+              if (droits.est_proprietaire || isAdmin) return true
+              if ('proprietaire' in item && item.proprietaire) return false
+              if (!('domaine' in item)) return true
+              const droit =
+                item.domaine === 'locatif' ? droits.droit_locatif
+                : item.domaine === 'foncier' ? droits.droit_foncier
+                : droits.droit_chantiers
+              return droit !== 'aucun'
+            }).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
               return (

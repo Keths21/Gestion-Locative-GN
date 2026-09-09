@@ -1,4 +1,4 @@
-import { createServerSupabase, lireSession, peutEcrire } from '@/lib/supabase-server'
+import { createServerSupabase, lireSession, peutEcrireDomaine } from '@/lib/supabase-server'
 import { enregistrerParcelle, journaliser, listerParcelles, supprimerParcelle } from '@/lib/parcelles'
 import { lotSyncSchema, parcelleSchema } from '@/lib/schemas'
 import { polygoneEstSimple } from '@/lib/geo'
@@ -34,13 +34,13 @@ export async function POST(req: Request) {
       motif?: string
     }[] = []
 
-    if (!peutEcrire(session)) {
+    if (!peutEcrireDomaine(session, 'foncier')) {
       for (const m of mutations) {
         resultats.push({
           id: m.id,
           parcelle_id: m.parcelle_id,
           etat: 'refuse',
-          motif: 'Rôle lecteur : modification interdite.',
+          motif: 'Écriture foncière non autorisée pour ce compte.',
         })
       }
     } else {

@@ -6,6 +6,7 @@ import { viderTout } from '@/lib/offline/idb'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Carte, EnTetePage, Pastille } from '@/components/ui'
+import Collaborateurs from '@/components/parametres/Collaborateurs'
 
 const DEVISES = [
   { value: 'GNF', label: 'GNF — Franc Guinéen' },
@@ -281,6 +282,11 @@ export default function ParametresPage() {
 
         </div>
       </div>
+
+      {/* Collaborateurs — pleine largeur : trois sélecteurs par personne ne
+          tiennent pas dans une colonne latérale. Le composant se retire de
+          lui-même si l'appelant n'est pas propriétaire. */}
+      <Collaborateurs />
     </div>
   )
 }

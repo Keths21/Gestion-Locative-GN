@@ -2,6 +2,34 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { configSupabaseServeur } from '@/lib/config-supabase'
 
+/**
+ * Quel domaine protège quelle page.
+ *
+ * Une page absente de cette table n'est régie par aucun domaine : c'est le cas
+ * du tableau de bord — il n'affiche que du locatif, et son entrée y figure —
+ * mais aussi de /abonnement ou /parametres, dont l'accès relève d'autres
+ * règles.
+ *
+ * Le tableau est ordonné : /parcelles doit être examiné avant /parametres si
+ * jamais un préfixe en recouvrait un autre. Ici aucun ne se recouvre, mais
+ * l'ordre reste une propriété à préserver.
+ */
+const DOMAINE_PAR_CHEMIN: ReadonlyArray<readonly [string, 'locatif' | 'foncier' | 'chantiers']> = [
+  ['/biens',      'locatif'],
+  ['/locataires', 'locatif'],
+  ['/paiements',  'locatif'],
+  ['/relances',   'locatif'],
+  ['/documents',  'locatif'],
+  ['/dashboard',  'locatif'],
+  ['/carte',      'foncier'],
+  ['/parcelles',  'foncier'],
+  ['/chantiers',  'chantiers'],
+]
+
+function domaineDuChemin(pathname: string) {
+  return DOMAINE_PAR_CHEMIN.find(([prefixe]) => pathname.startsWith(prefixe))?.[1]
+}
+
 export async function proxy(request: NextRequest) {
   // Les rappels de prestataires passent AVANT toute authentification : ils sont
   // émis par un serveur tiers, qui n'a ni session ni cookie. Sans cette sortie,
@@ -80,6 +108,10 @@ export async function proxy(request: NextRequest) {
     acces_jusqu_au: string | null
     abonnement_actif: boolean | null
     a_deja_paye: boolean | null
+    est_proprietaire: boolean | null
+    droit_locatif: string | null
+    droit_foncier: string | null
+    droit_chantiers: string | null
   }>()
 
   const status = acces?.statut_compte ?? 'pending'
@@ -153,6 +185,50 @@ export async function proxy(request: NextRequest) {
     url.pathname = '/abonnement'
     url.searchParams.set('expire', '1')
     return NextResponse.redirect(url)
+  }
+
+  // --- Droits par domaine ---------------------------------------------------
+  //
+  // Le menu masque déjà ce qui n'est pas accessible, mais masquer n'est pas
+  // interdire : sans ce contrôle, une URL tapée à la main ouvrirait la page. La
+  // RLS empêcherait de lire la donnée — l'écran serait vide plutôt que refusé,
+  // ce qui se lit comme une panne et non comme une permission manquante.
+  //
+  // Les paramètres sont réservés au propriétaire : c'est là qu'on accorde les
+  // droits, et un collaborateur qui s'y rendrait s'en accorderait lui-même.
+  const estProprietaire = acces?.est_proprietaire === true
+
+  if (pathname.startsWith('/parametres') && !estProprietaire && role !== 'admin') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  const domaine = domaineDuChemin(pathname)
+  if (domaine && !estProprietaire && role !== 'admin') {
+    const droit =
+      domaine === 'locatif' ? acces?.droit_locatif
+      : domaine === 'foncier' ? acces?.droit_foncier
+      : acces?.droit_chantiers
+
+    if (!droit || droit === 'aucun') {
+      if (isApiRoute) {
+        return NextResponse.json(
+          { erreur: 'Accès non autorisé à ce module', domaine }, { status: 403 }
+        )
+      }
+      // Vers la première page qu'il peut voir, plutôt qu'une page d'erreur : un
+      // collaborateur qui n'a que le foncier doit atterrir sur la carte, pas
+      // sur un mur.
+      const url = request.nextUrl.clone()
+      url.pathname =
+        acces?.droit_locatif !== 'aucun' ? '/dashboard'
+        : acces?.droit_foncier !== 'aucun' ? '/carte'
+        : acces?.droit_chantiers !== 'aucun' ? '/chantiers'
+        : '/abonnement'
+      url.searchParams.set('acces', 'refuse')
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

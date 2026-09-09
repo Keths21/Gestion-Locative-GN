@@ -1,4 +1,4 @@
-import { createServerSupabase, lireSession, peutEcrire } from '@/lib/supabase-server'
+import { createServerSupabase, lireSession, peutEcrireDomaine } from '@/lib/supabase-server'
 import { enregistrerParcelle, journaliser } from '@/lib/parcelles'
 import { parcelleSchema } from '@/lib/schemas'
 import { analyserFichier } from '@/lib/import-parcelles'
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const supabase = await createServerSupabase()
     const session = await lireSession(supabase)
     if (!session) return erreur('Non authentifié', 401)
-    if (!peutEcrire(session)) return erreur('Rôle lecteur : import interdit.', 403)
+    if (!peutEcrireDomaine(session, 'foncier')) return erreur('Écriture foncière non autorisée.', 403)
 
     const form = await req.formData()
     const recu = form.get('fichier')

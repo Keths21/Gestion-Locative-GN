@@ -39,10 +39,15 @@ export async function createServerSupabase() {
 
 export type RoleMembreCourant = 'proprietaire' | 'editeur' | 'lecteur'
 
+export type Domaine = 'locatif' | 'foncier' | 'chantiers'
+export type NiveauDroit = 'aucun' | 'lecture' | 'ecriture'
+
 export type SessionCourante = {
   userId: string
   organisationId: string
   role: RoleMembreCourant
+  /** Droits par domaine. Le propriétaire les a tous en écriture. */
+  droits: Record<Domaine, NiveauDroit>
 }
 
 /**
@@ -56,23 +61,52 @@ export async function lireSession(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: membre } = await supabase
-    .from('membres')
-    .select('organisation_id, role')
-    .eq('user_id', user.id)
-    .order('cree_le', { ascending: true })
-    .limit(1)
-    .maybeSingle()
+  // Un seul appel, qui couvre le propriétaire ET le collaborateur invité.
+  //
+  // Cette fonction ne lisait que `membres`, où un collaborateur ne figure pas :
+  // TOUTES les routes d'API lui répondaient 401, pas seulement celles de
+  // gestion. Défaut trouvé à l'essai de bout en bout, invisible autrement.
+  const { data: acces } = await supabase.rpc('etat_acces').single<{
+    organisation_id: string | null
+    est_proprietaire: boolean | null
+    droit_locatif: NiveauDroit | null
+    droit_foncier: NiveauDroit | null
+    droit_chantiers: NiveauDroit | null
+  }>()
 
-  if (!membre) return null
+  if (!acces?.organisation_id) return null
+
+  const droits: Record<Domaine, NiveauDroit> = {
+    locatif: acces.droit_locatif ?? 'aucun',
+    foncier: acces.droit_foncier ?? 'aucun',
+    chantiers: acces.droit_chantiers ?? 'aucun',
+  }
+
+  // Un collaborateur sans aucun droit est un accès révoqué qu'on n'a pas encore
+  // supprimé : il n'a pas de session applicative.
+  if (!acces.est_proprietaire && Object.values(droits).every(d => d === 'aucun')) return null
 
   return {
     userId: user.id,
-    organisationId: membre.organisation_id,
-    role: membre.role as RoleMembreCourant,
+    organisationId: acces.organisation_id,
+    role: acces.est_proprietaire ? 'proprietaire' : 'editeur',
+    droits,
   }
 }
 
+/**
+ * Droit d'écriture. Sans domaine, la question n'a plus de réponse juste depuis
+ * que les droits sont découpés : on la réserve donc au propriétaire, et les
+ * appelants qui savent de quel domaine ils relèvent utilisent peutEcrireDomaine.
+ */
 export function peutEcrire(session: SessionCourante): boolean {
-  return session.role === 'proprietaire' || session.role === 'editeur'
+  return session.role === 'proprietaire'
+}
+
+export function peutEcrireDomaine(session: SessionCourante, domaine: Domaine): boolean {
+  return session.droits[domaine] === 'ecriture'
+}
+
+export function peutLireDomaine(session: SessionCourante, domaine: Domaine): boolean {
+  return session.droits[domaine] !== 'aucun'
 }
