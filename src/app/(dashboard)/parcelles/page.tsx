@@ -64,24 +64,26 @@ function Liste() {
             {filtrees.length} parcelle(s) · {formaterSuperficie(total)} au total
           </p>
         </div>
-        <div className="flex gap-2">
+        {/* flex-wrap + nowrap : sur téléphone, « Ouvrir la carte » sortait de
+            l'écran, écrit sur trois lignes. */}
+        <div className="flex flex-wrap gap-2">
           {peutEcrire !== false && (
             <button
               onClick={() => setImportOuvert(true)}
-              className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
+              className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
             >
               <Upload size={16} /> Importer
             </button>
           )}
           <a
             href="/api/export?format=geojson"
-            className="flex items-center gap-2 rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
+            className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-[var(--rayon)] border border-bordure-forte px-4 py-2 text-sm text-texte hover:bg-surface-appuyee"
           >
             <Download size={16} /> Exporter
           </a>
           <Link
             href="/carte"
-            className="flex items-center gap-2 rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
+            className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-[var(--rayon)] bg-primaire px-4 py-2 text-sm font-semibold text-white hover:bg-primaire-appui"
           >
             <Map size={16} /> Ouvrir la carte
           </Link>
@@ -170,7 +172,7 @@ function Liste() {
       )}
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <div className="relative min-w-56 flex-1">
+        <div className="relative min-w-0 flex-1 basis-56">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-texte-faible" />
           <input
             value={recherche}
@@ -203,7 +205,47 @@ function Liste() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[var(--rayon)] border border-bordure bg-surface">
+        <>
+        {/* Téléphone : une fiche par parcelle. Le tableau de 52rem n'y
+            montrait que le nom et le type, le reste caché hors de l'écran. */}
+        <ul className="divide-y divide-bordure overflow-hidden rounded-[var(--rayon)] border border-bordure bg-surface md:hidden">
+          {filtrees.map((p) => (
+            <li key={p.id}>
+              <button
+                onClick={() => setSelectionId(p.id)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-primaire-tenue"
+              >
+                <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: p.couleur }} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 font-medium text-texte">
+                    <span className="truncate">{p.nom}</span>
+                    {p.bien_id && (
+                      <span title="Rattachée à un bien locatif" className="shrink-0">
+                        <Link2 size={13} className="text-primaire" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate text-xs text-texte-doux">
+                    {[p.reference, p.quartier, p.commune].filter(Boolean).join(' · ') || '—'}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-texte-doux">
+                    <span className={`rounded-full px-2 py-0.5 font-medium ${couleursStatut[p.statut]}`}>
+                      {LIBELLES_STATUT_PARCELLE[p.statut]}
+                    </span>
+                    <span>{LIBELLES_TYPE_PARCELLE[p.type]}</span>
+                    {p.superficie_m2 ? <span className="tabular-nums">· {formaterSuperficie(p.superficie_m2)}</span> : null}
+                    {p.valeur_estimee ?? p.prix_achat
+                      ? <span className="tabular-nums">· {formatMontant(p.valeur_estimee ?? p.prix_achat!)}</span>
+                      : null}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="shrink-0 text-texte-faible" />
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <div className="hidden overflow-x-auto rounded-[var(--rayon)] border border-bordure bg-surface md:block">
           <table className="w-full min-w-[52rem] text-sm">
             <thead className="border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux">
               <tr>
@@ -271,6 +313,7 @@ function Liste() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   )

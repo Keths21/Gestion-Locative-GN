@@ -215,13 +215,15 @@ export default function DashboardPage() {
         sous={`Vue d'ensemble — ${moisNom} ${new Date().getFullYear()}`}
       />
 
-      {/* Chiffres clés */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Chiffres clés. Un montant en francs guinéens (« 42 400 000 GNF »)
+          demande ~200 px : une colonne sur téléphone, 2 × 2 ensuite, et quatre
+          de front seulement à 1536 px — à 1024, la barre latérale ne laisse
+          que 720 px et les montants débordaient de leur tuile. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <Tuile
           libelle="Biens"
           valeur={d.totalBiens}
           icone={Building2}
-          className="col-span-2 lg:col-span-1"
           accessoire={
             <div className="flex gap-1.5">
               <Pastille ton="info" icone={Moon}>{d.nbAirbnb}</Pastille>
@@ -404,8 +406,10 @@ export default function DashboardPage() {
           ) : (
             <ul className="divide-y divide-bordure">
               {d.biensVacantsList.map((b: any) => (
-                <li key={b.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
+                // flex-wrap : quand le loyer ne laisse plus la place au nom, il
+                // passe dessous plutôt que de réduire le nom à trois lettres.
+                <li key={b.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3">
+                  <div className="flex min-w-0 flex-1 basis-44 items-center gap-2.5">
                     <span
                       className={`shrink-0 rounded-[var(--rayon)] border p-1.5 ${b.mode_location === 'airbnb' ? 'border-info/20 bg-info-tenue' : 'border-bordure bg-surface-appuyee'}`}
                       aria-hidden
@@ -419,7 +423,7 @@ export default function DashboardPage() {
                       <p className="truncate text-xs text-texte-faible">{b.adresse}, {b.ville}</p>
                     </div>
                   </div>
-                  <span className="chiffres shrink-0 text-sm font-semibold text-texte-doux">
+                  <span className="chiffres ml-auto shrink-0 text-sm font-semibold text-texte-doux">
                     {b.mode_location === 'airbnb' ? formatMontant(b.prix_nuit || 0) + '/nuit' : formatMontant(b.loyer_base || 0) + '/mois'}
                   </span>
                 </li>
@@ -457,10 +461,13 @@ export default function DashboardPage() {
                     <td className="px-5 py-3">
                       <p className="font-medium text-texte">{p.locataire?.prenom} {p.locataire?.nom}</p>
                       <p className="mt-0.5 hidden text-xs text-texte-faible md:block">{p.bien?.nom}</p>
+                      {/* Sur téléphone, le montant rejoint le nom : en colonne
+                          à part, il poussait le statut hors de l'écran. */}
+                      <p className="chiffres mt-0.5 text-xs font-semibold text-texte-doux sm:hidden">{formatMontant(p.montant)}</p>
                     </td>
                     <td className="chiffres hidden px-5 py-3 text-xs text-texte-doux lg:table-cell">{p.mois_concerne}</td>
-                    <td className="chiffres whitespace-nowrap px-5 py-3 font-semibold text-texte">{formatMontant(p.montant)}</td>
-                    <td className="px-5 py-3">
+                    <td className="chiffres hidden whitespace-nowrap px-5 py-3 font-semibold text-texte sm:table-cell">{formatMontant(p.montant)}</td>
+                    <td className="px-5 py-3 text-right sm:text-left">
                       <Pastille ton={TON_STATUT[p.statut] ?? 'alerte'}>
                         {statutLabel[p.statut] || 'En attente'}
                       </Pastille>

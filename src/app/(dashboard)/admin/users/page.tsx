@@ -97,13 +97,13 @@ export default function AdminUsersPage() {
         sous="Validez ou refusez les demandes d'accès"
       />
 
-      {/* Filtres */}
-      <div className="flex gap-2 flex-wrap">
+      {/* Filtres — une rangée qui défile au doigt sur téléphone */}
+      <div className="sans-barre -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {(['pending', 'all', 'approved', 'rejected'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
               filter === f
                 ? 'bg-primaire text-white'
                 : 'bg-surface text-texte-doux border border-bordure hover:bg-surface-appuyee'
@@ -146,9 +146,13 @@ export default function AdminUsersPage() {
             <p className="text-sm">Aucun utilisateur dans cette catégorie</p>
           </div>
         ) : (
+          // Sous 1280 px, chaque ligne devient une fiche (mêmes éléments, mis
+          // en bloc) : le tableau demande ~900 px, et les boutons Approuver /
+          // Refuser n'étaient atteignables qu'en faisant défiler de côté —
+          // y compris à 1024, où la barre latérale ne laisse que 720 px.
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+            <table className="block w-full xl:table">
+              <thead className="hidden xl:table-header-group">
                 <tr className="border-b border-bordure bg-surface-appuyee">
                   <th className="text-left px-6 py-3 text-xs font-medium text-texte-doux uppercase tracking-wider">Utilisateur</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-texte-doux uppercase tracking-wider">Rôle</th>
@@ -157,17 +161,17 @@ export default function AdminUsersPage() {
                   <th className="text-right px-6 py-3 text-xs font-medium text-texte-doux uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-bordure">
+              <tbody className="block divide-y divide-bordure xl:table-row-group">
                 {filtered.map((user) => {
                   const cfg = statusConfig[user.status as keyof typeof statusConfig]
                   const Icon = cfg?.icon ?? Clock
                   return (
-                    <tr key={user.id} className="hover:bg-surface-appuyee transition-colors">
-                      <td className="px-6 py-4">
+                    <tr key={user.id} className="block px-4 py-3.5 hover:bg-surface-appuyee transition-colors xl:table-row xl:p-0">
+                      <td className="block xl:table-cell xl:px-6 xl:py-4">
                         <div className="font-medium text-texte">{user.full_name || '—'}</div>
-                        <div className="text-sm text-texte-faible">{user.email}</div>
+                        <div className="text-sm text-texte-faible break-all xl:break-normal">{user.email}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="mr-2 mt-2 inline-block align-top xl:mr-0 xl:mt-0 xl:table-cell xl:align-middle xl:px-6 xl:py-4">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
                           user.role === 'admin' ? 'bg-info-tenue text-info' : 'bg-surface-appuyee text-texte-doux'
                         }`}>
@@ -175,7 +179,7 @@ export default function AdminUsersPage() {
                           {user.role === 'admin' ? 'Admin' : 'Utilisateur'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="mr-2 mt-2 inline-block align-top xl:mr-0 xl:mt-0 xl:table-cell xl:align-middle xl:px-6 xl:py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${cfg?.className}`}>
                           <Icon className="h-3.5 w-3.5" />
                           {cfg?.label}
@@ -184,12 +188,13 @@ export default function AdminUsersPage() {
                           <p className="text-xs text-texte-faible mt-1 max-w-xs">{user.rejection_reason}</p>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-texte-faible">
+                      <td className="mt-2 inline-block align-top text-sm text-texte-faible xl:mt-0 xl:table-cell xl:align-middle xl:px-6 xl:py-4">
+                        <span className="xl:hidden">Inscrit le </span>
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="block xl:table-cell xl:px-6 xl:py-4">
                         {user.role !== 'admin' && (
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="mt-3 flex items-center gap-2 xl:mt-0 xl:justify-end">
                             {user.status !== 'approved' && (
                               <button
                                 onClick={() => updateStatus(user.id, 'approved')}
@@ -233,7 +238,7 @@ export default function AdminUsersPage() {
 
       {/* Modal de refus */}
       {rejectModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-[1300] flex items-center justify-center p-4">
           <div className="bg-surface rounded-2xl shadow-flottante p-6 w-full max-w-md">
             <h3 className="text-lg font-bold text-texte mb-1">Refuser l&apos;accès</h3>
             <p className="text-sm text-texte-doux mb-4">

@@ -83,6 +83,7 @@ export type Paiement = {
   date_paiement: string | null
   mois_concerne: string
   statut: 'payé' | 'en_attente' | 'impayé'
+  notes?: string | null
   created_at: string
   locataire?: Locataire
   bien?: Bien

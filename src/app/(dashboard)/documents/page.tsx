@@ -117,6 +117,46 @@ export default function DocumentsPage() {
     }
   }
 
+  // Les quatre boutons servent au tableau (ordinateur) et aux fiches
+  // (téléphone) : une seule définition. En « tactile », chaque bouton occupe
+  // un quart de la rangée et 44 px de haut — empilés dans une cellule étroite,
+  // ils prenaient quatre lignes par locataire.
+  const boutonsDocuments = (loc: Locataire, tactile: boolean) => {
+    const forme = tactile
+      ? 'flex min-h-11 items-center justify-center gap-1.5 text-xs px-2 rounded-lg transition font-medium disabled:opacity-50'
+      : 'flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition font-medium disabled:opacity-50'
+    return (
+      <>
+        {/* Bail PDF */}
+        <button onClick={() => handleBail(loc)}
+          className={`${forme} bg-succes-tenue text-succes hover:bg-succes-tenue`}>
+          <FileText className="h-3.5 w-3.5" /> Bail
+        </button>
+        {/* Relance PDF */}
+        <button onClick={() => handleRelancePDF(loc)}
+          className={`${forme} bg-danger-tenue text-danger hover:bg-danger-tenue`}>
+          <Download className="h-3.5 w-3.5" /> PDF
+        </button>
+        {/* Relance SMS */}
+        <button
+          onClick={() => handleRelanceSMS(loc, 'sms')}
+          disabled={sending === `sms-relance-${loc.id}`}
+          className={`${forme} bg-alerte-tenue text-alerte hover:bg-alerte-tenue`}>
+          <MessageSquare className="h-3.5 w-3.5" />
+          {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
+        </button>
+        {/* Relance WhatsApp */}
+        <button
+          onClick={() => handleRelanceSMS(loc, 'whatsapp')}
+          disabled={sending === `whatsapp-relance-${loc.id}`}
+          className={`${forme} bg-succes-tenue text-succes hover:bg-succes-tenue`}>
+          <Mail className="h-3.5 w-3.5" />
+          {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
+        </button>
+      </>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <EnTetePage titre="Documents" sous="Générez vos documents officiels en PDF" />
@@ -132,12 +172,16 @@ export default function DocumentsPage() {
         ] as const).map(card => {
           const Icon = card.icon
           return (
-            <Carte key={card.title} className="p-5">
-              <div className={`w-10 h-10 rounded-[var(--rayon)] flex items-center justify-center mb-3 ${card.classes}`} aria-hidden>
+            // Icône à côté du texte sur téléphone : empilées, ces trois cartes
+            // d'explication occupaient tout le premier écran avant la liste.
+            <Carte key={card.title} className="flex items-start gap-3 p-4 md:block md:p-5">
+              <div className={`w-10 h-10 shrink-0 rounded-[var(--rayon)] flex items-center justify-center md:mb-3 ${card.classes}`} aria-hidden>
                 <Icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold text-texte">{card.title}</h3>
-              <p className="text-sm text-texte-doux mt-1 mb-4">{card.desc}</p>
+              <div>
+                <h3 className="font-semibold text-texte">{card.title}</h3>
+                <p className="text-sm text-texte-doux mt-1 md:mb-4">{card.desc}</p>
+              </div>
             </Carte>
           )
         })}
@@ -151,7 +195,19 @@ export default function DocumentsPage() {
         {loading ? (
           <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primaire"></div></div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="divide-y divide-bordure md:hidden">
+            {locataires.map(loc => (
+              <li key={loc.id} className="px-4 py-3.5">
+                <p className="font-medium text-texte">{loc.prenom} {loc.nom}</p>
+                <p className="mt-0.5 truncate text-xs text-texte-doux">
+                  {loc.bien?.nom || '-'}{loc.telephone ? ` · ${loc.telephone}` : ''}
+                </p>
+                <div className="mt-2.5 grid grid-cols-4 gap-2">{boutonsDocuments(loc, true)}</div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface-appuyee border-b border-bordure">
@@ -174,40 +230,14 @@ export default function DocumentsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 justify-end flex-wrap">
-                        {/* Bail PDF */}
-                        <button onClick={() => handleBail(loc)}
-                          className="flex items-center gap-1.5 text-xs bg-succes-tenue text-succes px-3 py-1.5 rounded-lg hover:bg-succes-tenue transition font-medium">
-                          <FileText className="h-3.5 w-3.5" /> Bail
-                        </button>
-                        {/* Relance PDF */}
-                        <button onClick={() => handleRelancePDF(loc)}
-                          className="flex items-center gap-1.5 text-xs bg-danger-tenue text-danger px-3 py-1.5 rounded-lg hover:bg-danger-tenue transition font-medium">
-                          <Download className="h-3.5 w-3.5" /> PDF
-                        </button>
-                        {/* Relance SMS */}
-                        <button
-                          onClick={() => handleRelanceSMS(loc, 'sms')}
-                          disabled={sending === `sms-relance-${loc.id}`}
-                          className="flex items-center gap-1.5 text-xs bg-alerte-tenue text-alerte px-3 py-1.5 rounded-lg hover:bg-alerte-tenue transition font-medium disabled:opacity-50">
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
-                        </button>
-                        {/* Relance WhatsApp */}
-                        <button
-                          onClick={() => handleRelanceSMS(loc, 'whatsapp')}
-                          disabled={sending === `whatsapp-relance-${loc.id}`}
-                          className="flex items-center gap-1.5 text-xs bg-succes-tenue text-succes px-3 py-1.5 rounded-lg hover:bg-succes-tenue transition font-medium disabled:opacity-50">
-                          <Mail className="h-3.5 w-3.5" />
-                          {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
-                        </button>
-                      </div>
+                      <div className="flex items-center gap-2 justify-end flex-wrap">{boutonsDocuments(loc, false)}</div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Carte>
     </div>

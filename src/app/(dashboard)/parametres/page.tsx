@@ -40,11 +40,11 @@ function InputField({ label, icon: Icon, value, onChange, type = 'text', placeho
 function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
     <Carte className="overflow-hidden">
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-bordure bg-surface-appuyee">
+      <div className="flex items-center gap-2 px-4 sm:px-6 py-4 border-b border-bordure bg-surface-appuyee">
         <Icon className="h-4 w-4 text-primaire" />
         <h2 className="font-semibold text-texte text-sm">{title}</h2>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </Carte>
   )
 }
@@ -97,11 +97,11 @@ function CompletionBar({ form }: { form: typeof EMPTY_FORM }) {
 function AperçuDocument({ form }: { form: typeof EMPTY_FORM }) {
   return (
     <Carte className="overflow-hidden">
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-bordure bg-surface-appuyee">
+      <div className="flex items-center gap-2 px-4 sm:px-6 py-4 border-b border-bordure bg-surface-appuyee">
         <Eye className="h-4 w-4 text-primaire" />
         <h2 className="font-semibold text-texte text-sm">Aperçu dans les documents PDF</h2>
       </div>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="border border-dashed border-bordure rounded-[var(--rayon)] p-4 bg-surface-appuyee text-sm space-y-1">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-10 h-10 bg-primaire rounded-[var(--rayon)] flex items-center justify-center">
@@ -112,7 +112,7 @@ function AperçuDocument({ form }: { form: typeof EMPTY_FORM }) {
               <p className="text-xs text-texte-doux">Bailleur / Agence immobilière</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-texte-doux">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-texte-doux [overflow-wrap:anywhere]">
             {form.adresse && <span>📍 {form.adresse}</span>}
             {form.ville && <span>🏙 {form.ville}</span>}
             {form.telephone && <span>📞 {form.telephone}</span>}
@@ -213,7 +213,7 @@ export default function ParametresPage() {
                     placeholder="Spécialiste de la gestion locative à Conakry..."
                     rows={2} className="w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm resize-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InputField label="RCCM" icon={FileText} value={form.rccm} onChange={v => set('rccm', v)} placeholder="GN-CON-2024-B-1234" />
                   <InputField label="NIF" icon={Shield} value={form.nif} onChange={v => set('nif', v)} placeholder="123456789" />
                 </div>
@@ -223,12 +223,12 @@ export default function ParametresPage() {
             {/* Contact */}
             <Section title="Coordonnées" icon={Phone}>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InputField label="Email professionnel" icon={Mail} value={form.email} onChange={v => set('email', v)} type="email" placeholder="contact@agence.com" />
                   <InputField label="Téléphone" icon={Phone} value={form.telephone} onChange={v => set('telephone', v)} placeholder="+224 620 00 00 00" />
                 </div>
                 <InputField label="Site web" icon={Globe} value={form.site_web} onChange={v => set('site_web', v)} placeholder="www.monagence.com" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InputField label="Adresse" icon={MapPin} value={form.adresse} onChange={v => set('adresse', v)} placeholder="Rue, Quartier" />
                   <InputField label="Ville" icon={MapPin} value={form.ville} onChange={v => set('ville', v)} placeholder="Conakry" />
                 </div>

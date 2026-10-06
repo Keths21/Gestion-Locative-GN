@@ -228,7 +228,7 @@ export default function LocatairesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-[1300] flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-bordure">
               <h2 className="font-bold text-texte text-lg">{editItem ? 'Modifier le locataire' : 'Nouveau locataire'}</h2>

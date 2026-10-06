@@ -52,7 +52,9 @@ export function EnTetePage({
         <h1 className="text-2xl font-semibold tracking-tight text-texte">{titre}</h1>
         {sous && <p className="mt-1 text-sm text-texte-doux">{sous}</p>}
       </div>
-      {children && <div className="flex items-center gap-2">{children}</div>}
+      {/* flex-wrap : sur téléphone, trois boutons côte à côte sortaient de
+          l'écran au lieu de passer à la ligne */}
+      {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>
   )
 }
@@ -164,7 +166,7 @@ export function Tuile({
 }) {
   return (
     <Carte className={cn('p-5', className)}>
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         {/* L'icône est décorative : le libellé dit déjà tout, la lui faire
             annoncer par un lecteur d'écran ne ferait que doubler. */}
         <span

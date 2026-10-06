@@ -110,8 +110,10 @@ function Carte() {
         <BarreEtatSync />
       </div>
 
-      {/* Contrôles de couches */}
-      <div className="absolute right-2 top-16 z-[1000] flex flex-col gap-2">
+      {/* Contrôles de couches — top-24 : le zoom de Leaflet descend jusqu'à
+          ~76 px sur écran tactile (boutons de 30 px), et à top-16 le bouton
+          des fonds de carte recouvrait le « − ». */}
+      <div className="absolute right-2 top-24 z-[1000] flex flex-col gap-2">
         <button
           onClick={() => setCouches(!couches)}
           className="rounded-[var(--rayon)] bg-surface p-2.5 text-texte shadow-flottante hover:bg-surface-appuyee"
@@ -136,7 +138,7 @@ function Carte() {
       </div>
 
       {couches && (
-        <div className="absolute right-14 top-16 z-[1000] w-56 rounded-[var(--rayon)] bg-surface p-3 shadow-flottante">
+        <div className="absolute right-14 top-24 z-[1000] w-56 rounded-[var(--rayon)] bg-surface p-3 shadow-flottante">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-texte-doux">
             Fond de carte
           </p>

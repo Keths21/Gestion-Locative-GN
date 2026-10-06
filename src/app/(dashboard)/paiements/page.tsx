@@ -216,6 +216,44 @@ export default function PaiementsPage() {
 
   const inputCls = 'w-full px-4 py-2.5 border border-bordure-forte rounded-[var(--rayon)] focus:ring-2 focus:ring-primaire outline-none text-sm'
 
+  // Statut et actions servent deux fois : dans le tableau (ordinateur) et dans
+  // les fiches (téléphone). Une seule définition, pour qu'ils ne divergent pas.
+  const boutonStatut = (p: Paiement) => {
+    const s = statutConfig[p.statut] || statutConfig['en_attente']
+    return (
+      <button
+        onClick={() => handleStatutChange(p)}
+        title="Cliquer pour changer le statut"
+        className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${s.color}`}>
+        {p.statut === 'payé' && <CheckCircle className="h-3 w-3" />}
+        {p.statut === 'en_attente' && <Clock className="h-3 w-3" />}
+        {p.statut === 'impayé' && <AlertCircle className="h-3 w-3" />}
+        {s.label}
+      </button>
+    )
+  }
+
+  // taille : sur téléphone, cible de 44 px — l'icône seule se rate au pouce.
+  const boutonsActions = (p: Paiement, taille: 'compacte' | 'tactile') => {
+    const cls = taille === 'tactile'
+      ? 'inline-flex h-11 w-11 items-center justify-center rounded-[var(--rayon)] transition'
+      : 'p-1.5 rounded-[var(--rayon)] transition'
+    return (
+      <div className="flex items-center gap-1 justify-end">
+        {p.statut === 'payé' && (
+          <button onClick={() => handleQuittance(p)} title="Générer quittance" aria-label="Générer la quittance"
+            className={`${cls} hover:bg-primaire-tenue text-primaire`}>
+            <FileText className="h-4 w-4" />
+          </button>
+        )}
+        <button onClick={() => handleDelete(p.id)} title="Supprimer" aria-label="Supprimer le paiement"
+          className={`${cls} hover:bg-danger-tenue text-danger`}>
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
 
@@ -224,79 +262,86 @@ export default function PaiementsPage() {
         sous={locataireChoisi
           ? `${perimetre.length} paiement(s) — ${locataireChoisi.prenom} ${locataireChoisi.nom}`
           : `${paiements.length} paiement(s) enregistré(s)`}>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => runGeneration(false)} disabled={generating}
             title="Créer les échéances de loyer du mois pour les locataires mensuels"
-            className="flex items-center gap-2 border border-bordure text-texte px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium disabled:opacity-50">
+            className="flex items-center gap-2 whitespace-nowrap border border-bordure text-texte px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium disabled:opacity-50">
             <CalendarPlus className={`h-4 w-4 ${generating ? 'animate-pulse' : ''}`} />
             {generating ? 'Génération...' : 'Générer les loyers'}
           </button>
           <button onClick={() => { setForm(EMPTY_FORM); setModeAirbnb(false); setShowModal(true) }}
-            className="flex items-center gap-2 bg-primaire text-white px-4 py-2.5 rounded-[var(--rayon)] hover:bg-primaire-appui transition text-sm font-medium">
+            className="flex items-center gap-2 whitespace-nowrap bg-primaire text-white px-4 py-2.5 rounded-[var(--rayon)] hover:bg-primaire-appui transition text-sm font-medium">
             <Plus className="h-4 w-4" /> Enregistrer un paiement
           </button>
         </div>
       </EnTetePage>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats — text-base sur téléphone : en demi-largeur, un total à neuf
+          chiffres en text-lg touchait le bord de sa carte. Quatre de front
+          seulement à 1280 px : à 1024, la barre latérale ne laisse que 720 px.
+          Une seule colonne sous 360 px, où même text-base ne tient plus. */}
+      <div className="grid grid-cols-1 min-[360px]:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="h-4 w-4 text-succes" />
+            <TrendingUp className="h-4 w-4 shrink-0 text-succes" />
             <p className="text-xs text-texte-doux font-medium">Total encaissé</p>
           </div>
-          <p className="text-lg font-bold text-succes">{formatMontant(totalEncaisse)}</p>
+          <p className="text-base sm:text-lg font-bold text-succes">{formatMontant(totalEncaisse)}</p>
         </Carte>
         <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingDown className="h-4 w-4 text-danger" />
+            <TrendingDown className="h-4 w-4 shrink-0 text-danger" />
             <p className="text-xs text-texte-doux font-medium">Impayés</p>
           </div>
-          <p className="text-lg font-bold text-danger">{formatMontant(totalImpayes)}</p>
+          <p className="text-base sm:text-lg font-bold text-danger">{formatMontant(totalImpayes)}</p>
         </Carte>
         <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Hourglass className="h-4 w-4 text-alerte" />
+            <Hourglass className="h-4 w-4 shrink-0 text-alerte" />
             <p className="text-xs text-texte-doux font-medium">En attente</p>
           </div>
-          <p className="text-lg font-bold text-alerte">{formatMontant(totalAttente)}</p>
+          <p className="text-base sm:text-lg font-bold text-alerte">{formatMontant(totalAttente)}</p>
         </Carte>
         <Carte className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <CreditCard className="h-4 w-4 text-primaire" />
+            <CreditCard className="h-4 w-4 shrink-0 text-primaire" />
             <p className="text-xs text-texte-doux font-medium">Ce mois-ci</p>
           </div>
-          <p className="text-lg font-bold text-primaire">{formatMontant(totalMois)}</p>
+          <p className="text-base sm:text-lg font-bold text-primaire">{formatMontant(totalMois)}</p>
         </Carte>
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-2 flex-wrap items-center">
+      {/* Filtres. Sur téléphone : le locataire sur sa ligne, les statuts sur
+          une rangée qui défile au doigt — en flex-wrap, ils prenaient trois
+          lignes à eux seuls. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-texte-doux" />
+          <Users className="h-4 w-4 shrink-0 text-texte-doux" />
           <select
             value={filtreLocataire}
             onChange={e => setFiltreLocataire(e.target.value)}
             aria-label="Filtrer par locataire"
-            className="px-3 py-2 border border-bordure rounded-[var(--rayon)] bg-surface text-sm text-texte
-                       focus:ring-2 focus:ring-primaire outline-none max-w-[16rem]">
+            className="min-w-0 flex-1 px-3 py-2 border border-bordure rounded-[var(--rayon)] bg-surface text-sm text-texte
+                       focus:ring-2 focus:ring-primaire outline-none sm:flex-none sm:max-w-[16rem]">
             <option value="tous">Tous les locataires</option>
             {locatairesTries.map(l => (
               <option key={l.id} value={l.id}>{l.nom} {l.prenom}</option>
             ))}
           </select>
-        </div>
 
-        {filtreLocataire !== 'tous' && (
-          <button onClick={() => setFiltreLocataire('tous')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--rayon)] text-sm
-                       text-texte-doux border border-bordure hover:bg-surface-appuyee transition">
-            <X className="h-3.5 w-3.5" /> Retirer le filtre
-          </button>
-        )}
+          {filtreLocataire !== 'tous' && (
+            <button onClick={() => setFiltreLocataire('tous')}
+              aria-label="Retirer le filtre locataire"
+              className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-[var(--rayon)] text-sm
+                         text-texte-doux border border-bordure hover:bg-surface-appuyee transition">
+              <X className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Retirer le filtre</span>
+            </button>
+          )}
+        </div>
 
         <span className="w-px self-stretch bg-bordure mx-1 hidden sm:block" />
 
+        <div className="sans-barre -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {([
           { key: 'tous', label: 'Tous', count: perimetre.length },
           { key: 'payé', label: 'Payés', count: perimetre.filter(p => p.statut === 'payé').length },
@@ -304,11 +349,12 @@ export default function PaiementsPage() {
           { key: 'impayé', label: 'Impayés', count: perimetre.filter(p => p.statut === 'impayé').length },
         ] as const).map(f => (
           <button key={f.key} onClick={() => setFiltre(f.key)}
-            className={`px-4 py-2 rounded-[var(--rayon)] text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-surface border border-bordure text-texte-doux hover:bg-surface-appuyee'}`}>
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-[var(--rayon)] text-sm font-medium transition flex items-center gap-2 ${filtre === f.key ? 'bg-primaire text-white' : 'bg-surface border border-bordure text-texte-doux hover:bg-surface-appuyee'}`}>
             {f.label}
             <span className={`text-xs px-1.5 py-0.5 rounded-full ${filtre === f.key ? 'bg-surface/20 text-white' : 'bg-surface-appuyee text-texte-doux'}`}>{f.count}</span>
           </button>
         ))}
+        </div>
       </div>
 
       {/* Liste */}
@@ -325,6 +371,48 @@ export default function PaiementsPage() {
         </div>
       ) : (
         <Carte className="overflow-hidden">
+          {/* Sous 1280 px : une fiche par paiement. Le tableau y était rogné
+              par sa carte — statut coupé, boutons quittance et suppression
+              introuvables sur téléphone, et encore hors cadre à 1024 px, où
+              la barre latérale ne laisse que 720 px aux sept colonnes. */}
+          <ul className="divide-y divide-bordure xl:hidden">
+            {paiementsFiltres.map(p => {
+              const isAirbnb = p.bien?.mode_location === 'airbnb'
+              return (
+                <li key={p.id} className="px-4 pt-3.5 pb-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-texte">{p.locataire?.prenom} {p.locataire?.nom}</p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-texte-doux">
+                        {isAirbnb
+                          ? <Moon className="h-3.5 w-3.5 text-info shrink-0" />
+                          : <Home className="h-3.5 w-3.5 text-texte-faible shrink-0" />}
+                        {/* Seul le nom du bien s'abrège : la période est ce
+                            qu'on cherche dans la liste. */}
+                        <span className="truncate">{p.bien?.nom || '-'}</span>
+                        <span className="shrink-0">· {p.mois_concerne}</span>
+                      </p>
+                    </div>
+                    <p className="chiffres shrink-0 text-sm font-semibold text-texte">{formatMontant(p.montant)}</p>
+                  </div>
+                  {p.notes && <p className="text-xs text-texte-faible mt-1 italic">{p.notes}</p>}
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      {boutonStatut(p)}
+                      <span className="truncate text-xs text-texte-faible">
+                        {p.date_paiement ? formatDate(p.date_paiement) : <span className="italic">Non réglé</span>}
+                      </span>
+                    </div>
+                    {boutonsActions(p, 'tactile')}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* overflow-x-auto : filet de sécurité si un nom de bien très long
+              élargit le tableau — il défile alors dans son cadre. */}
+          <div className="hidden overflow-x-auto xl:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-surface-appuyee border-b border-bordure">
@@ -339,7 +427,6 @@ export default function PaiementsPage() {
             </thead>
             <tbody className="divide-y divide-bordure">
               {paiementsFiltres.map(p => {
-                const s = statutConfig[p.statut] || statutConfig['en_attente']
                 const isAirbnb = (p as any).bien?.mode_location === 'airbnb'
                 return (
                   <tr key={p.id} className="hover:bg-surface-appuyee transition">
@@ -355,7 +442,7 @@ export default function PaiementsPage() {
                         {(p as any).bien?.nom || '-'}
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 font-semibold text-texte">{formatMontant(p.montant)}</td>
+                    <td className="px-5 py-3.5 font-semibold text-texte whitespace-nowrap">{formatMontant(p.montant)}</td>
                     <td className="px-5 py-3.5 text-texte-doux hidden lg:table-cell text-xs">
                       {p.mois_concerne?.includes('→')
                         ? p.mois_concerne
@@ -366,42 +453,20 @@ export default function PaiementsPage() {
                         ? formatDate(p.date_paiement)
                         : <span className="italic text-texte-faible">Non réglé</span>}
                     </td>
-                    <td className="px-5 py-3.5">
-                      <button
-                        onClick={() => handleStatutChange(p)}
-                        title="Cliquer pour changer le statut"
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition ${s.color}`}>
-                        {p.statut === 'payé' && <CheckCircle className="h-3 w-3" />}
-                        {p.statut === 'en_attente' && <Clock className="h-3 w-3" />}
-                        {p.statut === 'impayé' && <AlertCircle className="h-3 w-3" />}
-                        {s.label}
-                      </button>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-1 justify-end">
-                        {p.statut === 'payé' && (
-                          <button onClick={() => handleQuittance(p)} title="Générer quittance"
-                            className="p-1.5 hover:bg-primaire-tenue rounded-[var(--rayon)] text-primaire transition">
-                            <FileText className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button onClick={() => handleDelete(p.id)} title="Supprimer"
-                          className="p-1.5 hover:bg-danger-tenue rounded-[var(--rayon)] text-danger transition">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+                    <td className="px-5 py-3.5">{boutonStatut(p)}</td>
+                    <td className="px-5 py-3.5">{boutonsActions(p, 'compacte')}</td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
+          </div>
         </Carte>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-[1300] flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-bordure">
               <h2 className="font-bold text-texte text-lg">Nouveau paiement</h2>

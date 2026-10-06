@@ -192,10 +192,13 @@ export default function TableauBudget({
         </div>
       )}
 
-      {/* Postes */}
+      {/* Postes. Sur téléphone, chaque ligne devient une fiche « libellé :
+          montant » : à 44rem, le tableau n'y montrait que le poste et le
+          prévu. Mêmes éléments dans les deux cas — un seul champ de saisie
+          par poste, rien à synchroniser. */}
       <div className="overflow-x-auto rounded-[var(--rayon)] border border-bordure bg-surface">
-        <table className="w-full min-w-[44rem] text-sm">
-          <thead className="border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux">
+        <table className="block w-full text-sm md:table md:min-w-[44rem]">
+          <thead className="hidden border-b border-bordure bg-surface-appuyee text-left text-xs uppercase tracking-wide text-texte-doux md:table-header-group">
             <tr>
               <th className="px-4 py-3 font-medium">Poste</th>
               <th className="px-4 py-3 text-right font-medium">Prévu</th>
@@ -204,12 +207,16 @@ export default function TableauBudget({
               <th className="px-4 py-3 text-right font-medium">Écart</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block md:table-row-group">
             {synthese.postes.map((p) => {
               const depasse = p.ecart < 0
+              // Cellule de montant : ligne « libellé … valeur » sur téléphone,
+              // cellule ordinaire au-delà.
+              const cellule = 'flex items-center justify-between gap-3 py-0.5 md:table-cell md:px-4 md:py-2.5 md:text-right'
+              const libelle = 'text-xs text-texte-doux md:hidden'
               return (
-                <tr key={p.id} className="border-b border-bordure last:border-0">
-                  <td className="px-4 py-2.5">
+                <tr key={p.id} className="block border-b border-bordure px-4 py-3 last:border-0 md:table-row md:p-0">
+                  <td className="block pb-1.5 md:table-cell md:px-4 md:py-2.5">
                     <div className="font-medium text-texte">{p.libelle}</div>
                     <div className="text-xs text-texte-doux">
                       {LIBELLES_CORPS_ETAT[p.corps_etat]}
@@ -220,7 +227,8 @@ export default function TableauBudget({
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className={cellule}>
+                    <span className={libelle}>Prévu</span>
                     {lectureSeule ? (
                       <span className="tabular-nums">{formatMontant(p.prevu)}</span>
                     ) : (
@@ -233,17 +241,20 @@ export default function TableauBudget({
                       />
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-alerte">
+                  <td className={`${cellule} tabular-nums text-alerte`}>
+                    <span className={libelle}>Engagé</span>
                     {p.engage ? formatMontant(p.engage) : '—'}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-primaire">
+                  <td className={`${cellule} tabular-nums text-primaire`}>
+                    <span className={libelle}>Réalisé</span>
                     {p.realise ? formatMontant(p.realise) : '—'}
                   </td>
                   <td
-                    className={`px-4 py-2.5 text-right tabular-nums font-medium ${
+                    className={`${cellule} tabular-nums font-medium ${
                       depasse ? 'text-danger' : 'text-texte-doux'
                     }`}
                   >
+                    <span className={libelle}>Écart</span>
                     {formatMontant(p.ecart)}
                   </td>
                 </tr>

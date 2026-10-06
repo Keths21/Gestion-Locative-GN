@@ -121,6 +121,15 @@ body {
   border-radius: 4px;
 }
 
+/* Rangée qui défile au doigt (filtres, onglets) : la barre de défilement
+   n'apporte rien sur un écran tactile et mange la hauteur de la rangée. */
+@utility sans-barre {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* L'en-tête mobile est collant : sans cette réserve, la cible qui reçoit le
    focus au clavier peut se retrouver dessous, hors de vue. */
 main {

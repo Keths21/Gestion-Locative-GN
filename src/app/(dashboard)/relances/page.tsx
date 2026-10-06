@@ -118,13 +118,13 @@ export default function RelancesPage() {
   return (
     <div className="space-y-6">
       <EnTetePage titre="Relances" sous={`${impayes.length} locataire(s) avec impayés`}>
-        <div className="flex items-center gap-2">
-          <button onClick={fetchData} className="flex items-center gap-2 text-sm text-texte-doux border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition">
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={fetchData} className="flex items-center gap-2 whitespace-nowrap text-sm text-texte-doux border border-bordure px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition">
             <RefreshCw className="h-4 w-4" /> Actualiser
           </button>
           <button onClick={relancerTous} disabled={bulkSending || eligibles.length === 0}
             title={eligibles.length === 0 ? 'Aucun locataire à relancer (déjà relancés récemment ou sans contact)' : 'Envoyer une relance SMS + email à tous les impayés éligibles'}
-            className="flex items-center gap-2 bg-danger text-white px-4 py-2.5 rounded-[var(--rayon)] hover:brightness-110 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            className="flex items-center gap-2 whitespace-nowrap bg-danger text-white px-4 py-2.5 rounded-[var(--rayon)] hover:brightness-110 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
             {bulkSending
               ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi en cours...</>
               : <><Zap className="h-4 w-4" /> Relancer tous les impayés ({eligibles.length})</>}
@@ -132,9 +132,11 @@ export default function RelancesPage() {
         </div>
       </EnTetePage>
 
-      {/* Résumé */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-danger-tenue border border-danger/20 rounded-[var(--rayon)] p-4">
+      {/* Résumé — sur téléphone, le total en pleine largeur et les deux
+          compteurs côte à côte : trois blocs empilés repoussaient la liste
+          d'un écran entier. */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="col-span-2 md:col-span-1 bg-danger-tenue border border-danger/20 rounded-[var(--rayon)] p-4">
           <p className="text-sm text-danger font-medium">Total impayés</p>
           <p className="text-2xl font-bold text-danger mt-1">{formatMontant(totalImpayes)}</p>
         </div>
@@ -163,18 +165,20 @@ export default function RelancesPage() {
         <div className="space-y-4">
           {impayes.map(item => (
             <Carte key={item.locataire.id} className="border-danger/20 overflow-hidden">
-              <div className="flex items-center justify-between p-5 border-b border-bordure">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-danger-tenue rounded-full flex items-center justify-center">
+              {/* flex-wrap : sur téléphone, le total passe sous le nom au lieu
+                  d'être coupé par le bord de l'écran. */}
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 p-4 sm:p-5 border-b border-bordure">
+                <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 bg-danger-tenue rounded-full flex items-center justify-center">
                     <span className="text-danger font-bold text-sm">
                       {item.locataire.prenom?.[0]}{item.locataire.nom?.[0]}
                     </span>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-semibold text-texte">{item.locataire.prenom} {item.locataire.nom}</p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                      <span className="text-xs text-texte-faible flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
+                      <span className="min-w-0 break-all text-xs text-texte-faible flex items-center gap-1">
+                        <Mail className="h-3 w-3 shrink-0" />
                         {item.locataire.email || <span className="text-texte-faible">—</span>}
                       </span>
                       <span className="text-xs text-texte-faible flex items-center gap-1">
@@ -190,8 +194,8 @@ export default function RelancesPage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-danger text-lg">{formatMontant(item.total)}</p>
+                <div className="ml-auto text-right">
+                  <p className="font-bold text-danger text-lg whitespace-nowrap">{formatMontant(item.total)}</p>
                   <p className="text-xs text-texte-faible">{item.paiements.length} mois impayé(s)</p>
                 </div>
               </div>
@@ -208,12 +212,14 @@ export default function RelancesPage() {
               </div>
 
               {/* Actions */}
-              <div className="px-5 py-3 flex gap-3">
+              {/* Empilés en pleine largeur sur téléphone : côte à côte, chaque
+                  libellé s'y écrivait sur trois lignes. */}
+              <div className="px-4 sm:px-5 py-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
                 <button
                   onClick={() => envoyerRelance(item)}
                   disabled={sending === item.locataire.id || (!item.locataire.email && !item.locataire.telephone)}
                   title={!item.locataire.email && !item.locataire.telephone ? 'Aucun email ni téléphone' : 'Envoyer par SMS et/ou email'}
-                  className="flex items-center gap-2 bg-danger text-white text-sm px-4 py-2 rounded-[var(--rayon)] hover:brightness-110 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex min-h-11 items-center justify-center gap-2 bg-danger text-white text-sm px-4 py-2 rounded-[var(--rayon)] hover:brightness-110 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sending === item.locataire.id
                     ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi...</>
@@ -222,7 +228,7 @@ export default function RelancesPage() {
                 </button>
                 <button
                   onClick={async () => { await marquerRelance(item.locataire.id); toast.success('Marqué comme contacté'); fetchData() }}
-                  className="flex items-center gap-2 text-sm border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-texte-doux">
+                  className="flex min-h-11 items-center justify-center gap-2 text-sm border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-texte-doux">
                   <Bell className="h-4 w-4" /> Marquer comme contacté
                 </button>
               </div>
