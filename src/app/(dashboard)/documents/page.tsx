@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { FileText, Download, FileCheck, Mail, MessageSquare, Phone } from 'lucide-react'
+import { FileText, Download, FileCheck, MessageCircle, MessageSquare, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { Locataire } from '@/types'
 import { genererBail, genererRelance } from '@/lib/pdf'
@@ -150,7 +150,9 @@ export default function DocumentsPage() {
           onClick={() => handleRelanceSMS(loc, 'whatsapp')}
           disabled={sending === `whatsapp-relance-${loc.id}`}
           className={`${forme} bg-succes-tenue text-succes hover:bg-succes-tenue`}>
-          <Mail className="h-3.5 w-3.5" />
+          {/* Bulle ronde : l'enveloppe faisait lire « e-mail ». Le SMS garde
+              la bulle carrée, pour que les deux canaux se distinguent. */}
+          <MessageCircle className="h-3.5 w-3.5" />
           {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
         </button>
       </>
