@@ -2,24 +2,29 @@ import { Resend } from 'resend'
 import { verifierEnvoi } from './garde-envoi'
 
 /**
- * Transport des notifications — e-mail et SMS.
+ * Transport des notifications — e-mail, SMS et WhatsApp.
  *
- * Extrait des routes de relance locative, où il était enfermé dans un
- * traitement propre aux locataires. Le module Travaux en a besoin pour ses
- * alertes d'échéance ; le dupliquer aurait fait vivre deux copies des
- * réglages fournisseur.
- *
- * Les routes de relance existantes n'ont pas été migrées : elles fonctionnent
- * en production, et les toucher ferait courir un risque sans bénéfice
- * immédiat. À reprendre lors d'un passage sur ce code.
+ * Seul endroit qui parle aux fournisseurs. Les routes de relance et de
+ * quittance gardaient chacune leur propre copie de ce code ; elles passent
+ * toutes ici depuis l'audit de sécurité du 11/10/2026, et donc toutes par la
+ * garde d'envoi (garde-envoi.ts).
  */
 
-export type Canal = 'email' | 'sms'
+export type Canal = 'email' | 'sms' | 'whatsapp'
 
 export interface ResultatEnvoi {
   canal: Canal
   ok: boolean
   erreur?: string
+  /** Refusé par la garde d'envoi (environnement hors production) : pas une panne. */
+  bloque?: boolean
+  indice?: string
+}
+
+function refusParLaGarde(canal: Canal, destinataire: string): ResultatEnvoi | null {
+  const verdict = verifierEnvoi(canal, destinataire)
+  if (verdict.autorise) return null
+  return { canal, ok: false, bloque: true, erreur: verdict.motif, indice: verdict.indice }
 }
 
 /* ------------------------------------ SMS --------------------------------- */
@@ -71,8 +76,8 @@ export async function envoyerSms(
   message: string,
   expediteur = process.env.NIMBASMS_SENDER_NAME ?? 'CasaChams'
 ): Promise<ResultatEnvoi> {
-  const verdict = verifierEnvoi('sms', telephone)
-  if (!verdict.autorise) return { canal: 'sms', ok: false, erreur: verdict.motif }
+  const refus = refusParLaGarde('sms', telephone)
+  if (refus) return refus
 
   try {
     const r =
@@ -85,7 +90,44 @@ export async function envoyerSms(
   }
 }
 
+/* ---------------------------------- WhatsApp ------------------------------- */
+
+export async function envoyerWhatsapp(telephone: string, texte: string): Promise<ResultatEnvoi> {
+  const refus = refusParLaGarde('whatsapp', telephone)
+  if (refus) return refus
+
+  try {
+    const idNumero = process.env.WHATSAPP_PHONE_NUMBER_ID
+    const jeton = process.env.WHATSAPP_ACCESS_TOKEN
+    if (!idNumero || !jeton) throw new Error('Configuration WhatsApp manquante')
+
+    const res = await fetch(`https://graph.facebook.com/v19.0/${idNumero}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${jeton}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: telephone.replace(/[\s+]/g, ''),
+        type: 'text',
+        text: { body: texte },
+      }),
+    })
+    return { canal: 'whatsapp', ok: res.ok, erreur: res.ok ? undefined : (await res.text()).slice(0, 200) }
+  } catch (e) {
+    return { canal: 'whatsapp', ok: false, erreur: e instanceof Error ? e.message : 'Envoi impossible' }
+  }
+}
+
 /* ----------------------------------- E-mail -------------------------------- */
+
+/**
+ * Nom affiché de l'expéditeur. Il vient du nom de l'agence, donc d'une saisie :
+ * guillemets, chevrons et retours à la ligne y permettraient de forger l'en-tête
+ * From. On les retire et on borne la longueur.
+ */
+function nomExpediteur(nom: string): string {
+  const propre = nom.replace(/["<>\\\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)
+  return propre || 'CASA CHAMS'
+}
 
 export async function envoyerEmail(params: {
   destinataire: string
@@ -93,8 +135,8 @@ export async function envoyerEmail(params: {
   html: string
   expediteur?: string
 }): Promise<ResultatEnvoi> {
-  const verdict = verifierEnvoi('email', params.destinataire)
-  if (!verdict.autorise) return { canal: 'email', ok: false, erreur: verdict.motif }
+  const refus = refusParLaGarde('email', params.destinataire)
+  if (refus) return refus
 
   try {
     const cle = process.env.RESEND_API_KEY
@@ -102,9 +144,10 @@ export async function envoyerEmail(params: {
 
     const resend = new Resend(cle)
     const { error } = await resend.emails.send({
-      from: `${params.expediteur ?? 'CASA CHAMS'} <noreply@casachams.com>`,
+      from: `${nomExpediteur(params.expediteur ?? 'CASA CHAMS')} <noreply@casachams.com>`,
       to: params.destinataire,
-      subject: params.sujet,
+      // Pas de retour à la ligne dans un en-tête : le sujet porte des noms saisis.
+      subject: params.sujet.replace(/[\r\n]+/g, ' ').slice(0, 200),
       html: params.html,
     })
     if (error) return { canal: 'email', ok: false, erreur: error.message }

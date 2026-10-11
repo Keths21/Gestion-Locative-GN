@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server'
-
 /**
  * Garde-fou des envois sortants — courriel, SMS, WhatsApp.
  *
@@ -89,18 +87,4 @@ export function verifierEnvoi(canal: CanalEnvoi, destinataire: string): VerdictE
       `Ajoutez le destinataire à ENVOIS_LISTE_BLANCHE pour tester, ou posez ` +
       `ENVOIS_REELS=true s'il s'agit bien de la production.`,
   }
-}
-
-/**
- * Réponse HTTP pour un envoi refusé.
- *
- * 403 et non 200 : l'appelant doit pouvoir distinguer « envoyé » de « refusé »
- * sans lire le corps. Le drapeau `bloque` permet à l'interface de traiter ce
- * cas autrement qu'une panne — ce n'en est pas une.
- */
-export function reponseEnvoiBloque(verdict: Extract<VerdictEnvoi, { autorise: false }>) {
-  return NextResponse.json(
-    { error: verdict.motif, indice: verdict.indice, bloque: true },
-    { status: 403 }
-  )
 }

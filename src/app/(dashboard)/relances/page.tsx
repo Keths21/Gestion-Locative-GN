@@ -33,17 +33,15 @@ export default function RelancesPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState<string | null>(null)
   const [bulkSending, setBulkSending] = useState(false)
-  const [agence, setAgence] = useState<any>(null)
   const supabase = createClient()
 
   const fetchData = async () => {
     setLoading(true)
 
-    const [{ data: paiements }, { data: params }] = await Promise.all([
-      supabase.from('paiements').select('*, locataire:locataires(*), bien:biens(*)').eq('statut', 'impayé'),
-      // Voir documents/page.tsx : les paramètres sont ceux de l'organisation.
-      supabase.from('parametres').select('*').limit(1).maybeSingle()
-    ])
+    // Les coordonnées de l'agence ne sont plus lues ici : le serveur les relit
+    // lui-même au moment d'envoyer (lib/envois-locatifs.ts).
+    const { data: paiements } = await supabase
+      .from('paiements').select('*, locataire:locataires(*), bien:biens(*)').eq('statut', 'impayé')
 
     // Grouper par locataire
     const grouped: Record<string, LocataireImpayes> = {}
@@ -56,7 +54,6 @@ export default function RelancesPage() {
     }
 
     setImpayes(Object.values(grouped))
-    setAgence(params)
     setLoading(false)
   }
 
@@ -74,7 +71,7 @@ export default function RelancesPage() {
     }
     setSending(item.locataire.id)
     try {
-      const results = await envoyerRelanceMultiCanal(item, agence)
+      const results = await envoyerRelanceMultiCanal(item.locataire)
       const ok = results.filter(r => r.ok)
       const ko = results.filter(r => !r.ok)
       if (ok.length > 0) {
@@ -100,7 +97,7 @@ export default function RelancesPage() {
     setBulkSending(true)
     let tenants = 0, sms = 0, email = 0, fails = 0
     for (const item of cibles) {
-      const results = await envoyerRelanceMultiCanal(item, agence)
+      const results = await envoyerRelanceMultiCanal(item.locataire)
       const ok = results.filter(r => r.ok)
       ok.forEach(r => { if (r.canal === 'sms') sms++; else email++ })
       fails += results.filter(r => !r.ok).length

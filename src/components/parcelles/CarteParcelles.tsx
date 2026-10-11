@@ -8,6 +8,7 @@ import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css'
 import type { Parcelle, PolygoneGeoJSON } from '@/types'
 import { FONDS, VUE_DEFAUT, type CleFond } from '@/lib/fonds-carte'
 import { formaterSuperficie } from '@/lib/geo'
+import { echapperHtml } from '@/lib/html'
 
 /**
  * Carte Leaflet. Repris de CarteBiens.tsx de l'application CartographieBiens.
@@ -49,12 +50,6 @@ function versGeoJson(layer: L.Polygon): PolygoneGeoJSON | null {
   const gj = layer.toGeoJSON() as GeoJSON.Feature<GeoJSON.Polygon>
   if (gj.geometry?.type !== 'Polygon') return null
   return gj.geometry as PolygoneGeoJSON
-}
-
-function echapperHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string
-  )
 }
 
 const CarteParcelles = forwardRef<PoigneeCarte, Props>(function CarteParcelles(

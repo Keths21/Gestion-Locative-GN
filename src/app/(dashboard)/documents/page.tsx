@@ -91,21 +91,16 @@ export default function DocumentsPage() {
       toast.error('Numéro de téléphone manquant pour ce locataire')
       return
     }
-    const { data: impayes } = await supabase.from('paiements')
-      .select('*').eq('locataire_id', loc.id).eq('statut', 'impayé')
-    if (!impayes || impayes.length === 0) {
-      toast.error('Aucun impayé pour ce locataire')
-      return
-    }
-
     const key = `${canal}-relance-${loc.id}`
     setSending(key)
     try {
+      // Seul l'identifiant part : le serveur relit les impayés et l'agence, et
+      // répond « Aucun impayé pour ce locataire » s'il n'y en a pas.
       const endpoint = canal === 'sms' ? '/api/sms/relance' : '/api/whatsapp/relance'
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locataire: loc, paiements: impayes, agence }),
+        body: JSON.stringify({ locataire_id: loc.id }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur envoi')

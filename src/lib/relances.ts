@@ -40,13 +40,13 @@ export function estRelancable(loc: LocataireLike): boolean {
  * Envoie une relance à un locataire sur TOUS ses canaux disponibles
  * (email s'il a un email, SMS s'il a un téléphone).
  * Retourne le résultat par canal sans jamais throw.
+ *
+ * Seul l'identifiant part : le serveur relit en base le locataire, ses impayés
+ * et l'agence (voir lib/envois-locatifs.ts). Le contenu ne vient plus du
+ * navigateur.
  */
-export async function envoyerRelanceMultiCanal(
-  item: ImpayeGroupe,
-  agence: unknown
-): Promise<CanalResultat[]> {
-  const { locataire, paiements } = item
-  const body = JSON.stringify({ locataire, paiements, agence })
+export async function envoyerRelanceMultiCanal(locataire: LocataireLike): Promise<CanalResultat[]> {
+  const body = JSON.stringify({ locataire_id: locataire.id })
   const headers = { 'Content-Type': 'application/json' }
   const results: CanalResultat[] = []
 

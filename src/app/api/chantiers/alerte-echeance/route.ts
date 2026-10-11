@@ -1,6 +1,8 @@
-import { createServerSupabase, lireSession } from '@/lib/supabase-server'
+import { createServerSupabase, lireSession, peutEcrireDomaine } from '@/lib/supabase-server'
 import { echeancesAAlerter } from '@/lib/echeancier'
 import { envoyerEmail, envoyerSms, type ResultatEnvoi } from '@/lib/envoi'
+import { echapperHtml } from '@/lib/html'
+import { enregistrerEnvoi, verifierLimite } from '@/lib/limite-envois'
 import { erreur, gerer, ok } from '@/lib/api'
 import { formatMontant, formatMontantSMS } from '@/lib/utils'
 
@@ -16,23 +18,38 @@ export const dynamic = 'force-dynamic'
  *
  * L'horodatage n'est posé que sur les échéances réellement notifiées : un
  * échec d'envoi doit pouvoir être retenté.
+ *
+ * Destinataires : l'e-mail et le téléphone de l'agence, lus dans ses
+ * paramètres. Jusqu'au 11/10/2026, ils venaient du corps de la requête — une
+ * adresse arbitraire, donc, à qui l'on envoyait l'échéancier de l'agence.
+ * L'écran, lui, n'en fournissait aucune : chaque appel finissait en 400.
  */
 export async function POST(req: Request) {
   try {
     const supabase = await createServerSupabase()
     const session = await lireSession(supabase)
     if (!session) return erreur('Non authentifié', 401)
-
-    const corps = (await req.json().catch(() => ({}))) as {
-      jours?: number
-      email?: string
-      telephone?: string
+    // La route marque les échéances comme alertées : c'est une écriture.
+    if (!peutEcrireDomaine(session, 'chantiers')) {
+      return erreur("Signaler les échéances demande le droit d'écriture sur les chantiers.", 403)
     }
-    const jours = Number.isFinite(corps.jours) ? Number(corps.jours) : 3
 
-    if (!corps.email && !corps.telephone) {
-      return erreur('Indiquez au moins une adresse e-mail ou un numéro de téléphone.', 400)
+    const corps = (await req.json().catch(() => ({}))) as { jours?: unknown }
+    const demande = Number(corps.jours)
+    const jours = Number.isInteger(demande) && demande >= 1 && demande <= 60 ? demande : 3
+
+    const { data: agence } = await supabase
+      .from('parametres')
+      .select('email, telephone')
+      .eq('organisation_id', session.organisationId)
+      .maybeSingle()
+    if (!agence?.email && !agence?.telephone) {
+      return erreur("Renseignez l'e-mail ou le téléphone de l'agence dans Paramètres pour recevoir les alertes.", 409)
     }
+
+    const reference = { organisationId: session.organisationId, canal: 'alerte', destinataire: 'echeances-chantier' }
+    const limite = verifierLimite(reference)
+    if (!limite.ok) return erreur(limite.motif, 429)
 
     const echeances = await echeancesAAlerter(supabase, jours)
     if (!echeances.length) {
@@ -42,12 +59,12 @@ export async function POST(req: Request) {
     const total = echeances.reduce((s, e) => s + e.montant, 0)
     const resultats: ResultatEnvoi[] = []
 
-    if (corps.email) {
+    if (agence.email) {
       const lignes = echeances
         .map(
           (e) => `<tr>
-            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${e.chantier_nom}<br>
-              <span style="color:#6b7280;font-size:12px">${e.libelle}</span></td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${echapperHtml(e.chantier_nom)}<br>
+              <span style="color:#6b7280;font-size:12px">${echapperHtml(e.libelle)}</span></td>
             <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap">
               ${new Date(e.date_echeance).toLocaleDateString('fr-FR')}
               ${e.jours_restants < 0 ? '<strong style="color:#dc2626"> — en retard</strong>' : ''}</td>
@@ -59,7 +76,7 @@ export async function POST(req: Request) {
 
       resultats.push(
         await envoyerEmail({
-          destinataire: corps.email,
+          destinataire: agence.email,
           sujet: `Échéances de chantier à régler — ${formatMontant(total)}`,
           html: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
             <body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:20px">
@@ -80,7 +97,7 @@ export async function POST(req: Request) {
       )
     }
 
-    if (corps.telephone) {
+    if (agence.telephone) {
       // Un SMS est facturé par tranche de 160 caractères : on résume au lieu
       // d'énumérer, et on renvoie vers l'application pour le détail.
       const premiere = echeances[0]
@@ -92,23 +109,30 @@ export async function POST(req: Request) {
           : `CASA CHAMS: ${echeances.length} echeances chantier a regler, ` +
             `total ${formatMontantSMS(total)}. Detail dans l'application.`
 
-      resultats.push(await envoyerSms(corps.telephone, message))
+      resultats.push(await envoyerSms(agence.telephone, message))
     }
 
     // Seules les échéances effectivement notifiées sont marquées : un échec
     // d'envoi doit rester rattrapable au prochain appel.
     const envoiReussi = resultats.some((r) => r.ok)
-    if (envoiReussi) {
-      await supabase
-        .from('echeances_chantier')
-        .update({ alerte_envoyee_le: new Date().toISOString() })
-        .in('id', echeances.map((e) => e.id))
+    if (!envoiReussi) {
+      const bloque = resultats.find((r) => r.bloque)
+      if (bloque) return erreur(bloque.erreur ?? 'Envoi bloqué sur cet environnement.', 403)
+      // Le détail du fournisseur part dans les journaux, pas chez l'appelant.
+      console.error('[alerte-echeance]', resultats.map((r) => `${r.canal}: ${r.erreur}`).join(' | '))
+      return erreur("Échec de l'envoi de l'alerte.", 502)
     }
 
+    await supabase
+      .from('echeances_chantier')
+      .update({ alerte_envoyee_le: new Date().toISOString() })
+      .in('id', echeances.map((e) => e.id))
+    enregistrerEnvoi(reference)
+
     return ok({
-      alertees: envoiReussi ? echeances.length : 0,
+      alertees: echeances.length,
       total,
-      resultats,
+      canaux: resultats.filter((r) => r.ok).map((r) => r.canal),
     })
   } catch (e) {
     return gerer(e)
