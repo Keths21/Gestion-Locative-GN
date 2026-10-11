@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { genererQuittance } from '@/lib/pdf'
 import { genererEcheancesMensuelles } from '@/lib/echeances'
 import { Carte, EnTetePage } from '@/components/ui'
+import { useDroits } from '@/components/droits'
 
 const statutConfig: Record<string, { label: string; color: string; next: string }> = {
   'payé':       { label: 'Payé',       color: 'bg-succes-tenue text-succes',   next: 'impayé' },
@@ -41,6 +42,9 @@ export default function PaiementsPage() {
   const [modeAirbnb, setModeAirbnb] = useState(false)
   const [generating, setGenerating] = useState(false)
   const supabase = createClient()
+  // Lecture seule (collaborateur en lecture, abonnement expiré) : on consulte et
+  // on imprime les quittances, sans rien créer ni modifier.
+  const peutEcrire = useDroits().ecriture('locatif')
 
   const fetchData = async () => {
     const [{ data: pai }, { data: loc }] = await Promise.all([
@@ -220,6 +224,17 @@ export default function PaiementsPage() {
   // les fiches (téléphone). Une seule définition, pour qu'ils ne divergent pas.
   const boutonStatut = (p: Paiement) => {
     const s = statutConfig[p.statut] || statutConfig['en_attente']
+    // En lecture seule, le statut s'affiche sans pouvoir être changé.
+    if (!peutEcrire) {
+      return (
+        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium ${s.color}`}>
+          {p.statut === 'payé' && <CheckCircle className="h-3 w-3" />}
+          {p.statut === 'en_attente' && <Clock className="h-3 w-3" />}
+          {p.statut === 'impayé' && <AlertCircle className="h-3 w-3" />}
+          {s.label}
+        </span>
+      )
+    }
     return (
       <button
         onClick={() => handleStatutChange(p)}
@@ -246,10 +261,13 @@ export default function PaiementsPage() {
             <FileText className="h-4 w-4" />
           </button>
         )}
-        <button onClick={() => handleDelete(p.id)} title="Supprimer" aria-label="Supprimer le paiement"
-          className={`${cls} hover:bg-danger-tenue text-danger`}>
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {/* La quittance est une lecture : elle reste offerte en lecture seule. */}
+        {peutEcrire && (
+          <button onClick={() => handleDelete(p.id)} title="Supprimer" aria-label="Supprimer le paiement"
+            className={`${cls} hover:bg-danger-tenue text-danger`}>
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     )
   }
@@ -262,7 +280,7 @@ export default function PaiementsPage() {
         sous={locataireChoisi
           ? `${perimetre.length} paiement(s) — ${locataireChoisi.prenom} ${locataireChoisi.nom}`
           : `${paiements.length} paiement(s) enregistré(s)`}>
-        <div className="flex flex-wrap items-center gap-2">
+        {peutEcrire && <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => runGeneration(false)} disabled={generating}
             title="Créer les échéances de loyer du mois pour les locataires mensuels"
             className="flex items-center gap-2 whitespace-nowrap border border-bordure text-texte px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-sm font-medium disabled:opacity-50">
@@ -273,7 +291,7 @@ export default function PaiementsPage() {
             className="flex items-center gap-2 whitespace-nowrap bg-primaire text-white px-4 py-2.5 rounded-[var(--rayon)] hover:bg-primaire-appui transition text-sm font-medium">
             <Plus className="h-4 w-4" /> Enregistrer un paiement
           </button>
-        </div>
+        </div>}
       </EnTetePage>
 
       {/* Stats — text-base sur téléphone : en demi-largeur, un total à neuf

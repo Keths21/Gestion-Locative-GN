@@ -13,6 +13,7 @@ import { formatMontant } from '@/lib/utils'
 import { LIBELLES_NATURE_CHANTIER, LIBELLES_STATUT_CHANTIER } from '@/lib/constants'
 import type { Chantier, NatureChantier, StatutChantier } from '@/types'
 import { EnTetePage, Bouton } from '@/components/ui'
+import { useDroits } from '@/components/droits'
 
 const couleursStatut: Record<StatutChantier, string> = {
   prevu: 'bg-surface-appuyee text-texte',
@@ -27,6 +28,10 @@ const classeChamp =
 
 export default function PageChantiers() {
   const supabase = useMemo(() => createClient(), [])
+  // Lecture seule (collaborateur en lecture, abonnement expiré) : les cinq
+  // onglets savaient se mettre en lecture seule, mais la page ne le leur
+  // disait jamais — un lecteur voyait tous les boutons d'édition.
+  const lectureSeule = !useDroits().ecriture('chantiers')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [resumes, setResumes] = useState<Record<string, { realise: number; prevu: number; depassement: number }>>({})
   const [chargement, setChargement] = useState(true)
@@ -107,7 +112,7 @@ export default function PageChantiers() {
           titre="Chantiers"
           sous={`${chantiers.length} chantier(s) — travaux de construction et de rénovation`}
         >
-          <Bouton onClick={() => setCreation(true)} icone={Plus}>Nouveau chantier</Bouton>
+          {!lectureSeule && <Bouton onClick={() => setCreation(true)} icone={Plus}>Nouveau chantier</Bouton>}
         </EnTetePage>
       </div>
 
@@ -259,18 +264,19 @@ export default function PageChantiers() {
 
             <div className="marge-bas-sure min-h-0 flex-1 overflow-y-auto px-5 py-4">
               {onglet === 'budget' ? (
-                <TableauBudget chantierId={selection.id} />
+                <TableauBudget chantierId={selection.id} lectureSeule={lectureSeule} />
               ) : onglet === 'avancement' ? (
-                <FriseAvancement chantierId={selection.id} />
+                <FriseAvancement chantierId={selection.id} lectureSeule={lectureSeule} />
               ) : onglet === 'journal' ? (
                 <JournalChantier
                   chantierId={selection.id}
                   organisationId={selection.organisation_id}
+                  lectureSeule={lectureSeule}
                 />
               ) : onglet === 'intervenants' ? (
-                <Intervenants chantierId={selection.id} />
+                <Intervenants chantierId={selection.id} lectureSeule={lectureSeule} />
               ) : (
-                <Echeancier chantierId={selection.id} />
+                <Echeancier chantierId={selection.id} lectureSeule={lectureSeule} />
               )}
             </div>
           </aside>

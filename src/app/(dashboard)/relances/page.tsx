@@ -6,6 +6,7 @@ import { formatMontant } from '@/lib/utils'
 import { envoyerRelanceMultiCanal, estRelancable } from '@/lib/relances'
 import toast from 'react-hot-toast'
 import { Carte, EnTetePage } from '@/components/ui'
+import { useDroits } from '@/components/droits'
 
 type LocataireImpayes = {
   locataire: any
@@ -34,6 +35,7 @@ export default function RelancesPage() {
   const [sending, setSending] = useState<string | null>(null)
   const [bulkSending, setBulkSending] = useState(false)
   const supabase = createClient()
+  const peutEcrire = useDroits().ecriture('locatif')
 
   const fetchData = async () => {
     setLoading(true)
@@ -119,13 +121,13 @@ export default function RelancesPage() {
           <button onClick={fetchData} className="flex items-center gap-2 whitespace-nowrap text-sm text-texte-doux border border-bordure px-4 py-2.5 rounded-[var(--rayon)] hover:bg-surface-appuyee transition">
             <RefreshCw className="h-4 w-4" /> Actualiser
           </button>
-          <button onClick={relancerTous} disabled={bulkSending || eligibles.length === 0}
+          {peutEcrire && <button onClick={relancerTous} disabled={bulkSending || eligibles.length === 0}
             title={eligibles.length === 0 ? 'Aucun locataire à relancer (déjà relancés récemment ou sans contact)' : 'Envoyer une relance SMS + email à tous les impayés éligibles'}
             className="flex items-center gap-2 whitespace-nowrap bg-danger text-white px-4 py-2.5 rounded-[var(--rayon)] hover:brightness-110 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
             {bulkSending
               ? <><RefreshCw className="h-4 w-4 animate-spin" /> Envoi en cours...</>
               : <><Zap className="h-4 w-4" /> Relancer tous les impayés ({eligibles.length})</>}
-          </button>
+          </button>}
         </div>
       </EnTetePage>
 
@@ -208,10 +210,11 @@ export default function RelancesPage() {
                 </div>
               </div>
 
-              {/* Actions */}
-              {/* Empilés en pleine largeur sur téléphone : côte à côte, chaque
-                  libellé s'y écrivait sur trois lignes. */}
-              <div className="px-4 sm:px-5 py-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
+              {/* Actions — absentes en lecture seule : relancer envoie un
+                  message et date la relance. Empilées en pleine largeur sur
+                  téléphone : côte à côte, chaque libellé s'y écrivait sur
+                  trois lignes. */}
+              {peutEcrire && <div className="px-4 sm:px-5 py-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
                 <button
                   onClick={() => envoyerRelance(item)}
                   disabled={sending === item.locataire.id || (!item.locataire.email && !item.locataire.telephone)}
@@ -228,7 +231,7 @@ export default function RelancesPage() {
                   className="flex min-h-11 items-center justify-center gap-2 text-sm border border-bordure px-4 py-2 rounded-[var(--rayon)] hover:bg-surface-appuyee transition text-texte-doux">
                   <Bell className="h-4 w-4" /> Marquer comme contacté
                 </button>
-              </div>
+              </div>}
             </Carte>
           ))}
         </div>

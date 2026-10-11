@@ -45,7 +45,7 @@ const VIDE = {
 /** Identifiants fraîchement créés, montrés une seule fois. */
 type Identifiants = { email: string; motDePasse: string }
 
-export default function Collaborateurs() {
+export default function Collaborateurs({ lectureSeule = false }: { lectureSeule?: boolean }) {
   const [liste, setListe] = useState<Collaborateur[]>([])
   const [chargement, setChargement] = useState(true)
   const [form, setForm] = useState<{
@@ -191,7 +191,9 @@ export default function Collaborateurs() {
         </div>
       )}
 
-      {/* Invitation */}
+      {/* Invitation — absente en lecture seule (abonnement expiré) : la base
+          refuserait de toute façon d'enregistrer l'invitation. */}
+      {!lectureSeule && (
       <form onSubmit={inviter} className="space-y-4 border border-bordure rounded-[var(--rayon)] p-4 mb-6">
         <div className="grid gap-3 sm:grid-cols-2">
           <input
@@ -245,6 +247,7 @@ export default function Collaborateurs() {
           Inviter
         </button>
       </form>
+      )}
 
       {/* Liste */}
       {chargement ? (
@@ -270,11 +273,13 @@ export default function Collaborateurs() {
                     )}
                   </p>
                 </div>
-                <button onClick={() => retirer(c)} disabled={enCours === c.id}
-                  className="text-danger hover:bg-danger-tenue p-2 rounded-[var(--rayon)] transition flex-shrink-0"
-                  aria-label={`Retirer ${c.email}`}>
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {!lectureSeule && (
+                  <button onClick={() => retirer(c)} disabled={enCours === c.id}
+                    className="text-danger hover:bg-danger-tenue p-2 rounded-[var(--rayon)] transition flex-shrink-0"
+                    aria-label={`Retirer ${c.email}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 {DOMAINES.map(d => (
@@ -282,7 +287,7 @@ export default function Collaborateurs() {
                     <label className="block text-[11px] font-medium text-texte-doux mb-1">{d.titre}</label>
                     <select
                       value={c[d.cle]}
-                      disabled={enCours === c.id}
+                      disabled={lectureSeule || enCours === c.id}
                       onChange={e => modifier(c, d.cle, e.target.value as Droit)}
                       className="w-full px-2.5 py-1.5 border border-bordure rounded-[var(--rayon)] bg-surface text-sm disabled:opacity-50">
                       {NIVEAUX.map(n => <option key={n.valeur} value={n.valeur}>{n.libelle}</option>)}

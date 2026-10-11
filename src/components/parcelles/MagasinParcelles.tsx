@@ -241,7 +241,11 @@ export function FournisseurParcelles({ children }: { children: React.ReactNode }
           droit_foncier: string | null
         }>()
         if (vivant) {
-          setPeutEcrire(data?.est_proprietaire === true || data?.droit_foncier === 'ecriture')
+          // droit_foncier seul : la base y met déjà « ecriture » pour le
+          // propriétaire, et le réduit à « lecture » quand l'abonnement a
+          // expiré. Le test sur est_proprietaire laissait écrire un propriétaire
+          // expiré, dont chaque écriture était ensuite refusée par la base.
+          setPeutEcrire(data?.droit_foncier === 'ecriture')
         }
         if (data?.organisation_id && vivant) {
           setOrganisationId(data.organisation_id)

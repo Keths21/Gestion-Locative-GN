@@ -6,6 +6,7 @@ import { Locataire } from '@/types'
 import { genererBail, genererRelance } from '@/lib/pdf'
 import toast from 'react-hot-toast'
 import { Carte, EnTetePage } from '@/components/ui'
+import { useDroits } from '@/components/droits'
 
 function supprimerFondBlanc(base64: string, seuil = 230): Promise<string> {
   return new Promise((resolve) => {
@@ -36,6 +37,7 @@ export default function DocumentsPage() {
   const [agence, setAgence] = useState<any>(null)
   const [sending, setSending] = useState<string | null>(null)
   const supabase = createClient()
+  const peutEcrire = useDroits().ecriture('locatif')
 
   useEffect(() => {
     async function load() {
@@ -132,24 +134,30 @@ export default function DocumentsPage() {
           className={`${forme} bg-danger-tenue text-danger hover:bg-danger-tenue`}>
           <Download className="h-3.5 w-3.5" /> PDF
         </button>
-        {/* Relance SMS */}
-        <button
-          onClick={() => handleRelanceSMS(loc, 'sms')}
-          disabled={sending === `sms-relance-${loc.id}`}
-          className={`${forme} bg-alerte-tenue text-alerte hover:bg-alerte-tenue`}>
-          <MessageSquare className="h-3.5 w-3.5" />
-          {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
-        </button>
-        {/* Relance WhatsApp */}
-        <button
-          onClick={() => handleRelanceSMS(loc, 'whatsapp')}
-          disabled={sending === `whatsapp-relance-${loc.id}`}
-          className={`${forme} bg-succes-tenue text-succes hover:bg-succes-tenue`}>
-          {/* Bulle ronde : l'enveloppe faisait lire « e-mail ». Le SMS garde
-              la bulle carrée, pour que les deux canaux se distinguent. */}
-          <MessageCircle className="h-3.5 w-3.5" />
-          {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
-        </button>
+        {/* Les envois sont des écritures : absents en lecture seule. Le bail
+            et la lettre en PDF, eux, restent — ce sont des lectures. */}
+        {peutEcrire && (
+          <>
+            {/* Relance SMS */}
+            <button
+              onClick={() => handleRelanceSMS(loc, 'sms')}
+              disabled={sending === `sms-relance-${loc.id}`}
+              className={`${forme} bg-alerte-tenue text-alerte hover:bg-alerte-tenue`}>
+              <MessageSquare className="h-3.5 w-3.5" />
+              {sending === `sms-relance-${loc.id}` ? '...' : 'SMS'}
+            </button>
+            {/* Relance WhatsApp */}
+            <button
+              onClick={() => handleRelanceSMS(loc, 'whatsapp')}
+              disabled={sending === `whatsapp-relance-${loc.id}`}
+              className={`${forme} bg-succes-tenue text-succes hover:bg-succes-tenue`}>
+              {/* Bulle ronde : l'enveloppe faisait lire « e-mail ». Le SMS garde
+                  la bulle carrée, pour que les deux canaux se distinguent. */}
+              <MessageCircle className="h-3.5 w-3.5" />
+              {sending === `whatsapp-relance-${loc.id}` ? '...' : 'WA'}
+            </button>
+          </>
+        )}
       </>
     )
   }
@@ -200,7 +208,7 @@ export default function DocumentsPage() {
                 <p className="mt-0.5 truncate text-xs text-texte-doux">
                   {loc.bien?.nom || '-'}{loc.telephone ? ` · ${loc.telephone}` : ''}
                 </p>
-                <div className="mt-2.5 grid grid-cols-4 gap-2">{boutonsDocuments(loc, true)}</div>
+                <div className={`mt-2.5 grid gap-2 ${peutEcrire ? 'grid-cols-4' : 'grid-cols-2'}`}>{boutonsDocuments(loc, true)}</div>
               </li>
             ))}
           </ul>

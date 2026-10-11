@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import { garantirCompte, viderTout } from '@/lib/offline/idb'
+import { FournisseurDroits, type EtatDroits } from '@/components/droits'
 import { useRouter } from 'next/navigation'
 
 // `domaine` dit de quel droit dépend l'entrée ; `proprietaire` la réserve au
@@ -27,12 +28,6 @@ const navItems = [
   { href: '/parametres', label: 'Paramètres', icon: Settings, proprietaire: true },
 ] as const
 
-type Droits = {
-  est_proprietaire: boolean
-  droit_locatif: string
-  droit_foncier: string
-  droit_chantiers: string
-}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -40,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isAdmin, setIsAdmin] = useState(false)
   // null tant qu'on ne sait pas : on affiche alors tout le menu plutôt que de
   // le faire clignoter en le reconstruisant sous les yeux de l'utilisateur.
-  const [droits, setDroits] = useState<Droits | null>(null)
+  const [droits, setDroits] = useState<EtatDroits | null>(null)
   // Compte créé par le propriétaire avec un mot de passe tiré au sort
   // (api/collaborateurs) : on invite à le remplacer tant que ce n'est pas fait.
   const [motDePasseProvisoire, setMotDePasseProvisoire] = useState(false)
@@ -72,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       // Rattache les invitations laissées à cette adresse avant l'inscription :
       // sans cet appel, inviter quelqu'un de déjà inscrit resterait sans effet.
       supabase.rpc('lier_invitations_collaborateur').then(() => {
-        supabase.rpc('etat_acces').single<Droits>()
+        supabase.rpc('etat_acces').single<EtatDroits>()
           .then(({ data }) => data && setDroits(data))
       })
     })
@@ -256,11 +251,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         )}
 
+        {/* Abonnement expiré : l'agence garde la consultation de ses données
+            (décision du 11/10/2026), la base refuse toute écriture. L'adminis-
+            trateur n'est jamais bloqué, il ne voit donc pas ce bandeau. */}
+        {droits?.abonnement_actif === false && !isAdmin && pathname !== '/abonnement' && (
+          <Link
+            href="/abonnement"
+            className="relative z-[1100] shrink-0 border-b border-danger/20 bg-danger-tenue px-4 py-2 text-sm text-danger hover:underline"
+          >
+            Abonnement expiré : vos données restent consultables, mais rien ne peut être
+            ajouté ni modifié. Régler l&apos;abonnement →
+          </Link>
+        )}
+
         <main className={cn(
           'min-h-0 flex-1',
           pleinEcran ? 'overflow-hidden' : 'overflow-auto p-5 lg:p-6',
         )}>
-          {children}
+          <FournisseurDroits value={droits}>{children}</FournisseurDroits>
         </main>
       </div>
     </div>

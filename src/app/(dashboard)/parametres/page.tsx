@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { Carte, EnTetePage, Pastille } from '@/components/ui'
 import Collaborateurs from '@/components/parametres/Collaborateurs'
+import { useDroits } from '@/components/droits'
 
 const DEVISES = [
   { value: 'GNF', label: 'GNF — Franc Guinéen' },
@@ -138,6 +139,8 @@ export default function ParametresPage() {
   const [userId, setUserId] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
   const supabase = createClient()
+  // Propriétaire d'une agence expirée : consultation seule.
+  const gestion = useDroits().gestionAgence
   const router = useRouter()
 
   useEffect(() => {
@@ -249,11 +252,17 @@ export default function ParametresPage() {
               </div>
             </Section>
 
-            <button type="submit" disabled={saving}
+            {gestion && <button type="submit" disabled={saving}
               className="w-full flex items-center justify-center gap-2 bg-primaire hover:bg-primaire-appui text-white font-semibold py-3 rounded-[var(--rayon)] transition disabled:opacity-50">
               {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
               {saving ? 'Sauvegarde en cours...' : 'Sauvegarder les paramètres'}
-            </button>
+            </button>}
+            {!gestion && (
+              <p className="rounded-[var(--rayon)] border border-bordure bg-surface-appuyee px-4 py-3 text-sm text-texte-doux">
+                Consultation seule : la fiche de l&apos;agence ne peut plus être modifiée tant que
+                l&apos;abonnement n&apos;est pas réglé.
+              </p>
+            )}
           </form>
         </div>
 
@@ -286,7 +295,7 @@ export default function ParametresPage() {
       {/* Collaborateurs — pleine largeur : trois sélecteurs par personne ne
           tiennent pas dans une colonne latérale. Le composant se retire de
           lui-même si l'appelant n'est pas propriétaire. */}
-      <Collaborateurs />
+      <Collaborateurs lectureSeule={!gestion} />
     </div>
   )
 }

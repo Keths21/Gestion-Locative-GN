@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { Bien } from '@/types'
 import { formatMontant, isLocataireActif } from '@/lib/utils'
 import { Carte, EnTetePage, Bouton } from '@/components/ui'
+import { useDroits } from '@/components/droits'
 
 const statusColors: Record<string, string> = {
   'loué': 'bg-succes-tenue text-succes',
@@ -86,6 +87,8 @@ export default function BiensPage() {
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const supabase = createClient()
+  // Lecture seule (collaborateur en lecture, abonnement expiré) : sans action.
+  const peutEcrire = useDroits().ecriture('locatif')
 
   const fetchBiens = async () => {
     const [{ data }, { data: locs }] = await Promise.all([
@@ -184,7 +187,7 @@ export default function BiensPage() {
   return (
     <div className="space-y-6">
       <EnTetePage titre="Mes Biens" sous={`${biens.length} bien(s) enregistré(s)`}>
-        <Bouton onClick={openAdd} icone={Plus}>Ajouter un bien</Bouton>
+        {peutEcrire && <Bouton onClick={openAdd} icone={Plus}>Ajouter un bien</Bouton>}
       </EnTetePage>
 
       {/* Liste */}
@@ -229,14 +232,16 @@ export default function BiensPage() {
                   {bien.climatisation && <span className="bg-surface-appuyee text-texte-doux px-1.5 py-0.5 rounded">Clim</span>}
                 </div>
               </div>
-              <div className="flex gap-2 mt-4 pt-4 border-t border-bordure">
-                <button onClick={() => openEdit(bien)} className="flex items-center gap-1 text-xs text-primaire hover:text-primaire-appui font-medium">
-                  <Pencil className="h-3.5 w-3.5" /> Modifier
-                </button>
-                <button onClick={() => handleDelete(bien.id)} className="flex items-center gap-1 text-xs text-danger hover:text-danger font-medium ml-auto">
-                  <Trash2 className="h-3.5 w-3.5" /> Supprimer
-                </button>
-              </div>
+              {peutEcrire && (
+                <div className="flex gap-2 mt-4 pt-4 border-t border-bordure">
+                  <button onClick={() => openEdit(bien)} className="flex items-center gap-1 text-xs text-primaire hover:text-primaire-appui font-medium">
+                    <Pencil className="h-3.5 w-3.5" /> Modifier
+                  </button>
+                  <button onClick={() => handleDelete(bien.id)} className="flex items-center gap-1 text-xs text-danger hover:text-danger font-medium ml-auto">
+                    <Trash2 className="h-3.5 w-3.5" /> Supprimer
+                  </button>
+                </div>
+              )}
             </Carte>
           ))}
         </div>

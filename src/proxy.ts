@@ -171,22 +171,25 @@ export async function proxy(request: NextRequest) {
   //
   // L'administrateur n'est jamais bloqué : c'est vous, et vous devez pouvoir
   // entrer même quand tout le reste est fermé.
+  //
+  // Depuis le 11/10/2026, une agence expirée passe en CONSULTATION : ses pages
+  // restent ouvertes — ses données ne sont jamais prises en otage — et la base
+  // réduit tout droit d'écriture à la lecture (ecriture_ouverte). Ici, on ne
+  // laisse passer côté API que ce qui lit : GET, et la synchronisation
+  // hors-ligne, qui renvoie les changements et refuse elle-même toute mutation
+  // sans droit d'écriture. Le reste reçoit 402.
   const abonnementExpire = acces?.abonnement_actif === false
+  const requeteDeLecture =
+    request.method === 'GET' || request.method === 'HEAD' || pathname.startsWith('/api/sync')
 
-  if (abonnementExpire && role !== 'admin' && !isAbonnementRoute) {
-    if (isApiRoute) {
-      // 402 et non 403 : « il faut payer » n'est pas « vous n'avez pas le
-      // droit ». Le drapeau permet à l'interface — et à la file de
-      // synchronisation hors-ligne — de traiter ce cas autrement qu'une panne.
-      return NextResponse.json(
-        { erreur: 'Abonnement expiré', abonnement_expire: true },
-        { status: 402 }
-      )
-    }
-    const url = request.nextUrl.clone()
-    url.pathname = '/abonnement'
-    url.searchParams.set('expire', '1')
-    return NextResponse.redirect(url)
+  if (abonnementExpire && role !== 'admin' && !isAbonnementRoute && isApiRoute && !requeteDeLecture) {
+    // 402 et non 403 : « il faut payer » n'est pas « vous n'avez pas le
+    // droit ». Le drapeau permet à l'interface — et à la file de
+    // synchronisation hors-ligne — de traiter ce cas autrement qu'une panne.
+    return NextResponse.json(
+      { erreur: 'Abonnement expiré', abonnement_expire: true },
+      { status: 402 }
+    )
   }
 
   // --- Droits par domaine ---------------------------------------------------
