@@ -15,6 +15,12 @@ import { configSupabaseServeur } from '@/lib/config-supabase'
  */
 export const dynamic = 'force-dynamic'
 
+/** Erreur de la base : détaillée dans les journaux, neutre dans la réponse. */
+function echecBase(error: { message: string; code?: string }) {
+  console.error('[collaborateurs]', error.code, error.message)
+  return NextResponse.json({ error: 'Opération impossible pour le moment.' }, { status: 500 })
+}
+
 const DROIT = z.enum(['aucun', 'lecture', 'ecriture'])
 
 const corpsInvitation = z.object({
@@ -89,7 +95,7 @@ export async function GET() {
     .select('id, email, user_id, droit_locatif, droit_foncier, droit_chantiers, cree_le')
     .order('cree_le', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return echecBase(error)
   return NextResponse.json({ collaborateurs: data })
 }
 
@@ -142,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Cette personne est déjà invitée.' }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return echecBase(error)
   }
 
   if (!creer_compte) {
@@ -166,7 +172,9 @@ export async function POST(req: NextRequest) {
       // sans passer par un courriel qu'elle ne recevra peut-être jamais — c'est
       // toute la raison de ce mode.
       email_confirm: true,
-      user_metadata: { full_name: nom || email },
+      // mot_de_passe_provisoire : affiche un bandeau qui invite à le remplacer
+      // (page /compte) tant que la personne n'a pas choisi le sien.
+      user_metadata: { full_name: nom || email, mot_de_passe_provisoire: true },
     })
 
     if (errCompte) {
@@ -237,7 +245,7 @@ export async function PATCH(req: NextRequest) {
     .select('id, email, user_id, droit_locatif, droit_foncier, droit_chantiers, cree_le')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return echecBase(error)
   return NextResponse.json({ collaborateur: data })
 }
 
@@ -249,6 +257,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Identifiant manquant' }, { status: 400 })
 
   const { error } = await r.supabase!.from('collaborateurs').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return echecBase(error)
   return NextResponse.json({ supprime: true })
 }

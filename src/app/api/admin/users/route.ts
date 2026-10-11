@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { configSupabaseServeur } from '@/lib/config-supabase'
+import { echapperHtml } from '@/lib/html'
 
 // Construit à l'appel, jamais au chargement du module : le constructeur lève
 // quand la clé manque, et Next importe cette route pendant la construction pour
@@ -36,6 +37,12 @@ function createAdminClient() {
     cle,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
+}
+
+/** Erreur de la base : détaillée dans les journaux, neutre dans la réponse. */
+function echecBase(error: { message: string; code?: string }) {
+  console.error('[admin/users]', error.code, error.message)
+  return NextResponse.json({ error: 'Opération impossible pour le moment.' }, { status: 500 })
 }
 
 async function checkIsAdmin(request: NextRequest): Promise<boolean> {
@@ -98,7 +105,7 @@ function buildApprovalEmail(name: string): string {
             <h2 style="margin:0;color:#15803d;font-size:20px">Accès approuvé !</h2>
           </div>
 
-          <p style="color:#374151;font-size:15px">Bonjour <strong>${name}</strong>,</p>
+          <p style="color:#374151;font-size:15px">Bonjour <strong>${echapperHtml(name)}</strong>,</p>
           <p style="color:#6b7280;font-size:14px;line-height:1.7">
             Votre demande d'accès à la plateforme <strong>CASA CHAMS</strong> a été approuvée par l'administrateur.
             Vous pouvez dès maintenant vous connecter et utiliser toutes les fonctionnalités.
@@ -148,7 +155,7 @@ function buildRejectionEmail(name: string, reason?: string): string {
             <h2 style="margin:0;color:#dc2626;font-size:20px">Demande d'accès refusée</h2>
           </div>
 
-          <p style="color:#374151;font-size:15px">Bonjour <strong>${name}</strong>,</p>
+          <p style="color:#374151;font-size:15px">Bonjour <strong>${echapperHtml(name)}</strong>,</p>
           <p style="color:#6b7280;font-size:14px;line-height:1.7">
             Votre demande d'accès à la plateforme <strong>CASA CHAMS</strong> n'a pas pu être approuvée.
           </p>
@@ -156,7 +163,7 @@ function buildRejectionEmail(name: string, reason?: string): string {
           ${reason ? `
           <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:20px 0">
             <p style="margin:0;color:#991b1b;font-size:13px">
-              <strong>Motif :</strong> ${reason}
+              <strong>Motif :</strong> ${echapperHtml(reason)}
             </p>
           </div>
           ` : ''}
@@ -203,7 +210,7 @@ export async function GET(request: NextRequest) {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return echecBase(error)
   return NextResponse.json({ users: data })
 }
 
@@ -237,7 +244,7 @@ export async function PATCH(request: NextRequest) {
     })
     .eq('id', userId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return echecBase(error)
 
   // Envoyer l'email de notification si statut approuvé ou refusé
   if (profile?.email && (status === 'approved' || status === 'rejected')) {

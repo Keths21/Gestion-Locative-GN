@@ -182,7 +182,13 @@ function versCsv(parcelles: Parcelle[]): string {
       .map((c) => {
         const v = props[c]
         if (v === null || v === undefined) return ''
-        const s = String(v)
+        let s = String(v)
+        // Injection de formule : Excel exécute une cellule qui commence par
+        // = + @ (ou - suivi d'autre chose qu'un nombre). Un nom de parcelle
+        // saisi par un collaborateur pouvait ainsi agir chez qui ouvre
+        // l'export. L'apostrophe force la lecture en texte ; les longitudes
+        // négatives, elles, restent des nombres.
+        if (/^[=+@\t\r]/.test(s) || (s.startsWith('-') && Number.isNaN(Number(s)))) s = `'${s}`
         return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
       })
       .join(';')

@@ -76,9 +76,11 @@ export async function proxy(request: NextRequest) {
   const isAdminRoute = pathname.startsWith('/admin')
   // Restent joignables quand l'accès a expiré : la page qui explique et permet
   // de payer, et la route qui ouvre le paiement. Bloquer celles-ci enfermerait
-  // le client dehors sans moyen de rentrer.
+  // le client dehors sans moyen de rentrer. /compte aussi : changer son mot de
+  // passe ne doit pas dépendre d'un règlement.
   const isAbonnementRoute =
-    pathname.startsWith('/abonnement') || pathname.startsWith('/api/abonnement/')
+    pathname.startsWith('/abonnement') || pathname.startsWith('/api/abonnement/') ||
+    pathname.startsWith('/compte')
   // Une route d'API doit répondre par un statut, jamais par une redirection :
   // un client fetch() suivrait le 307 et recevrait la page de connexion en
   // HTML au lieu du 401 qu'il attend. C'est ce dont dépend la file de

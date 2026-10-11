@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Building2, Users, CreditCard,
-  FileText, Bell, Settings, LogOut, Menu, X, Shield, Map, LandPlot, HardHat
+  FileText, Bell, Settings, LogOut, Menu, X, Shield, Map, LandPlot, HardHat, UserRound
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -41,12 +41,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // null tant qu'on ne sait pas : on affiche alors tout le menu plutôt que de
   // le faire clignoter en le reconstruisant sous les yeux de l'utilisateur.
   const [droits, setDroits] = useState<Droits | null>(null)
+  // Compte créé par le propriétaire avec un mot de passe tiré au sort
+  // (api/collaborateurs) : on invite à le remplacer tant que ce n'est pas fait.
+  const [motDePasseProvisoire, setMotDePasseProvisoire] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // Le changement fait sur /compte doit lever le bandeau sans recharger.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session) => {
+      setMotDePasseProvisoire(session?.user?.user_metadata?.mot_de_passe_provisoire === true)
+    })
+    return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+      setMotDePasseProvisoire(user.user_metadata?.mot_de_passe_provisoire === true)
 
       // Avant toute lecture locale : le magasin hors-ligne survit à la
       // déconnexion, et servirait sinon les parcelles du compte précédent à
@@ -175,7 +188,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </nav>
 
-          <div className="border-t border-bordure p-3">
+          <div className="space-y-0.5 border-t border-bordure p-3">
+            {/* Ouvert à tous, collaborateurs compris : Paramètres ne l'est pas. */}
+            <Link
+              href="/compte"
+              onClick={() => setSidebarOpen(false)}
+              aria-current={pathname === '/compte' ? 'page' : undefined}
+              className={lienNav(pathname === '/compte')}
+            >
+              <UserRound className="h-[18px] w-[18px] shrink-0" aria-hidden />
+              Mon compte
+            </Link>
             <button
               onClick={handleLogout}
               className={cn(
@@ -223,6 +246,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="font-semibold tracking-tight text-texte">CASA CHAMS</span>
           </div>
         </header>
+
+        {motDePasseProvisoire && pathname !== '/compte' && (
+          <Link
+            href="/compte"
+            className="relative z-[1100] shrink-0 border-b border-alerte/20 bg-alerte-tenue px-4 py-2 text-sm text-alerte hover:underline"
+          >
+            Vous utilisez un mot de passe provisoire. Choisissez le vôtre →
+          </Link>
+        )}
 
         <main className={cn(
           'min-h-0 flex-1',
