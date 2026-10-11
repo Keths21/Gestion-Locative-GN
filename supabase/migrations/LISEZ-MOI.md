@@ -65,3 +65,27 @@ Toute évolution du schéma passe par un fichier de ce dossier, **avec son SQL**
 Un fichier qui se contente de décrire ce qui a été fait ailleurs n'est pas une
 migration : c'est une note, et elle laisse le dépôt incapable de reconstruire la
 base.
+
+## Droits d'exécution des fonctions
+
+Depuis `20261011100000_fermer_fonctions_au_public`, une fonction créée dans
+`public` naît exécutable par `authenticated` et `service_role`, **plus par
+PUBLIC ni anon**. Deux conséquences pour qui écrit la suivante :
+
+- Une fonction **de service** — appelée seulement avec la clé de service, ou
+  seulement depuis une autre fonction SECURITY DEFINER — doit retirer
+  `authenticated` explicitement :
+  `REVOKE EXECUTE ON FUNCTION public.ma_fonction(...) FROM authenticated;`
+- `REVOKE … FROM anon, authenticated` ne suffit **jamais** si PUBLIC a gardé
+  le droit : les deux rôles en héritent. C'est ainsi que `crediter_abonnement`
+  est restée ouverte à tous du 01/09 au 11/10/2026.
+
+Contrôle à refaire après chaque migration — le résultat doit être vide :
+
+```sql
+SELECT p.oid::regprocedure
+  FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+ WHERE n.nspname = 'public'
+   AND has_function_privilege('anon', p.oid, 'execute')
+   AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e');
+```
